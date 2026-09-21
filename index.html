@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+html_content = '''<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
@@ -709,7 +709,7 @@
 
   function getSentences(content) {
     if(!content) return [];
-    return content.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    return content.split('\\n').map(s => s.trim()).filter(s => s.length > 0);
   }
 
   // --- 進入默書詳情頁面 (相片1) ---
@@ -956,7 +956,7 @@
 
   function shareCurrentDictation() {
     if(!currentDictation) return;
-    const textData = `【默書內容：${currentDictation.title}】\n` + currentDictation.content;
+    const textData = `【默書內容：${currentDictation.title}】\\n` + currentDictation.content;
     
     if(navigator.share) {
       navigator.share({
@@ -1026,28 +1026,28 @@
   // --- 文字處理工具 ---
   function filterNumbers() {
     let text = document.getElementById('editContent').value;
-    text = text.replace(/^[\s]*([0-9一二三四五六七八九十]+[\.\)、、\s]+|\([0-9]+\)[\s]*)/gm, '');
+    text = text.replace(/^[\\s]*([0-9一二三四五六七八九十]+[\\.\\)、、\\s]+|\\([0-9]+\\)[\\s]*)/gm, '');
     document.getElementById('editContent').value = text;
   }
 
   function filterPinyin() {
     let text = document.getElementById('editContent').value;
-    text = text.replace(/\([a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+\)/g, '');
-    text = text.replace(/（[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+）/g, '');
+    text = text.replace(/\\([a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\\s]+\\)/g, '');
+    text = text.replace(/（[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\\s]+）/g, '');
     text = text.replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/g, '');
     document.getElementById('editContent').value = text;
   }
 
   function smartSegment() {
     let text = document.getElementById('editContent').value;
-    const sentences = text.split(/([。！？!?\n]+)/).filter(s => s.trim().length > 0);
+    const sentences = text.split(/([。！？!?\\n]+)/).filter(s => s.trim().length > 0);
     let result = [];
     for(let i = 0; i < sentences.length; i += 2) {
       let sentence = sentences[i];
       let punc = sentences[i+1] || '';
       if(sentence.trim()) result.push((sentence + punc).trim());
     }
-    document.getElementById('editContent').value = result.join('\n');
+    document.getElementById('editContent').value = result.join('\\n');
   }
 
   // --- OCR / Crop 邏輯 ---
@@ -1099,7 +1099,7 @@
     
     try {
       const result = await Tesseract.recognize(croppedCanvas, 'chi_tra+eng');
-      const text = result.data.text.replace(/\n\s*\n/g, '\n').trim();
+      const text = result.data.text.replace(/\\n\\s*\\n/g, '\\n').trim();
       document.getElementById('editContent').value = text;
       statusText.innerText = "✅ OCR 辨識成功！";
     } catch(err) {
@@ -1141,8 +1141,8 @@
     if(isEnglish) {
       return text
         .replace(/,/g, ' comma ')
-        .replace(/\./g, ' period ')
-        .replace(/\?/g, ' question mark ')
+        .replace(/\\./g, ' period ')
+        .replace(/\\?/g, ' question mark ')
         .replace(/!/g, ' exclamation mark ');
     } else {
       return text
@@ -1218,8 +1218,14 @@
   }
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const escapeXml = unsafe => unsafe.replace(/[<>&'"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;',''':'&apos;','"':'&quot;'}[c]));
+  const escapeXml = unsafe => unsafe.replace(/[<>&'"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','\'':'&apos;','"':'&quot;'}[c]));
 </script>
 
 </body>
 </html>
+'''
+
+with open('index.html', 'w', encoding='utf-8') as f:
+    f.write(html_content)
+
+print("index.html created successfully!")
