@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>默書小助手 V7</title>
+  <title>默書小助手 V8 最終版</title>
 
   <!-- 引入 Tesseract.js (OCR), Cropper.js (裁切), PDF.js (PDF 渲染) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -125,7 +125,6 @@
       background-color: #fff;
     }
     
-    /* 加大默書內容框 */
     textarea#editContent {
       height: 260px;
       min-height: 220px;
@@ -188,7 +187,6 @@
       box-shadow: 0 4px 12px rgba(255, 170, 0, 0.35);
     }
 
-    /* 溫習模式綠色膠囊按鈕 */
     .mode-pill-btn {
       background: #28a745;
       color: white;
@@ -209,7 +207,6 @@
       font-size: 13px;
     }
 
-    /* 播放設定摘要卡 */
     .settings-summary-card {
       background: #f8f9fa;
       border-radius: 14px;
@@ -225,7 +222,6 @@
     .settings-summary-tag { background: #ffe8cc; color: #d97706; font-size: 11px; padding: 2px 6px; border-radius: 6px; font-weight: normal; }
     .settings-summary-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
 
-    /* 默書內容卡片列表 */
     .sentence-card-list { display: flex; flex-direction: column; gap: 10px; }
     .sentence-card {
       background: #ffffff;
@@ -259,7 +255,6 @@
       margin-top: 2px;
     }
     
-    /* 當前播放高亮句子 */
     .sentence-card.active {
       background: var(--primary);
       color: #ffffff;
@@ -336,10 +331,8 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
 
-    /* Cropper Modal */
     .cropper-container-box { max-height: 60vh; overflow: hidden; margin-bottom: 15px; }
 
-    /* 多功能選單 */
     .dropdown-menu {
       position: absolute;
       right: 16px;
@@ -367,7 +360,6 @@
     }
     .dropdown-item:hover, .dropdown-item:active { background: #f8f9fa; }
 
-    /* 模糊/隱藏文字效果 */
     .blur-text {
       filter: blur(8px);
       user-select: none;
@@ -405,16 +397,13 @@
       </div>
     </div>
 
-    <!-- 頂部播放控制區 -->
     <div style="text-align: center; margin-top: 10px;">
       <div class="play-controls-bar">
         <button class="btn-circle" onclick="prevSentence()" title="上一句">⏮</button>
-        <!-- 播放/暫停按鈕 -->
         <button class="btn-circle btn-circle-main" id="mainPlayBtn" onclick="togglePlayPause()" title="播放/暫停">▶</button>
         <button class="btn-circle" onclick="nextSentence()" title="下一句">⏭</button>
       </div>
       
-      <!-- 加入了自動模式狀態顯示文字 -->
       <div id="playStatus" style="font-size: 15px; color: var(--primary); font-weight: bold; min-height: 22px; margin-bottom: 12px;"></div>
 
       <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
@@ -425,7 +414,6 @@
       </div>
     </div>
 
-    <!-- 播放設定摘要卡 -->
     <div class="settings-summary-card" onclick="openSettingsModal()" style="margin-top: 20px;">
       <div>
         <div class="settings-summary-title">
@@ -439,7 +427,6 @@
       <div style="color: #ccc; font-size: 18px;">❯</div>
     </div>
 
-    <!-- 默書內容句子卡片列表 -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
       <h3 style="margin: 0; font-size: 18px;">默書內容</h3>
       <div style="font-size: 13px; color: var(--primary); cursor: pointer;" onclick="toggleHideText()">
@@ -537,17 +524,11 @@
   <div id="settings-screen" class="page">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <button class="header-btn" onclick="showPage('home-screen')">❮</button>
-      <h2>⚙️ 系統 API 設定</h2>
+      <h2>⚙️ 系統設定</h2>
       <div style="width: 30px;"></div>
     </div>
 
     <div class="card" style="margin-top: 15px;">
-      <label>Azure API Key (KEY 1):</label>
-      <input type="password" id="apiKey" placeholder="貼上 Key 1" onchange="saveConfig()">
-      
-      <label>Azure Region (地區):</label>
-      <input type="text" id="apiRegion" placeholder="例如: eastasia" value="eastasia" onchange="saveConfig()">
-
       <label>家長解鎖密碼 (4位數):</label>
       <input type="password" id="parentPin" placeholder="預設: 1234" value="1234" onchange="saveConfig()">
 
@@ -585,7 +566,7 @@
 
       <label>播放模式：</label>
       <select id="playMode" onchange="toggleAutoSettingsDisplay(); savePlaySettings();">
-        <option value="manual">手動模式 (按鍵跳下一句)</option>
+        <option value="manual">手提模式 (按鍵跳下一句)</option>
         <option value="auto">自動默書 (定時朗讀)</option>
       </select>
 
@@ -647,6 +628,13 @@
 
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
+  // ==========================================
+  // ⚙️ 系統核心設定 (已填入你的 Azure Key)
+  // ==========================================
+  const AZURE_API_KEY = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS"; 
+  const AZURE_REGION = "eastasia";
+  // ==========================================
+
   let dictations = JSON.parse(localStorage.getItem('dictations')) || [];
   let currentDictation = null;   
   let activeSentenceIndices = []; 
@@ -656,7 +644,6 @@
   let playAudio = null;
   let currentAudioResolve = null;
 
-  // 用於在自動模式中強制跳轉的手動控制變數
   let forceNextInAuto = false;
   let forcePrevInAuto = false;
 
@@ -673,15 +660,11 @@
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
   window.onload = () => {
-    document.getElementById('apiKey').value = localStorage.getItem('azure_tts_key') || '';
-    document.getElementById('apiRegion').value = localStorage.getItem('azure_tts_region') || 'eastasia';
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
     renderList();
   };
 
   function saveConfig() {
-    localStorage.setItem('azure_tts_key', document.getElementById('apiKey').value.trim());
-    localStorage.setItem('azure_tts_region', document.getElementById('apiRegion').value.trim());
     localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
   }
 
@@ -804,7 +787,6 @@
   function prevSentence() {
     if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) {
-      // 自動模式下發送手動跳轉訊號並截斷當前語音/等待
       forcePrevInAuto = true;
       stopAudio();
       return;
@@ -820,7 +802,6 @@
   function nextSentence() {
     if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) {
-      // 自動模式下發送手動跳轉訊號並截斷當前語音/等待
       forceNextInAuto = true;
       stopAudio();
       return;
@@ -888,12 +869,10 @@
     const delay = parseInt(document.getElementById('setupDelay').value) || 5;
 
     while (isPlayingAuto && currentPlayingIndex < activeSentenceIndices.length) {
-      // 重置手動跳轉標記
       forceNextInAuto = false;
       forcePrevInAuto = false;
       updateDetailUI();
 
-      // 1. 處理重複朗讀
       for (let r = 0; r < repeats; r++) {
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
         
@@ -903,13 +882,12 @@
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
 
         if (r < repeats - 1) {
-          await sleep(1200); // 兩次朗讀之間的微小停頓
+          await sleep(1200); 
         }
       }
 
       if (!isPlayingAuto) break;
 
-      // 如果使用者在朗讀中點擊了 下一句/上一句，跳過等待階段直接進入新回合
       if (forceNextInAuto) {
         if (currentPlayingIndex < activeSentenceIndices.length - 1) { currentPlayingIndex++; } 
         else { isPlayingAuto = false; updatePlayBtnUI(false); document.getElementById('playStatus').innerText = '🎉 默書播放完畢！'; break; }
@@ -921,7 +899,6 @@
         continue;
       }
 
-      // 2. 處理句間停頓倒數
       if (currentPlayingIndex < activeSentenceIndices.length - 1) {
         let waited = 0;
         let totalWaitMs = delay * 1000;
@@ -935,7 +912,6 @@
         
         if (!isPlayingAuto) break;
         
-        // 如果在倒數時點擊了跳轉按鈕
         if (forceNextInAuto) { currentPlayingIndex++; continue; }
         if (forcePrevInAuto) { 
             if(currentPlayingIndex > 0) currentPlayingIndex--; 
@@ -977,16 +953,15 @@
         return;
       }
 
-      const apiKey = localStorage.getItem('azure_tts_key');
-      const region = localStorage.getItem('azure_tts_region') || 'eastasia';
+      const apiKey = AZURE_API_KEY;
+      const region = AZURE_REGION;
       const speed = document.getElementById('setupSpeed').value;
       const accent = document.getElementById('voiceAccent').value;
       const gender = document.getElementById('voiceGender').value;
       const readPunc = document.getElementById('readPunctuation').checked;
 
-      if (!apiKey) {
-        alert('請先點擊首頁⚙️設定 Azure API Key！');
-        showPage('settings-screen');
+      if (!apiKey || apiKey.includes('請在這裡貼上')) {
+        alert('API KEY 未設定或錯誤，請重新檢查檔案原始碼！');
         if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         return;
       }
@@ -1035,7 +1010,6 @@
     });
   }
 
-  // 處理標點符號發音 (英文句號替換為 full stop)
   function transformPunctuation(text, accent) {
     const isEnglish = accent.startsWith('en');
     if (isEnglish) {
@@ -1189,7 +1163,6 @@
     openDetailScreen(id ? parseInt(id) : dictations[0].id);
   }
 
-  // --- 文字處理工具 ---
   function filterNumbers() {
     let text = document.getElementById('editContent').value;
     text = text.replace(/^[\s]*([0-9一二三四五六七八九十]+[\.\)、、\s]+|\([0-9]+\)[\s]*)/gm, '');
@@ -1216,7 +1189,6 @@
     document.getElementById('editContent').value = result.join('\n');
   }
 
-  // --- OCR / Crop ---
   async function handleFileUpload(e) {
     const file = e.target.files[0];
     if(!file) return;
@@ -1275,7 +1247,6 @@
     }
   }
 
-  // --- 播放設定 Modal ---
   function openSettingsModal() {
     document.getElementById('settingsModal').classList.add('active');
     toggleAutoSettingsDisplay();
@@ -1291,7 +1262,19 @@
   function savePlaySettings() { updateDetailUI(); }
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const escapeXml = unsafe => unsafe.replace(/[<>&'"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','\'':'&apos;','"':'&quot;'}[c]));
+  
+  function escapeXml(unsafe) {
+    return unsafe.replace(/[<>&'"]/g, function(c) {
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case "'": return '&apos;';
+        case '"': return '&quot;';
+      }
+      return c;
+    });
+  }
 </script>
 
 </body>
