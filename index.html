@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>默書小助手 V5</title>
+  <title>默書小助手 V6</title>
 
   <!-- 引入 Tesseract.js (OCR), Cropper.js (裁切), PDF.js (PDF 渲染) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -125,7 +125,7 @@
       background-color: #fff;
     }
     
-    /* 1. 加大默書內容框 */
+    /* 加大默書內容框 */
     textarea#editContent {
       height: 260px;
       min-height: 220px;
@@ -153,7 +153,7 @@
     .dictation-item-title { font-size: 17px; font-weight: 700; color: #111; cursor: pointer; flex: 1; }
     .dictation-item-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
-    /* --- 相片1 風格：默書詳情/播放頁面 --- */
+    /* --- 播放與詳情頁面 --- */
     .play-controls-bar {
       display: flex;
       align-items: center;
@@ -173,6 +173,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      transition: background 0.2s;
     }
     .btn-circle-main {
       width: 68px;
@@ -181,6 +182,10 @@
       color: white;
       font-size: 26px;
       box-shadow: 0 4px 12px rgba(0, 102, 255, 0.35);
+    }
+    .btn-circle-main.playing {
+      background: #ffaa00; /* 播放中暫停按鈕變為醒目的橘黃色 */
+      box-shadow: 0 4px 12px rgba(255, 170, 0, 0.35);
     }
 
     /* 溫習模式綠色膠囊按鈕 */
@@ -220,7 +225,7 @@
     .settings-summary-tag { background: #ffe8cc; color: #d97706; font-size: 11px; padding: 2px 6px; border-radius: 6px; font-weight: normal; }
     .settings-summary-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
 
-    /* 默書內容卡片列表 (相片1) */
+    /* 默書內容卡片列表 */
     .sentence-card-list { display: flex; flex-direction: column; gap: 10px; }
     .sentence-card {
       background: #ffffff;
@@ -228,7 +233,7 @@
       border-radius: 14px;
       padding: 14px 16px;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 14px;
       cursor: pointer;
       transition: all 0.2s;
@@ -238,18 +243,24 @@
       font-size: 16px;
       font-weight: bold;
       min-width: 24px;
+      margin-top: 2px;
     }
     .sentence-text {
       flex: 1;
       font-size: 17px;
-      line-height: 1.4;
+      line-height: 1.5;
       font-weight: 500;
+      /* 解決沒有分行的問題：確保支援原本內容的換行與自動折行 */
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     .sentence-audio-btn {
       color: #8c98a4;
       font-size: 18px;
+      margin-top: 2px;
     }
-    /* 當前播放高亮句子 (相片1藍底白字效果) */
+    
+    /* 當前播放高亮句子 */
     .sentence-card.active {
       background: var(--primary);
       color: #ffffff;
@@ -262,7 +273,7 @@
       color: #ffffff;
     }
 
-    /* --- 相片2 風格：今日練習 / 句子勾選介面 --- */
+    /* --- 句子勾選介面 --- */
     .selection-header-tools {
       display: flex;
       align-items: center;
@@ -279,7 +290,7 @@
       border-bottom: 1px solid #f0f0f0;
       padding: 14px 8px;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
       cursor: pointer;
     }
@@ -301,6 +312,7 @@
       height: 22px;
       accent-color: var(--primary);
       cursor: pointer;
+      margin-top: 3px;
     }
 
     /* Modal 彈窗 (通用) */
@@ -328,7 +340,7 @@
     /* Cropper Modal */
     .cropper-container-box { max-height: 60vh; overflow: hidden; margin-bottom: 15px; }
 
-    /* 多功能選單 (右上角點擊) */
+    /* 多功能選單 */
     .dropdown-menu {
       position: absolute;
       right: 16px;
@@ -380,14 +392,13 @@
     </button>
   </div>
 
-  <!-- ==================== 2. 默書詳情與播放頁面 (相片1) ==================== -->
+  <!-- ==================== 2. 默書詳情與播放頁面 ==================== -->
   <div id="detail-screen" class="page">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <button class="header-btn" onclick="showPage('home-screen')">❮</button>
       <h2 id="detailTitle">默書詳情</h2>
       <button class="header-btn" onclick="toggleHeaderMenu()">⋮</button>
 
-      <!-- 右上角下拉選單 (編輯/分享) -->
       <div id="headerDropdown" class="dropdown-menu">
         <div class="dropdown-item" onclick="editCurrentDictation()">✏️ 編輯默書</div>
         <div class="dropdown-item" onclick="shareCurrentDictation()">📤 分享默書</div>
@@ -395,24 +406,24 @@
       </div>
     </div>
 
-    <!-- 頂部播放控制區 (相片1風格) -->
+    <!-- 頂部播放控制區 -->
     <div style="text-align: center; margin-top: 10px;">
       <div class="play-controls-bar">
         <button class="btn-circle" onclick="prevSentence()" title="上一句">⏮</button>
+        <!-- 播放/暫停按鈕 (新增動態狀態切換) -->
         <button class="btn-circle btn-circle-main" id="mainPlayBtn" onclick="togglePlayPause()" title="播放/暫停">▶</button>
         <button class="btn-circle" onclick="nextSentence()" title="下一句">⏭</button>
       </div>
 
-      <!-- 綠色溫習模式按鈕 (點擊進入句子選擇相片2) -->
       <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
         <div class="mode-pill-btn" onclick="openSentenceSelection()">
           🎮 溫習模式 <span class="mode-pill-badge" id="selectedCountBadge">0/0</span>
         </div>
-        <button class="btn-circle" style="width:42px; height:42px; font-size:16px;" onclick="toggleAudioPreviewCurrent()" title="試聽目前句">🎙️</button>
+        <button class="btn-circle" style="width:42px; height:42px; font-size:16px;" onclick="playCurrentSentence()" title="試聽目前句">🎙️</button>
       </div>
     </div>
 
-    <!-- 播放設定摘要卡 (點擊可彈出設定) -->
+    <!-- 播放設定摘要卡 -->
     <div class="settings-summary-card" onclick="openSettingsModal()" style="margin-top: 20px;">
       <div>
         <div class="settings-summary-title">
@@ -426,7 +437,7 @@
       <div style="color: #ccc; font-size: 18px;">❯</div>
     </div>
 
-    <!-- 默書內容句子卡片列表 (相片1風格) -->
+    <!-- 默書內容句子卡片列表 -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
       <h3 style="margin: 0; font-size: 18px;">默書內容</h3>
       <div style="font-size: 13px; color: var(--primary); cursor: pointer;" onclick="toggleHideText()">
@@ -437,7 +448,7 @@
     <div class="sentence-card-list" id="sentenceCardList"></div>
   </div>
 
-  <!-- ==================== 3. 句子勾選頁面 (相片2 今日練習) ==================== -->
+  <!-- ==================== 3. 句子勾選頁面 ==================== -->
   <div id="select-screen" class="page">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <button class="header-btn" onclick="cancelSentenceSelection()">✕</button>
@@ -452,17 +463,14 @@
       ⓘ 勾選今天要溫習的內容，只播放勾選項目
     </div>
 
-    <!-- 工具欄：全選 / 取消全選 / 隨機選 -->
     <div class="selection-header-tools">
       <span onclick="selectAllSentences(true)">全選</span>
       <span onclick="selectAllSentences(false)">取消全選</span>
       <span onclick="selectRandomSentences(3)">🔀 隨機選3項</span>
     </div>
 
-    <!-- 勾選列表 (相片2風格) -->
     <div id="selectListContainer"></div>
 
-    <!-- 底部固定按鈕 -->
     <div style="margin-top: 25px; margin-bottom: 30px; text-align: center;">
       <button class="btn btn-primary btn-block" id="startPracticeBtn" onclick="confirmSentenceSelection()" style="padding: 15px; font-size: 17px;">
         開始練習 (0 項)
@@ -486,7 +494,7 @@
     <div class="row">
       <div>
         <label>默書標題：</label>
-        <input type="text" id="editTitle" placeholder="例如：中文第十課 或 2026-09-21">
+        <input type="text" id="editTitle" placeholder="例如：中文第十課">
       </div>
       <div>
         <label>主要語言：</label>
@@ -512,9 +520,8 @@
       <button class="btn btn-secondary btn-sm" onclick="smartSegment()">✂️ 智能分段 (按標點拆分)</button>
     </div>
 
-    <!-- 1. 加大默書內容框 -->
     <label>默書內容 (每行代表一段或一個詞語)：</label>
-    <textarea id="editContent" placeholder="請在此輸入或貼上默書內容...&#10;每行一句或一個詞語"></textarea>
+    <textarea id="editContent" placeholder="請在此輸入或貼上默書內容...&#10;如果是一整段文字，可點擊上方「智能分段」自動換行拆分"></textarea>
     
     <p id="ocrStatus" style="color: #666; font-size: 13px; margin: 0 0 12px 0;"></p>
 
@@ -640,11 +647,15 @@
 <script>
   // 資料狀態
   let dictations = JSON.parse(localStorage.getItem('dictations')) || [];
-  let currentDictation = null;   // 當前選中的默書物件
-  let activeSentenceIndices = []; // 目前溫習模式選中的句子索引陣列 [0, 1, 2...]
-  let currentPlayingIndex = 0;   // 目前在 activeSentenceIndices 中的位置
+  let currentDictation = null;   
+  let activeSentenceIndices = []; 
+  let currentPlayingIndex = 0;   
+  
+  // 播放與暫停控制狀態
   let isPlayingAuto = false;
   let playAudio = null;
+  let currentAudioResolve = null;
+
   let cropper = null;
   let isTextHidden = false;
 
@@ -656,7 +667,6 @@
     'en-GB': { female: 'en-GB-SoniaNeural', male: 'en-GB-RyanNeural' }
   };
 
-  // PDF.js Worker 設定
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
   window.onload = () => {
@@ -676,14 +686,22 @@
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
-    stopAudio();
+    
+    // 切換頁面時自動暫停/停止播放
+    if (isPlayingAuto) togglePlayPause();
+    else stopAudio();
   }
 
   function toggleHeaderMenu() {
     document.getElementById('headerDropdown').classList.toggle('active');
   }
 
-  // --- 首頁清單渲染 ---
+  // 取得切割句子 (支援 \r\n 或 \n，增強相容性)
+  function getSentences(content) {
+    if(!content) return [];
+    return content.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+  }
+
   function renderList() {
     const listDiv = document.getElementById('dictation-list');
     listDiv.innerHTML = '';
@@ -707,56 +725,43 @@
     });
   }
 
-  function getSentences(content) {
-    if(!content) return [];
-    return content.split('\\n').map(s => s.trim()).filter(s => s.length > 0);
-  }
-
-  // --- 進入默書詳情頁面 (相片1) ---
   function openDetailScreen(id) {
     currentDictation = dictations.find(d => d.id === id);
     if(!currentDictation) return;
 
     document.getElementById('detailTitle').innerText = currentDictation.title;
-    
-    // 預設全選句子
     const sentences = getSentences(currentDictation.content);
     activeSentenceIndices = sentences.map((_, i) => i);
     currentPlayingIndex = 0;
 
-    // 依據語言預設語音設定
     if(currentDictation.lang === 'en') {
       document.getElementById('voiceAccent').value = 'en-US';
     } else {
       document.getElementById('voiceAccent').value = 'zh-HK';
     }
 
+    updatePlayBtnUI(false);
     updateDetailUI();
     showPage('detail-screen');
   }
 
   function updateDetailUI() {
     if(!currentDictation) return;
-
     const sentences = getSentences(currentDictation.content);
     
-    // 更新溫習模式徽章 (如 6/6)
     document.getElementById('selectedCountBadge').innerText = `${activeSentenceIndices.length}/${sentences.length}`;
 
-    // 更新播放設定摘要文字
     const accentText = document.getElementById('voiceAccent').selectedOptions[0].text.split(' ')[0];
     const speed = document.getElementById('setupSpeed').value;
     const modeText = document.getElementById('playMode').value === 'auto' ? '自動模式' : '手動模式';
     document.getElementById('settingsSummaryText').innerText = `${modeText} | ${accentText} | ${speed}x速`;
 
-    // 渲染句子列表 (相片1風格)
     const container = document.getElementById('sentenceCardList');
     container.innerHTML = '';
 
     sentences.forEach((sText, idx) => {
-      // 判斷是否為溫習模式中被選取的句子，若不是則隱藏或不顯著
       const isSelected = activeSentenceIndices.includes(idx);
-      if(!isSelected) return; // 只顯示被選取的句子
+      if(!isSelected) return; 
 
       const activePos = activeSentenceIndices.indexOf(idx);
       const isActive = (activePos === currentPlayingIndex);
@@ -787,6 +792,7 @@
   }
 
   function selectSentenceToPlay(pos) {
+    if (isPlayingAuto) togglePlayPause(); // 停止自動播放
     currentPlayingIndex = pos;
     updateDetailUI();
     playCurrentSentence();
@@ -794,41 +800,78 @@
 
   function prevSentence() {
     if(activeSentenceIndices.length === 0) return;
-    if(currentPlayingIndex > 0) {
-      currentPlayingIndex--;
-    } else {
-      currentPlayingIndex = activeSentenceIndices.length - 1;
-    }
+    if (isPlayingAuto) togglePlayPause();
+    
+    if(currentPlayingIndex > 0) currentPlayingIndex--;
+    else currentPlayingIndex = activeSentenceIndices.length - 1;
+    
     updateDetailUI();
     playCurrentSentence();
   }
 
   function nextSentence() {
     if(activeSentenceIndices.length === 0) return;
-    if(currentPlayingIndex < activeSentenceIndices.length - 1) {
-      currentPlayingIndex++;
-    } else {
-      currentPlayingIndex = 0;
-    }
+    if (isPlayingAuto) togglePlayPause();
+
+    if(currentPlayingIndex < activeSentenceIndices.length - 1) currentPlayingIndex++;
+    else currentPlayingIndex = 0;
+    
     updateDetailUI();
     playCurrentSentence();
   }
 
+  // --- 音訊控制核心邏輯 (解決暫停鍵與中斷問題) ---
+  
+  function updatePlayBtnUI(isPlaying) {
+    const btn = document.getElementById('mainPlayBtn');
+    if (isPlaying) {
+      btn.innerHTML = '⏸';
+      btn.classList.add('playing');
+    } else {
+      btn.innerHTML = '▶';
+      btn.classList.remove('playing');
+    }
+  }
+
+  function stopAudio() {
+    if (playAudio) {
+      playAudio.pause();
+      playAudio = null;
+    }
+    // 強制解析當前的 Promise，防止自動循環卡住
+    if (currentAudioResolve) {
+      currentAudioResolve();
+      currentAudioResolve = null;
+    }
+  }
+
   function togglePlayPause() {
     const playMode = document.getElementById('playMode').value;
-    if(playMode === 'auto') {
-      if(isPlayingAuto) {
+    
+    if (playMode === 'auto') {
+      if (isPlayingAuto) {
+        // 暫停自動播放
         isPlayingAuto = false;
         stopAudio();
-        document.getElementById('mainPlayBtn').innerText = '▶';
+        updatePlayBtnUI(false);
       } else {
+        // 開始自動播放
+        if(activeSentenceIndices.length === 0) return;
         isPlayingAuto = true;
-        document.getElementById('mainPlayBtn').innerText = '⏸';
+        updatePlayBtnUI(true);
         runAutoPlayLoop();
       }
     } else {
-      // 手動模式點擊直接播放當前句
-      playCurrentSentence();
+      // 手動模式
+      if (playAudio && !playAudio.paused) {
+        // 如果正在發聲，則暫停/停止它
+        stopAudio();
+        updatePlayBtnUI(false);
+      } else {
+        // 否則播放當前句子
+        if(activeSentenceIndices.length === 0) return;
+        playCurrentSentence();
+      }
     }
   }
 
@@ -836,42 +879,124 @@
     const repeats = parseInt(document.getElementById('setupRepeat').value) || 2;
     const delay = parseInt(document.getElementById('setupDelay').value) || 5;
 
-    while(isPlayingAuto && currentPlayingIndex < activeSentenceIndices.length) {
+    while (isPlayingAuto && currentPlayingIndex < activeSentenceIndices.length) {
       updateDetailUI();
 
-      for(let r = 0; r < repeats; r++) {
-        if(!isPlayingAuto) break;
+      for (let r = 0; r < repeats; r++) {
+        if (!isPlayingAuto) break;
         await playCurrentSentence();
-        if(r < repeats - 1 && isPlayingAuto) await sleep(1200);
+        if (r < repeats - 1 && isPlayingAuto) await sleep(1200);
       }
 
-      if(!isPlayingAuto) break;
+      if (!isPlayingAuto) break;
 
-      if(currentPlayingIndex < activeSentenceIndices.length - 1) {
-        await sleep(delay * 1000);
-        currentPlayingIndex++;
+      if (currentPlayingIndex < activeSentenceIndices.length - 1) {
+        // 在等待間隔中，也要檢查是否被中斷暫停
+        let waited = 0;
+        while(waited < delay * 1000 && isPlayingAuto) {
+            await sleep(200);
+            waited += 200;
+        }
+        if (isPlayingAuto) currentPlayingIndex++;
       } else {
         isPlayingAuto = false;
-        document.getElementById('mainPlayBtn').innerText = '▶';
+        updatePlayBtnUI(false);
         alert('🎉 默書播放完畢！');
         break;
       }
     }
   }
 
-  function toggleAudioPreviewCurrent() {
-    playCurrentSentence();
+  function playCurrentSentence() {
+    return new Promise(async (resolve) => {
+      stopAudio(); 
+      currentAudioResolve = resolve;
+
+      if (!currentDictation || activeSentenceIndices.length === 0) {
+        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+        return;
+      }
+
+      const rawSentences = getSentences(currentDictation.content);
+      const realIndex = activeSentenceIndices[currentPlayingIndex];
+      let sentenceText = rawSentences[realIndex];
+
+      if (!sentenceText) {
+        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+        return;
+      }
+
+      const apiKey = localStorage.getItem('azure_tts_key');
+      const region = localStorage.getItem('azure_tts_region') || 'eastasia';
+      const speed = document.getElementById('setupSpeed').value;
+      const accent = document.getElementById('voiceAccent').value;
+      const gender = document.getElementById('voiceGender').value;
+      const readPunc = document.getElementById('readPunctuation').checked;
+
+      if (!apiKey) {
+        alert('請先點擊首頁⚙️設定 Azure API Key！');
+        showPage('settings-screen');
+        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+        return;
+      }
+
+      const voice = voiceMap[accent][gender];
+      if (readPunc) sentenceText = transformPunctuation(sentenceText, accent);
+
+      const ssml = `<speak version='1.0' xml:lang='${accent}'><voice name='${voice}'><prosody rate='${speed}'>${escapeXml(sentenceText)}</prosody></voice></speak>`;
+
+      try {
+        const response = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+          method: 'POST',
+          headers: {
+            'Ocp-Apim-Subscription-Key': apiKey,
+            'Content-Type': 'application/ssml+xml',
+            'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
+          },
+          body: ssml
+        });
+
+        if (!response.ok) throw new Error('TTS Fetch Error');
+
+        const blob = await response.blob();
+        playAudio = new Audio(URL.createObjectURL(blob));
+        
+        if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(true);
+
+        playAudio.onended = () => {
+          if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(false);
+          if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+        };
+        playAudio.onerror = () => {
+          if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(false);
+          if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+        };
+        
+        playAudio.play();
+      } catch(err) {
+        console.error(err);
+        if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(false);
+        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+      }
+    });
   }
 
-  // --- 相片2 句子勾選介面 (今日練習) ---
+  function transformPunctuation(text, accent) {
+    const isEnglish = accent.startsWith('en');
+    if (isEnglish) {
+      return text.replace(/,/g, ' comma ').replace(/\./g, ' period ').replace(/\?/g, ' question mark ').replace(/!/g, ' exclamation mark ');
+    } else {
+      return text.replace(/，/g, '，逗號，').replace(/。/g, '，句號，').replace(/！/g, '，感嘆號，').replace(/？/g, '，問號，').replace(/；/g, '，分號，').replace(/：/g, '，冒號，');
+    }
+  }
+
+  // --- 句子勾選頁面 (今日練習) ---
   let tempSelectedIndices = [];
 
   function openSentenceSelection() {
     if(!currentDictation) return;
-
     const sentences = getSentences(currentDictation.content);
     tempSelectedIndices = [...activeSentenceIndices];
-
     renderSelectionList();
     showPage('select-screen');
   }
@@ -889,7 +1014,7 @@
       container.innerHTML += `
         <div class="select-item-card" onclick="toggleSelectSentence(${idx})">
           <div class="select-num-badge">${idx + 1}</div>
-          <div style="flex:1; font-size:16px;">${escapeXml(sText)}</div>
+          <div style="flex:1; font-size:16px; white-space:pre-wrap; word-break:break-word; line-height:1.5;">${escapeXml(sText)}</div>
           <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectSentence(${idx});">
         </div>
       `;
@@ -897,29 +1022,21 @@
   }
 
   function toggleSelectSentence(idx) {
-    if(tempSelectedIndices.includes(idx)) {
-      tempSelectedIndices = tempSelectedIndices.filter(i => i !== idx);
-    } else {
-      tempSelectedIndices.push(idx);
-      tempSelectedIndices.sort((a,b) => a - b);
-    }
+    if(tempSelectedIndices.includes(idx)) tempSelectedIndices = tempSelectedIndices.filter(i => i !== idx);
+    else { tempSelectedIndices.push(idx); tempSelectedIndices.sort((a,b) => a - b); }
     renderSelectionList();
   }
 
   function selectAllSentences(select) {
     const sentences = getSentences(currentDictation.content);
-    if(select) {
-      tempSelectedIndices = sentences.map((_, i) => i);
-    } else {
-      tempSelectedIndices = [];
-    }
+    if(select) tempSelectedIndices = sentences.map((_, i) => i);
+    else tempSelectedIndices = [];
     renderSelectionList();
   }
 
   function selectRandomSentences(count) {
     const sentences = getSentences(currentDictation.content);
     const indices = sentences.map((_, i) => i);
-    // 洗牌
     for (let i = indices.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [indices[i], indices[j]] = [indices[j], indices[i]];
@@ -929,26 +1046,17 @@
   }
 
   function confirmSentenceSelection() {
-    if(tempSelectedIndices.length === 0) {
-      alert('請至少勾選一個句子！');
-      return;
-    }
+    if(tempSelectedIndices.length === 0) { alert('請至少勾選一個句子！'); return; }
     activeSentenceIndices = [...tempSelectedIndices];
     currentPlayingIndex = 0;
     updateDetailUI();
     showPage('detail-screen');
   }
 
-  function cancelSentenceSelection() {
-    showPage('detail-screen');
-  }
+  function cancelSentenceSelection() { showPage('detail-screen'); }
+  function clearSelectionAndPlayAll() { selectAllSentences(true); confirmSentenceSelection(); }
 
-  function clearSelectionAndPlayAll() {
-    selectAllSentences(true);
-    confirmSentenceSelection();
-  }
-
-  // --- 右上角選單功能：編輯/分享/刪除 ---
+  // --- 右上角選單功能 ---
   function editCurrentDictation() {
     if(!currentDictation) return;
     openEditScreen(currentDictation.id);
@@ -956,16 +1064,12 @@
 
   function shareCurrentDictation() {
     if(!currentDictation) return;
-    const textData = `【默書內容：${currentDictation.title}】\\n` + currentDictation.content;
-    
+    const textData = `【默書內容：${currentDictation.title}】\n` + currentDictation.content;
     if(navigator.share) {
-      navigator.share({
-        title: currentDictation.title,
-        text: textData
-      }).catch(() => {});
+      navigator.share({ title: currentDictation.title, text: textData }).catch(() => {});
     } else {
       navigator.clipboard.writeText(textData).then(() => {
-        alert('📋 已複製默書內容到剪貼簿！可直接貼上分享給朋友。');
+        alert('📋 已複製默書內容到剪貼簿！');
       });
     }
   }
@@ -1004,12 +1108,9 @@
     const id = document.getElementById('editId').value;
     const title = document.getElementById('editTitle').value.trim();
     const lang = document.getElementById('editLang').value;
-    const content = document.getElementById('editContent').value.trim();
+    let content = document.getElementById('editContent').value.trim();
 
-    if(!title || !content) {
-      alert('請輸入標題與默書內容！');
-      return;
-    }
+    if(!title || !content) { alert('請輸入標題與默書內容！'); return; }
 
     if(id) {
       const index = dictations.findIndex(d => d.id === parseInt(id));
@@ -1026,31 +1127,31 @@
   // --- 文字處理工具 ---
   function filterNumbers() {
     let text = document.getElementById('editContent').value;
-    text = text.replace(/^[\\s]*([0-9一二三四五六七八九十]+[\\.\\)、、\\s]+|\\([0-9]+\\)[\\s]*)/gm, '');
+    text = text.replace(/^[\s]*([0-9一二三四五六七八九十]+[\.\)、、\s]+|\([0-9]+\)[\s]*)/gm, '');
     document.getElementById('editContent').value = text;
   }
 
   function filterPinyin() {
     let text = document.getElementById('editContent').value;
-    text = text.replace(/\\([a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\\s]+\\)/g, '');
-    text = text.replace(/（[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\\s]+）/g, '');
+    text = text.replace(/\([a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+\)/g, '');
+    text = text.replace(/（[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+）/g, '');
     text = text.replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/g, '');
     document.getElementById('editContent').value = text;
   }
 
   function smartSegment() {
     let text = document.getElementById('editContent').value;
-    const sentences = text.split(/([。！？!?\\n]+)/).filter(s => s.trim().length > 0);
+    const sentences = text.split(/([。！？!?\n]+)/).filter(s => s.trim().length > 0);
     let result = [];
     for(let i = 0; i < sentences.length; i += 2) {
       let sentence = sentences[i];
       let punc = sentences[i+1] || '';
       if(sentence.trim()) result.push((sentence + punc).trim());
     }
-    document.getElementById('editContent').value = result.join('\\n');
+    document.getElementById('editContent').value = result.join('\n');
   }
 
-  // --- OCR / Crop 邏輯 ---
+  // --- OCR / Crop ---
   async function handleFileUpload(e) {
     const file = e.target.files[0];
     if(!file) return;
@@ -1099,123 +1200,30 @@
     
     try {
       const result = await Tesseract.recognize(croppedCanvas, 'chi_tra+eng');
-      const text = result.data.text.replace(/\\n\\s*\\n/g, '\\n').trim();
+      const text = result.data.text.replace(/\n\s*\n/g, '\n').trim();
       document.getElementById('editContent').value = text;
-      statusText.innerText = "✅ OCR 辨識成功！";
+      smartSegment(); // OCR 後自動智能分段
+      statusText.innerText = "✅ OCR 辨識成功，並已自動分段！";
     } catch(err) {
       console.error(err);
       statusText.innerText = "❌ 辨識失敗，請重新嘗試。";
     }
   }
 
-  // --- 播放設定 Modal 邏輯 ---
+  // --- 播放設定 Modal ---
   function openSettingsModal() {
     document.getElementById('settingsModal').classList.add('active');
     toggleAutoSettingsDisplay();
   }
-
   function closeSettingsModal() {
     document.getElementById('settingsModal').classList.remove('active');
     updateDetailUI();
   }
-
   function toggleAutoSettingsDisplay() {
     const mode = document.getElementById('playMode').value;
     document.getElementById('autoSettingsBox').style.display = (mode === 'auto') ? 'flex' : 'none';
   }
-
-  function savePlaySettings() {
-    updateDetailUI();
-  }
-
-  // --- 語音朗讀 Core Engine ---
-  function stopAudio() {
-    if(playAudio) {
-      playAudio.pause();
-      playAudio = null;
-    }
-  }
-
-  function transformPunctuation(text, accent) {
-    const isEnglish = accent.startsWith('en');
-    if(isEnglish) {
-      return text
-        .replace(/,/g, ' comma ')
-        .replace(/\\./g, ' period ')
-        .replace(/\\?/g, ' question mark ')
-        .replace(/!/g, ' exclamation mark ');
-    } else {
-      return text
-        .replace(/，/g, '，逗號，')
-        .replace(/。/g, '，句號，')
-        .replace(/！/g, '，感嘆號，')
-        .replace(/？/g, '，問號，')
-        .replace(/；/g, '，分號，')
-        .replace(/：/g, '，冒號，');
-    }
-  }
-
-  function playCurrentSentence() {
-    return new Promise(async (resolve) => {
-      stopAudio();
-
-      if(!currentDictation || activeSentenceIndices.length === 0) {
-        resolve();
-        return;
-      }
-
-      const rawSentences = getSentences(currentDictation.content);
-      const realIndex = activeSentenceIndices[currentPlayingIndex];
-      let sentenceText = rawSentences[realIndex];
-
-      if(!sentenceText) { resolve(); return; }
-
-      const apiKey = localStorage.getItem('azure_tts_key');
-      const region = localStorage.getItem('azure_tts_region') || 'eastasia';
-      const speed = document.getElementById('setupSpeed').value;
-      const accent = document.getElementById('voiceAccent').value;
-      const gender = document.getElementById('voiceGender').value;
-      const readPunc = document.getElementById('readPunctuation').checked;
-
-      if(!apiKey) {
-        alert('請先點擊首頁⚙️設定 Azure API Key！');
-        showPage('settings-screen');
-        resolve();
-        return;
-      }
-
-      const voice = voiceMap[accent][gender];
-
-      if(readPunc) {
-        sentenceText = transformPunctuation(sentenceText, accent);
-      }
-
-      const ssml = `<speak version='1.0' xml:lang='${accent}'><voice name='${voice}'><prosody rate='${speed}'>${escapeXml(sentenceText)}</prosody></voice></speak>`;
-
-      try {
-        const response = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
-          method: 'POST',
-          headers: {
-            'Ocp-Apim-Subscription-Key': apiKey,
-            'Content-Type': 'application/ssml+xml',
-            'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
-          },
-          body: ssml
-        });
-
-        if(!response.ok) throw new Error('TTS Fetch Error');
-
-        const blob = await response.blob();
-        playAudio = new Audio(URL.createObjectURL(blob));
-        playAudio.onended = () => resolve();
-        playAudio.onerror = () => resolve();
-        playAudio.play();
-      } catch(err) {
-        console.error(err);
-        resolve();
-      }
-    });
-  }
+  function savePlaySettings() { updateDetailUI(); }
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const escapeXml = unsafe => unsafe.replace(/[<>&'"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','\'':'&apos;','"':'&quot;'}[c]));
@@ -1223,3 +1231,4 @@
 
 </body>
 </html>
+print("index.html successfully updated with Pause functionality and Line-break fixes!")
