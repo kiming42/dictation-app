@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>默書小助手 V6</title>
+  <title>默書小助手 V7</title>
 
   <!-- 引入 Tesseract.js (OCR), Cropper.js (裁切), PDF.js (PDF 渲染) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -184,7 +184,7 @@
       box-shadow: 0 4px 12px rgba(0, 102, 255, 0.35);
     }
     .btn-circle-main.playing {
-      background: #ffaa00; /* 播放中暫停按鈕變為醒目的橘黃色 */
+      background: #ffaa00; 
       box-shadow: 0 4px 12px rgba(255, 170, 0, 0.35);
     }
 
@@ -250,7 +250,6 @@
       font-size: 17px;
       line-height: 1.5;
       font-weight: 500;
-      /* 解決沒有分行的問題：確保支援原本內容的換行與自動折行 */
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -410,10 +409,13 @@
     <div style="text-align: center; margin-top: 10px;">
       <div class="play-controls-bar">
         <button class="btn-circle" onclick="prevSentence()" title="上一句">⏮</button>
-        <!-- 播放/暫停按鈕 (新增動態狀態切換) -->
+        <!-- 播放/暫停按鈕 -->
         <button class="btn-circle btn-circle-main" id="mainPlayBtn" onclick="togglePlayPause()" title="播放/暫停">▶</button>
         <button class="btn-circle" onclick="nextSentence()" title="下一句">⏭</button>
       </div>
+      
+      <!-- 加入了自動模式狀態顯示文字 -->
+      <div id="playStatus" style="font-size: 15px; color: var(--primary); font-weight: bold; min-height: 22px; margin-bottom: 12px;"></div>
 
       <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
         <div class="mode-pill-btn" onclick="openSentenceSelection()">
@@ -621,7 +623,7 @@
       <div style="margin-top: 15px; background: #f8f9fa; padding: 12px; border-radius: 10px;">
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
           <input type="checkbox" id="readPunctuation" style="width: auto; margin-right: 8px; transform: scale(1.2);" onchange="savePlaySettings()">
-          <label for="readPunctuation" style="margin: 0; cursor: pointer;">🗣️ 讀出標點符號 (逗號/句號)</label>
+          <label for="readPunctuation" style="margin: 0; cursor: pointer;">🗣️ 讀出標點符號 (英文: full stop)</label>
         </div>
       </div>
 
@@ -645,21 +647,22 @@
 
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
-  // 資料狀態
   let dictations = JSON.parse(localStorage.getItem('dictations')) || [];
   let currentDictation = null;   
   let activeSentenceIndices = []; 
   let currentPlayingIndex = 0;   
   
-  // 播放與暫停控制狀態
   let isPlayingAuto = false;
   let playAudio = null;
   let currentAudioResolve = null;
 
+  // 用於在自動模式中強制跳轉的手動控制變數
+  let forceNextInAuto = false;
+  let forcePrevInAuto = false;
+
   let cropper = null;
   let isTextHidden = false;
 
-  // Azure Neural 聲線對照表
   const voiceMap = {
     'zh-HK': { female: 'zh-HK-HiuGaaiNeural', male: 'zh-HK-WanLungNeural' },
     'zh-CN': { female: 'zh-CN-XiaoxiaoNeural', male: 'zh-CN-YunxiNeural' },
@@ -687,16 +690,15 @@
     document.getElementById(pageId).classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
     
-    // 切換頁面時自動暫停/停止播放
     if (isPlayingAuto) togglePlayPause();
     else stopAudio();
+    document.getElementById('playStatus').innerText = '';
   }
 
   function toggleHeaderMenu() {
     document.getElementById('headerDropdown').classList.toggle('active');
   }
 
-  // 取得切割句子 (支援 \r\n 或 \n，增強相容性)
   function getSentences(content) {
     if(!content) return [];
     return content.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
@@ -740,6 +742,7 @@
       document.getElementById('voiceAccent').value = 'zh-HK';
     }
 
+    document.getElementById('playStatus').innerText = '';
     updatePlayBtnUI(false);
     updateDetailUI();
     showPage('detail-screen');
@@ -792,7 +795,7 @@
   }
 
   function selectSentenceToPlay(pos) {
-    if (isPlayingAuto) togglePlayPause(); // 停止自動播放
+    if (isPlayingAuto) togglePlayPause(); 
     currentPlayingIndex = pos;
     updateDetailUI();
     playCurrentSentence();
@@ -800,7 +803,12 @@
 
   function prevSentence() {
     if(activeSentenceIndices.length === 0) return;
-    if (isPlayingAuto) togglePlayPause();
+    if (isPlayingAuto) {
+      // 自動模式下發送手動跳轉訊號並截斷當前語音/等待
+      forcePrevInAuto = true;
+      stopAudio();
+      return;
+    }
     
     if(currentPlayingIndex > 0) currentPlayingIndex--;
     else currentPlayingIndex = activeSentenceIndices.length - 1;
@@ -811,7 +819,12 @@
 
   function nextSentence() {
     if(activeSentenceIndices.length === 0) return;
-    if (isPlayingAuto) togglePlayPause();
+    if (isPlayingAuto) {
+      // 自動模式下發送手動跳轉訊號並截斷當前語音/等待
+      forceNextInAuto = true;
+      stopAudio();
+      return;
+    }
 
     if(currentPlayingIndex < activeSentenceIndices.length - 1) currentPlayingIndex++;
     else currentPlayingIndex = 0;
@@ -820,8 +833,6 @@
     playCurrentSentence();
   }
 
-  // --- 音訊控制核心邏輯 (解決暫停鍵與中斷問題) ---
-  
   function updatePlayBtnUI(isPlaying) {
     const btn = document.getElementById('mainPlayBtn');
     if (isPlaying) {
@@ -838,7 +849,6 @@
       playAudio.pause();
       playAudio = null;
     }
-    // 強制解析當前的 Promise，防止自動循環卡住
     if (currentAudioResolve) {
       currentAudioResolve();
       currentAudioResolve = null;
@@ -850,26 +860,24 @@
     
     if (playMode === 'auto') {
       if (isPlayingAuto) {
-        // 暫停自動播放
         isPlayingAuto = false;
         stopAudio();
         updatePlayBtnUI(false);
+        document.getElementById('playStatus').innerText = '⏸ 已暫停自動播放';
       } else {
-        // 開始自動播放
         if(activeSentenceIndices.length === 0) return;
         isPlayingAuto = true;
         updatePlayBtnUI(true);
         runAutoPlayLoop();
       }
     } else {
-      // 手動模式
       if (playAudio && !playAudio.paused) {
-        // 如果正在發聲，則暫停/停止它
         stopAudio();
         updatePlayBtnUI(false);
+        document.getElementById('playStatus').innerText = '⏸ 已暫停';
       } else {
-        // 否則播放當前句子
         if(activeSentenceIndices.length === 0) return;
+        document.getElementById('playStatus').innerText = '🔊 手動播放中';
         playCurrentSentence();
       }
     }
@@ -880,30 +888,73 @@
     const delay = parseInt(document.getElementById('setupDelay').value) || 5;
 
     while (isPlayingAuto && currentPlayingIndex < activeSentenceIndices.length) {
+      // 重置手動跳轉標記
+      forceNextInAuto = false;
+      forcePrevInAuto = false;
       updateDetailUI();
 
+      // 1. 處理重複朗讀
       for (let r = 0; r < repeats; r++) {
-        if (!isPlayingAuto) break;
+        if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
+        
+        document.getElementById('playStatus').innerText = `🔊 正在朗讀 (第 ${r + 1}/${repeats} 次)`;
         await playCurrentSentence();
-        if (r < repeats - 1 && isPlayingAuto) await sleep(1200);
+        
+        if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
+
+        if (r < repeats - 1) {
+          await sleep(1200); // 兩次朗讀之間的微小停頓
+        }
       }
 
       if (!isPlayingAuto) break;
 
+      // 如果使用者在朗讀中點擊了 下一句/上一句，跳過等待階段直接進入新回合
+      if (forceNextInAuto) {
+        if (currentPlayingIndex < activeSentenceIndices.length - 1) { currentPlayingIndex++; } 
+        else { isPlayingAuto = false; updatePlayBtnUI(false); document.getElementById('playStatus').innerText = '🎉 默書播放完畢！'; break; }
+        continue;
+      }
+      if (forcePrevInAuto) {
+        if (currentPlayingIndex > 0) { currentPlayingIndex--; } 
+        else { currentPlayingIndex = activeSentenceIndices.length - 1; }
+        continue;
+      }
+
+      // 2. 處理句間停頓倒數
       if (currentPlayingIndex < activeSentenceIndices.length - 1) {
-        // 在等待間隔中，也要檢查是否被中斷暫停
         let waited = 0;
-        while(waited < delay * 1000 && isPlayingAuto) {
-            await sleep(200);
-            waited += 200;
+        let totalWaitMs = delay * 1000;
+        
+        while (waited < totalWaitMs && isPlayingAuto && !forceNextInAuto && !forcePrevInAuto) {
+            let remaining = ((totalWaitMs - waited) / 1000).toFixed(1);
+            document.getElementById('playStatus').innerText = `✍️ 請書寫... 停頓倒數 ${remaining} 秒`;
+            await sleep(100);
+            waited += 100;
         }
-        if (isPlayingAuto) currentPlayingIndex++;
+        
+        if (!isPlayingAuto) break;
+        
+        // 如果在倒數時點擊了跳轉按鈕
+        if (forceNextInAuto) { currentPlayingIndex++; continue; }
+        if (forcePrevInAuto) { 
+            if(currentPlayingIndex > 0) currentPlayingIndex--; 
+            else currentPlayingIndex = activeSentenceIndices.length - 1; 
+            continue; 
+        }
+
+        currentPlayingIndex++;
       } else {
         isPlayingAuto = false;
         updatePlayBtnUI(false);
-        alert('🎉 默書播放完畢！');
+        document.getElementById('playStatus').innerText = '🎉 默書播放完畢！';
         break;
       }
+    }
+    
+    if (!isPlayingAuto && !document.getElementById('playStatus').innerText.includes('完畢')) {
+        updatePlayBtnUI(false);
+        document.getElementById('playStatus').innerText = '⏸ 已暫停';
     }
   }
 
@@ -964,7 +1015,10 @@
         if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(true);
 
         playAudio.onended = () => {
-          if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(false);
+          if (document.getElementById('playMode').value === 'manual') {
+              updatePlayBtnUI(false);
+              document.getElementById('playStatus').innerText = '準備就緒';
+          }
           if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         };
         playAudio.onerror = () => {
@@ -981,12 +1035,23 @@
     });
   }
 
+  // 處理標點符號發音 (英文句號替換為 full stop)
   function transformPunctuation(text, accent) {
     const isEnglish = accent.startsWith('en');
     if (isEnglish) {
-      return text.replace(/,/g, ' comma ').replace(/\./g, ' period ').replace(/\?/g, ' question mark ').replace(/!/g, ' exclamation mark ');
+      return text
+        .replace(/,/g, ' comma ')
+        .replace(/\./g, ' full stop ')
+        .replace(/\?/g, ' question mark ')
+        .replace(/!/g, ' exclamation mark ');
     } else {
-      return text.replace(/，/g, '，逗號，').replace(/。/g, '，句號，').replace(/！/g, '，感嘆號，').replace(/？/g, '，問號，').replace(/；/g, '，分號，').replace(/：/g, '，冒號，');
+      return text
+        .replace(/，/g, '，逗號，')
+        .replace(/。/g, '，句號，')
+        .replace(/！/g, '，感嘆號，')
+        .replace(/？/g, '，問號，')
+        .replace(/；/g, '，分號，')
+        .replace(/：/g, '，冒號，');
     }
   }
 
@@ -1202,7 +1267,7 @@
       const result = await Tesseract.recognize(croppedCanvas, 'chi_tra+eng');
       const text = result.data.text.replace(/\n\s*\n/g, '\n').trim();
       document.getElementById('editContent').value = text;
-      smartSegment(); // OCR 後自動智能分段
+      smartSegment(); 
       statusText.innerText = "✅ OCR 辨識成功，並已自動分段！";
     } catch(err) {
       console.error(err);
@@ -1231,4 +1296,4 @@
 
 </body>
 </html>
-print("index.html successfully updated with Pause functionality and Line-break fixes!")
+print("index.html successfully updated with Auto mode skip logic, timers, and full stop translation!")
