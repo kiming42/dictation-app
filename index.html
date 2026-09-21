@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>默書小助手 V10</title>
+  <title>默書小助手 V11</title>
 
-  <!-- 引入必要套件：OCR, 裁切, PDF 渲染, 以及新增的 QRCode 產生器 -->
+  <!-- 引入套件：OCR, 裁切, PDF 渲染, QRCode 產生器, 以及新增的 LZString 壓縮套件 -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 
   <style>
     :root {
@@ -385,7 +386,7 @@
 
       <div id="headerDropdown" class="dropdown-menu">
         <div class="dropdown-item" onclick="editCurrentDictation()">✏️ 編輯默書</div>
-        <!-- 分享按鈕現在會觸發 QR Code 彈窗 -->
+        <!-- 分享按鈕會觸發 QR Code 彈窗 -->
         <div class="dropdown-item" onclick="openShareModal()">📤 分享默書 (QR Code)</div>
         <div class="dropdown-item" style="color: var(--danger);" onclick="deleteCurrentDictation()">🗑️ 刪除默書</div>
       </div>
@@ -633,18 +634,19 @@
       </p>
       
       <div style="display:flex; justify-content:center; align-items:center; background:#f8f9fa; border-radius:12px; padding:20px; margin-bottom: 20px;">
+        <!-- QR Code 容器 -->
         <div id="qrcode"></div>
       </div>
       
-      <p style="font-size:13px; color:#999; margin-bottom: 15px;">或者你也可以直接複製連結傳給朋友：</p>
-      <button class="btn btn-outline btn-block" onclick="copyShareLink()">📋 複製分享連結</button>
+      <p style="font-size:13px; color:#999; margin-bottom: 15px;">或者你也可以直接複製壓縮連結傳給朋友：</p>
+      <button class="btn btn-outline btn-block" onclick="copyShareLink()">📋 複製一鍵匯入連結</button>
     </div>
   </div>
 
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
   // ==========================================
-  // ⚙️ 系統核心設定 (請填入你的 Azure Key)
+  // ⚙️ 系統核心設定 (請確保填入正確的 Azure Key)
   // ==========================================
   const AZURE_API_KEY = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS"; 
   const AZURE_REGION = "eastasia";
@@ -681,10 +683,17 @@
     
     // 檢查網址是否帶有匯入參數
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('action') === 'import') {
+    const action = urlParams.get('action');
+    
+    if (action === 'import' || action === 'import_v2') {
       const importTitle = urlParams.get('title');
       const importLang = urlParams.get('lang');
-      const importContent = urlParams.get('content');
+      let importContent = urlParams.get('content');
+
+      // 如果是 V11 壓縮版 (import_v2)，先進行解壓縮
+      if (action === 'import_v2' && importContent) {
+        importContent = LZString.decompressFromEncodedURIComponent(importContent);
+      }
 
       if (importTitle && importContent) {
         if (confirm(`📬 收到一份新的默書：\n「${importTitle}」\n\n請問是否要匯入到你的清單中？`)) {
@@ -1131,33 +1140,34 @@
   function cancelSentenceSelection() { showPage('detail-screen'); }
   function clearSelectionAndPlayAll() { selectAllSentences(true); confirmSentenceSelection(); }
 
-  // ===== 🌟 V10 更新：QR Code 產生與分享功能 =====
+  // ===== 🌟 V11 更新：QR Code 產生與 LZString 壓縮分享功能 =====
   function openShareModal() {
     if(!currentDictation) return;
     
-    // 1. 生成專屬分享網址 (把內容編碼放入 URL)
+    // 使用 LZString 壓縮內容
+    const compressedContent = LZString.compressToEncodedURIComponent(currentDictation.content);
+
     const baseUrl = window.location.href.split('?')[0]; 
     const params = new URLSearchParams({
-      action: 'import',
+      action: 'import_v2', // 標記為 V11 壓縮版
       title: currentDictation.title,
       lang: currentDictation.lang || 'zh',
-      content: currentDictation.content
+      content: compressedContent
     });
     shareUrl = `${baseUrl}?${params.toString()}`;
 
-    // 2. 顯示 Share Modal
     document.getElementById('shareModal').classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
 
-    // 3. 繪製 QR Code
-    document.getElementById('qrcode').innerHTML = ""; // 先清空舊的
+    // 生成較大的 QR Code 提升掃描成功率
+    document.getElementById('qrcode').innerHTML = ""; 
     new QRCode(document.getElementById('qrcode'), {
       text: shareUrl,
-      width: 180,
-      height: 180,
+      width: 260,  // 尺寸由 180 放大至 260
+      height: 260,
       colorDark : "#000000",
       colorLight : "#f8f9fa",
-      correctLevel : QRCode.CorrectLevel.L
+      correctLevel : QRCode.CorrectLevel.L // 保持最低糾錯率以換取最疏落的點陣
     });
   }
 
