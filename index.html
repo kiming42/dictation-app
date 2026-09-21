@@ -3,8 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>默書小助手 V3</title>
+  <title>默書小助手 V4</title>
+
+  <!-- 引入 Tesseract.js (OCR), Cropper.js (裁切), PDF.js (PDF 渲染) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
   <style>
     :root { --primary: #007bff; --success: #28a745; --danger: #dc3545; --secondary: #6c757d; --bg: #f4f7f6; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
@@ -12,62 +18,62 @@
     .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     h2, h3 { margin: 0; }
     
-    button { padding: 12px 15px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 8px; color: white; margin-top: 5px; }
+    button { padding: 12px 15px; font-size: 15px; font-weight: bold; cursor: pointer; border: none; border-radius: 8px; color: white; margin-top: 5px; }
     .btn-primary { background: var(--primary); }
     .btn-success { background: var(--success); }
     .btn-danger { background: var(--danger); }
     .btn-secondary { background: var(--secondary); }
-    .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-    .btn-sm { padding: 6px 12px; font-size: 14px; margin-top: 0; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+    .btn-sm { padding: 6px 10px; font-size: 13px; margin-top: 0; }
     button:disabled { opacity: 0.5; cursor: not-allowed; }
     
-    input, textarea, select { width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-    textarea { height: 140px; resize: vertical; }
+    input, textarea, select { width: 100%; padding: 11px; margin-top: 4px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+    textarea { height: 130px; resize: vertical; line-height: 1.4; }
     
     .page { display: none; }
     .page.active { display: block; }
     
-    /* 默書清單項目設計 */
-    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #fff; border: 1px solid #e9ecef; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-    .list-item-title { font-weight: bold; font-size: 18px; cursor: pointer; flex-grow: 1; color: #212529; }
-    .list-item-title:hover { color: var(--primary); }
-    .list-item-actions { display: flex; gap: 8px; align-items: center; }
-    
-    /* 播放介面 */
-    #play-screen { text-align: center; padding-top: 20px; }
-    .word-display { font-size: 44px; font-weight: bold; margin: 25px 0; min-height: 70px; letter-spacing: 2px; line-height: 1.2; word-break: break-word; }
-    .word-display.hidden { filter: blur(15px); user-select: none; }
-    .controls-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 25px; }
-    .big-btn { padding: 18px; font-size: 16px; }
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: #fff; border: 1px solid #e9ecef; border-radius: 10px; margin-bottom: 10px; }
+    .list-item-title { font-weight: bold; font-size: 17px; cursor: pointer; flex-grow: 1; }
     
     .row { display: flex; gap: 10px; }
     .row > div { flex: 1; }
+    .tools-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+
+    /* Modal 裁切視窗 */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); flex-direction: column; }
+    .modal-content { flex: 1; overflow: hidden; display: flex; justify-content: center; align-items: center; padding: 10px; }
+    .modal-footer { padding: 15px; background: #222; display: flex; gap: 10px; }
+    .img-container { max-width: 100%; max-height: 80vh; }
+
+    /* 播放介面 */
+    #play-screen { text-align: center; }
+    .word-display { font-size: 40px; font-weight: bold; margin: 20px 0; min-height: 60px; letter-spacing: 2px; line-height: 1.3; }
+    .word-display.hidden { filter: blur(15px); user-select: none; }
+    .controls-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
+    .big-btn { padding: 18px; font-size: 16px; }
   </style>
 </head>
 <body>
 
-  <!-- 1. 首頁：只保留默書清單 / 新增默書 -->
+  <!-- 首頁：默書清單 -->
   <div id="home-screen" class="page active">
     <div class="card">
       <div class="header-bar">
         <h2>📚 我的默書清單</h2>
         <button class="btn-secondary btn-sm" onclick="showPage('settings-screen')">⚙️ 系統設定</button>
       </div>
-      
       <div id="dictation-list"></div>
-      
       <button class="btn-primary" onclick="openEditScreen(null)" style="width: 100%; margin-top: 10px;">+ 新增默書</button>
     </div>
   </div>
 
-  <!-- 獨立：系統設定頁面 -->
+  <!-- 系統設定頁面 -->
   <div id="settings-screen" class="page">
     <div class="card">
       <h2>⚙️ 系統設定</h2>
-      <p style="color: #666; font-size: 14px;">設定將自動安全儲存於本地裝置中。</p>
-      
       <label>Azure API Key (KEY 1):</label>
-      <input type="password" id="apiKey" placeholder="貼上你的 Key 1" onchange="saveConfig()">
+      <input type="password" id="apiKey" placeholder="貼上 Key 1" onchange="saveConfig()">
       
       <label>Azure Region (地區):</label>
       <input type="text" id="apiRegion" placeholder="例如: eastasia" value="eastasia" onchange="saveConfig()">
@@ -75,30 +81,50 @@
       <label>家長解鎖密碼 (4位數):</label>
       <input type="password" id="parentPin" placeholder="預設: 1234" value="1234" onchange="saveConfig()">
 
-      <button class="btn-primary" onclick="showPage('home-screen')" style="width: 100%; margin-top: 10px;">完成並返回</button>
+      <button class="btn-primary" onclick="showPage('home-screen')" style="width: 100%; margin-top: 10px;">儲存並返回</button>
     </div>
   </div>
 
-  <!-- 2. 檢視/編輯默書內容 -->
+  <!-- 新增/編輯默書 -->
   <div id="edit-screen" class="page">
     <div class="card">
       <h2 id="editScreenTitle">✏️ 編輯默書</h2>
       <input type="hidden" id="editId">
       
-      <label>默書標題：</label>
-      <input type="text" id="editTitle" placeholder="例如：中文第十課 / English Unit 2">
-      
-      <label>默書內容 (每行一個詞語或句子)：</label>
-      <textarea id="editContent" placeholder="蘋果&#10;香蕉&#10;Apple&#10;Banana"></textarea>
-      
       <div class="row">
-        <button class="btn-outline" onclick="triggerCamera()">📸 拍照自動輸入 (OCR)</button>
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleImage(event)">
+        <div>
+          <label>默書標題：</label>
+          <input type="text" id="editTitle" placeholder="例如：中文第十課">
+        </div>
+        <div>
+          <label>主要語言：</label>
+          <select id="editLang">
+            <option value="zh">中文 (廣東話/普通話)</option>
+            <option value="en">英文 (English)</option>
+          </select>
+        </div>
       </div>
-      <p id="ocrStatus" style="color: #666; font-size: 14px; margin-top: 5px;"></p>
+      
+      <label>輸入圖片/PDF 或 拍照：</label>
+      <div class="row" style="margin-bottom: 12px;">
+        <button class="btn-outline" onclick="document.getElementById('fileInput').click()">📷 上傳圖片 / PDF 裁切識別</button>
+        <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(event)">
+      </div>
+      
+      <label>內容處理工具：</label>
+      <div class="tools-group">
+        <button class="btn-secondary btn-sm" onclick="filterNumbers()">🧹 過濾數字題號</button>
+        <button class="btn-secondary btn-sm" onclick="filterPinyin()">🧹 過濾拼音/註音</button>
+        <button class="btn-secondary btn-sm" onclick="smartSegment()">✂️ 智能分段 (按標點拆分)</button>
+      </div>
 
-      <div class="row" style="margin-top: 20px;">
-        <button class="btn-primary" onclick="saveDictation()">💾 儲存</button>
+      <label>默書內容 (每行代表一段/一個詞語)：</label>
+      <textarea id="editContent" placeholder="請輸入默書內容，每行一個詞語或句子..."></textarea>
+      
+      <p id="ocrStatus" style="color: #666; font-size: 13px; margin: 0 0 10px 0;"></p>
+
+      <div class="row">
+        <button class="btn-primary" onclick="saveDictation()">💾 儲存默書</button>
         <button class="btn-danger" onclick="showPage('home-screen')">取消</button>
       </div>
     </div>
@@ -110,13 +136,31 @@
       <h2 id="setupTitle">準備默書</h2>
       <input type="hidden" id="setupId">
       
-      <label style="font-weight: bold; margin-top: 10px; display: block;">播放模式：</label>
+      <!-- 語言模式與聲線選取 -->
+      <label style="font-weight: bold; margin-top: 10px; display: block;">語音模式與聲線：</label>
+      <div class="row">
+        <div>
+          <select id="voiceAccent">
+            <option value="zh-HK">廣東話 (香港)</option>
+            <option value="zh-CN">普通話 (大陸)</option>
+            <option value="en-US">英文 (美式 US)</option>
+            <option value="en-GB">英文 (英式 UK)</option>
+          </select>
+        </div>
+        <div>
+          <select id="voiceGender">
+            <option value="female" selected>👩 女聲</option>
+            <option value="male">👨 男聲</option>
+          </select>
+        </div>
+      </div>
+
+      <label style="font-weight: bold; margin-top: 5px; display: block;">播放模式：</label>
       <select id="playMode" onchange="toggleModeSettings()">
         <option value="auto">自動默書 (定時跳下一字)</option>
         <option value="manual">手動默書 (自行按控制鍵)</option>
       </select>
 
-      <!-- 4. 自動默書：重複次數 1-5 次 -->
       <div id="autoSettings" class="row">
         <div>
           <label style="font-weight: bold;">重複次數：</label>
@@ -139,7 +183,6 @@
         </div>
       </div>
 
-      <!-- 3. 默書語速：0.3x - 1.0x -->
       <div class="row" style="margin-top: 10px;">
         <div>
           <label style="font-weight: bold;">朗讀語速：</label>
@@ -151,16 +194,24 @@
             <option value="0.7">0.7x (慢速)</option>
             <option value="0.8" selected>0.8x (適合默書)</option>
             <option value="0.9">0.9x</option>
-            <option value="1.0">1.0x (正常速度)</option>
+            <option value="1.0">1.0x (正常)</option>
           </select>
-        </div>
-        <div style="display: flex; align-items: center; justify-content: center; margin-top: 25px;">
-          <input type="checkbox" id="hideText" checked style="width: auto; margin-right: 8px; transform: scale(1.4);">
-          <label for="hideText" style="margin: 0; font-weight: bold; cursor: pointer;">隱藏文字 (家長解鎖)</label>
         </div>
       </div>
 
-      <div class="row" style="margin-top: 25px;">
+      <!-- 附加選項：隱藏文字 / 讀出標點 -->
+      <div style="margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px;">
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <input type="checkbox" id="readPunctuation" style="width: auto; margin-right: 8px; transform: scale(1.3);">
+          <label for="readPunctuation" style="margin: 0; font-weight: bold; cursor: pointer;">🗣️ 讀出標點符號 (例如: 逗號、句號)</label>
+        </div>
+        <div style="display: flex; align-items: center;">
+          <input type="checkbox" id="hideText" checked style="width: auto; margin-right: 8px; transform: scale(1.3);">
+          <label for="hideText" style="margin: 0; font-weight: bold; cursor: pointer;">🔒 隱藏文字 (需家長密碼解鎖)</label>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 20px;">
         <button class="btn-success" onclick="startPlay()">▶ 開始默書</button>
         <button class="btn-secondary" onclick="showPage('home-screen')">返回</button>
       </div>
@@ -175,16 +226,28 @@
       <div id="wordDisplay" class="word-display hidden">準備中...</div>
       <button class="btn-outline btn-sm" id="unlockBtn" onclick="unlockText()" style="margin-bottom: 15px;">👁️ 顯示文字 (家長解鎖)</button>
       
-      <div id="playStatus" style="font-size: 18px; color: var(--primary); font-weight: bold; min-height: 30px;"></div>
+      <div id="playStatus" style="font-size: 17px; color: var(--primary); font-weight: bold; min-height: 28px;"></div>
 
-      <!-- 手動模式控制器 -->
       <div id="manualControls" class="controls-grid" style="display: none;">
         <button class="btn-primary big-btn" onclick="prevWord()">⏮ 上一個</button>
         <button class="btn-success big-btn" onclick="repeatWord()">🔄 再讀一次</button>
         <button class="btn-primary big-btn" onclick="nextWord()">下一個 ⏭</button>
       </div>
       
-      <button class="btn-danger" onclick="stopPlay()" style="width: 100%; margin-top: 30px; padding: 15px; font-size: 18px;">⏹ 結束默書</button>
+      <button class="btn-danger" onclick="stopPlay()" style="width: 100%; margin-top: 25px; padding: 15px; font-size: 18px;">⏹ 結束默書</button>
+    </div>
+  </div>
+
+  <!-- Modal 視窗：圖片/PDF 裁切 -->
+  <div id="cropModal" class="modal">
+    <div class="modal-content">
+      <div class="img-container">
+        <img id="cropImage" src="" alt="Crop target">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-success" style="flex:1;" onclick="confirmCropAndOCR()">✅ 確認裁切並辨識</button>
+      <button class="btn-danger" onclick="closeCropModal()">取消</button>
     </div>
   </div>
 
@@ -195,6 +258,18 @@
   let isPlaying = false;
   let playAudio = null;
   let playMode = 'auto';
+  let cropper = null;
+
+  // 設定 PDF.js Worker
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  // Azure Neural 聲線對照表
+  const voiceMap = {
+    'zh-HK': { female: 'zh-HK-HiuGaaiNeural', male: 'zh-HK-WanLungNeural' },
+    'zh-CN': { female: 'zh-CN-XiaoxiaoNeural', male: 'zh-CN-YunxiNeural' },
+    'en-US': { female: 'en-US-AvaNeural', male: 'en-US-GuyNeural' },
+    'en-GB': { female: 'en-GB-SoniaNeural', male: 'en-GB-RyanNeural' }
+  };
 
   window.onload = () => {
     document.getElementById('apiKey').value = localStorage.getItem('azure_tts_key') || '';
@@ -214,24 +289,22 @@
     document.getElementById(pageId).classList.add('active');
   }
 
-  // --- 1 & 2. 默書清單渲染與檢視編輯 ---
+  // --- 清單管理 ---
   function renderList() {
     const listDiv = document.getElementById('dictation-list');
     listDiv.innerHTML = '';
     if(dictations.length === 0) {
-      listDiv.innerHTML = '<p style="color:#666; text-align:center; padding: 20px 0;">尚未建立默書，請點擊下方按鈕新增。</p>';
+      listDiv.innerHTML = '<p style="color:#666; text-align:center; padding: 20px 0;">尚未建立默書，請點擊新增。</p>';
       return;
     }
     
     dictations.forEach(d => {
       listDiv.innerHTML += `
         <div class="list-item">
-          <div class="list-item-title" onclick="openEditScreen(${d.id})" title="點擊檢視/編輯">
-            📝 ${d.title}
-          </div>
-          <div class="list-item-actions">
+          <div class="list-item-title" onclick="openEditScreen(${d.id})">📝 ${d.title}</div>
+          <div>
             <button class="btn-success btn-sm" onclick="openSetup(${d.id})">▶ 默書</button>
-            <button class="btn-danger btn-sm" onclick="deleteDictation(${d.id})">刪除</button>
+            <button class="btn-danger btn-sm" onclick="deleteDictation(${d.id})">刪</button>
           </div>
         </div>
       `;
@@ -241,14 +314,16 @@
   function openEditScreen(id) {
     if(id !== null) {
       const dic = dictations.find(d => d.id === id);
-      document.getElementById('editScreenTitle').innerText = '✏️ 檢視/編輯默書';
+      document.getElementById('editScreenTitle').innerText = '✏️ 編輯默書';
       document.getElementById('editId').value = dic.id;
       document.getElementById('editTitle').value = dic.title;
+      document.getElementById('editLang').value = dic.lang || 'zh';
       document.getElementById('editContent').value = dic.content;
     } else {
       document.getElementById('editScreenTitle').innerText = '✏️ 新增默書';
       document.getElementById('editId').value = '';
       document.getElementById('editTitle').value = '';
+      document.getElementById('editLang').value = 'zh';
       document.getElementById('editContent').value = '';
     }
     document.getElementById('ocrStatus').innerText = '';
@@ -258,20 +333,18 @@
   function saveDictation() {
     const id = document.getElementById('editId').value;
     const title = document.getElementById('editTitle').value.trim();
+    const lang = document.getElementById('editLang').value;
     const content = document.getElementById('editContent').value.trim();
     
-    if(!title || !content) { alert('請填寫標題與默書內容！'); return; }
+    if(!title || !content) { alert('請填寫標題與內容！'); return; }
     
     if(id) {
-      // 編輯現有默書
       const index = dictations.findIndex(d => d.id === parseInt(id));
       if(index !== -1) {
-        dictations[index].title = title;
-        dictations[index].content = content;
+        dictations[index] = { id: parseInt(id), title, lang, content };
       }
     } else {
-      // 新增默書
-      dictations.push({ id: Date.now(), title, content });
+      dictations.push({ id: Date.now(), title, lang, content });
     }
     
     localStorage.setItem('dictations', JSON.stringify(dictations));
@@ -287,28 +360,96 @@
     }
   }
 
-  // --- 拍照 OCR 功能 ---
-  function triggerCamera() {
-    document.getElementById('cameraInput').click();
+  // --- 文字處理工具 (過濾/分段) ---
+  function filterNumbers() {
+    let text = document.getElementById('editContent').value;
+    // 清除行首數字、題號，例如: 1. / (2) / 一、/ 1)
+    text = text.replace(/^[\s]*([0-9一二三四五六七八九十]+[\.\)、、\s]+|\([0-9]+\)[\s]*)/gm, '');
+    document.getElementById('editContent').value = text;
   }
 
-  async function handleImage(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+  function filterPinyin() {
+    let text = document.getElementById('editContent').value;
+    // 刪除聲調拼音字母與括號內的拼音
+    text = text.replace(/\([a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+\)/g, '');
+    text = text.replace(/（[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+）/g, '');
+    text = text.replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/g, '');
+    document.getElementById('editContent').value = text;
+  }
+
+  function smartSegment() {
+    let text = document.getElementById('editContent').value;
+    // 按句號、問號、感嘆號拆分段落
+    const sentences = text.split(/([。！？!?\n]+)/).filter(s => s.trim().length > 0);
+    let result = [];
+    for(let i = 0; i < sentences.length; i += 2) {
+      let sentence = sentences[i];
+      let punc = sentences[i+1] || '';
+      if(sentence.trim()) result.push((sentence + punc).trim());
+    }
+    document.getElementById('editContent').value = result.join('\n');
+  }
+
+  // --- 圖片 / PDF 上傳與 Cropper 裁切 ---
+  async function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    if(file.type === 'application/pdf') {
+      document.getElementById('ocrStatus').innerText = "⏳ 正在解析 PDF 第一頁...";
+      const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 2.0 });
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      openCropModal(canvas.toDataURL('image/png'));
+    } else {
+      const reader = new FileReader();
+      reader.onload = (evt) => openCropModal(evt.target.result);
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function openCropModal(imageSrc) {
+    const img = document.getElementById('cropImage');
+    img.src = imageSrc;
+    document.getElementById('cropModal').style.display = 'flex';
+    
+    if(cropper) cropper.destroy();
+    cropper = new Cropper(img, {
+      viewMode: 1,
+      autoCropArea: 0.8,
+      responsive: true
+    });
+  }
+
+  function closeCropModal() {
+    document.getElementById('cropModal').style.display = 'none';
+    if(cropper) cropper.destroy();
+  }
+
+  async function confirmCropAndOCR() {
+    if(!cropper) return;
+    
+    const croppedCanvas = cropper.getCroppedCanvas();
+    closeCropModal();
     
     const statusText = document.getElementById('ocrStatus');
-    statusText.innerText = "⏳ 正在辨識圖片中的文字...";
+    statusText.innerText = "⏳ 正在辨識裁切範圍內的文字...";
     
     try {
-      const result = await Tesseract.recognize(file, 'chi_tra+eng', {
-        logger: m => { if(m.status === 'recognizing text') statusText.innerText = `⏳ 辨識中: ${Math.round(m.progress * 100)}%`; }
-      });
+      const result = await Tesseract.recognize(croppedCanvas, 'chi_tra+eng');
       const text = result.data.text.replace(/\n\s*\n/g, '\n').trim();
       document.getElementById('editContent').value = text;
-      statusText.innerText = "✅ 辨識完成！請檢查並修正錯漏字。";
-    } catch (err) {
+      statusText.innerText = "✅ 辨識完成！可使用上方按鈕清理格式。";
+    } catch(err) {
       console.error(err);
-      statusText.innerText = "❌ 辨識失敗，請手動輸入。";
+      statusText.innerText = "❌ 辨識失敗，請重試。";
     }
   }
 
@@ -317,6 +458,14 @@
     const dic = dictations.find(d => d.id === id);
     document.getElementById('setupTitle').innerText = dic.title;
     document.getElementById('setupId').value = id;
+    
+    // 自動預設語言選單
+    if(dic.lang === 'en') {
+      document.getElementById('voiceAccent').value = 'en-US';
+    } else {
+      document.getElementById('voiceAccent').value = 'zh-HK';
+    }
+    
     showPage('setup-screen');
   }
 
@@ -328,7 +477,7 @@
   async function startPlay() {
     const apiKey = localStorage.getItem('azure_tts_key');
     if(!apiKey) { 
-      alert('請先點擊首頁右上角「系統設定」輸入 Azure API Key！'); 
+      alert('請先點擊首頁「系統設定」輸入 Azure API Key！'); 
       showPage('settings-screen');
       return; 
     }
@@ -378,7 +527,6 @@
         }
       }
     }
-    
     if(isPlaying) document.getElementById('playStatus').innerText = '🎉 默書完成！棒極了！';
   }
 
@@ -390,14 +538,10 @@
   function nextWord() {
     if(currentIndex < currentWords.length - 1) { currentIndex++; updateManualUI(); playCurrentWord(); }
   }
-  
   function prevWord() {
     if(currentIndex > 0) { currentIndex--; updateManualUI(); playCurrentWord(); }
   }
-  
-  function repeatWord() {
-    playCurrentWord();
-  }
+  function repeatWord() { playCurrentWord(); }
 
   function updatePlayProgress() {
     const word = currentWords[currentIndex];
@@ -408,7 +552,7 @@
 
   function unlockText() {
     const pin = localStorage.getItem('parent_pin') || '1234';
-    if(prompt('請輸入家長密碼：') === pin) {
+    if(prompt('請輸入家長解鎖密碼：') === pin) {
       document.getElementById('wordDisplay').classList.remove('hidden');
       document.getElementById('unlockBtn').style.display = 'none';
       updatePlayProgress();
@@ -423,18 +567,47 @@
     showPage('home-screen');
   }
 
+  // 轉換標點符號為文字朗讀
+  function transformPunctuation(text, accent) {
+    const isEnglish = accent.startsWith('en');
+    if(isEnglish) {
+      return text
+        .replace(/,/g, ' comma ')
+        .replace(/\./g, ' period ')
+        .replace(/\?/g, ' question mark ')
+        .replace(/!/g, ' exclamation mark ');
+    } else {
+      return text
+        .replace(/，/g, '，逗號，')
+        .replace(/。/g, '，句號，')
+        .replace(/！/g, '，感嘆號，')
+        .replace(/？/g, '，問號，')
+        .replace(/；/g, '，分號，')
+        .replace(/：/g, '，冒號，');
+    }
+  }
+
   function playCurrentWord() {
     return new Promise(async (resolve) => {
-      const word = currentWords[currentIndex];
+      let word = currentWords[currentIndex];
       const apiKey = localStorage.getItem('azure_tts_key');
       const region = localStorage.getItem('azure_tts_region') || 'eastasia';
       const speed = document.getElementById('setupSpeed').value;
-      const lang = /[a-zA-Z]/.test(word) ? 'en-US' : 'zh-HK';
-      const voice = lang === 'en-US' ? 'en-US-AvaNeural' : 'zh-HK-HiuGaaiNeural';
       
+      const accent = document.getElementById('voiceAccent').value;
+      const gender = document.getElementById('voiceGender').value;
+      const readPunc = document.getElementById('readPunctuation').checked;
+
+      // 選擇對應聲線
+      const voice = voiceMap[accent][gender];
+
+      // 若勾選讀出標點，先處理字串
+      if(readPunc) {
+        word = transformPunctuation(word, accent);
+      }
+
       document.getElementById('playStatus').innerText = '🔊 朗讀中...';
-      
-      const ssml = `<speak version='1.0' xml:lang='${lang}'><voice name='${voice}'><prosody rate='${speed}'>${escapeXml(word)}</prosody></voice></speak>`;
+      const ssml = `<speak version='1.0' xml:lang='${accent}'><voice name='${voice}'><prosody rate='${speed}'>${escapeXml(word)}</prosody></voice></speak>`;
       
       try {
         const response = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
@@ -455,7 +628,7 @@
         playAudio.play();
       } catch (e) {
         console.error(e);
-        document.getElementById('playStatus').innerText = '⚠️ 朗讀失敗，請檢查 Key/Region';
+        document.getElementById('playStatus').innerText = '⚠️ 朗讀失敗，請檢查 Key';
         resolve();
       }
     });
