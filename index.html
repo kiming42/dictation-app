@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>默書小助手 V9 最終版</title>
+  <title>默書小助手 V10</title>
 
-  <!-- 引入 Tesseract.js (OCR), Cropper.js (裁切), PDF.js (PDF 渲染) -->
+  <!-- 引入必要套件：OCR, 裁切, PDF 渲染, 以及新增的 QRCode 產生器 -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     :root {
@@ -35,7 +36,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* 頂部導航列 Header */
     .app-header {
       position: sticky;
       top: 0;
@@ -72,7 +72,6 @@
     }
     .header-btn:active { background: #eee; }
 
-    /* 通用 Page 與 Container */
     .page { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
     .page.active { display: block; }
     .card {
@@ -83,7 +82,6 @@
       margin-bottom: 16px;
     }
 
-    /* 按鈕樣式 */
     button.btn {
       padding: 12px 18px;
       font-size: 15px;
@@ -107,7 +105,6 @@
     .btn-block { width: 100%; }
     .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
 
-    /* 表單元件 */
     label { font-weight: 600; font-size: 14px; margin-top: 10px; display: block; color: #495057; }
     input[type="text"], input[type="password"], select, textarea {
       width: 100%;
@@ -137,7 +134,6 @@
     .row > div { flex: 1; }
     .tools-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 
-    /* 清單列表 */
     .dictation-item {
       display: flex;
       justify-content: space-between;
@@ -152,7 +148,6 @@
     .dictation-item-title { font-size: 17px; font-weight: 700; color: #111; cursor: pointer; flex: 1; }
     .dictation-item-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
-    /* --- 播放與詳情頁面 --- */
     .play-controls-bar {
       display: flex;
       align-items: center;
@@ -267,7 +262,6 @@
       color: #ffffff;
     }
 
-    /* --- 句子勾選介面 --- */
     .selection-header-tools {
       display: flex;
       align-items: center;
@@ -309,7 +303,6 @@
       margin-top: 3px;
     }
 
-    /* Modal 彈窗 (通用) */
     .modal {
       display: none;
       position: fixed;
@@ -392,7 +385,8 @@
 
       <div id="headerDropdown" class="dropdown-menu">
         <div class="dropdown-item" onclick="editCurrentDictation()">✏️ 編輯默書</div>
-        <div class="dropdown-item" onclick="shareCurrentDictation()">📤 分享默書</div>
+        <!-- 分享按鈕現在會觸發 QR Code 彈窗 -->
+        <div class="dropdown-item" onclick="openShareModal()">📤 分享默書 (QR Code)</div>
         <div class="dropdown-item" style="color: var(--danger);" onclick="deleteCurrentDictation()">🗑️ 刪除默書</div>
       </div>
     </div>
@@ -626,10 +620,31 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL 3: 分享與 QR Code 彈窗 ==================== -->
+  <div id="shareModal" class="modal">
+    <div class="modal-box" style="text-align: center;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="margin:0;">📤 分享此默書</h3>
+        <button class="header-btn" onclick="closeShareModal()">✕</button>
+      </div>
+      
+      <p style="font-size:14px; color:#666; margin-bottom: 20px;">
+        用另一部手機或 iPad 的相機掃描下方 QR Code，<br>即可直接匯入這份默書到該裝置！
+      </p>
+      
+      <div style="display:flex; justify-content:center; align-items:center; background:#f8f9fa; border-radius:12px; padding:20px; margin-bottom: 20px;">
+        <div id="qrcode"></div>
+      </div>
+      
+      <p style="font-size:13px; color:#999; margin-bottom: 15px;">或者你也可以直接複製連結傳給朋友：</p>
+      <button class="btn btn-outline btn-block" onclick="copyShareLink()">📋 複製分享連結</button>
+    </div>
+  </div>
+
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
   // ==========================================
-  // ⚙️ 系統核心設定 (已為您貼上 Azure API Key)
+  // ⚙️ 系統核心設定 (請填入你的 Azure Key)
   // ==========================================
   const AZURE_API_KEY = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS"; 
   const AZURE_REGION = "eastasia";
@@ -649,6 +664,7 @@
 
   let cropper = null;
   let isTextHidden = false;
+  let shareUrl = "";
 
   const voiceMap = {
     'zh-HK': { female: 'zh-HK-HiuGaaiNeural', male: 'zh-HK-WanLungNeural' },
@@ -659,8 +675,28 @@
 
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+  // --- 系統載入與一鍵匯入檢查 ---
   window.onload = () => {
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
+    
+    // 檢查網址是否帶有匯入參數
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'import') {
+      const importTitle = urlParams.get('title');
+      const importLang = urlParams.get('lang');
+      const importContent = urlParams.get('content');
+
+      if (importTitle && importContent) {
+        if (confirm(`📬 收到一份新的默書：\n「${importTitle}」\n\n請問是否要匯入到你的清單中？`)) {
+          dictations.unshift({ id: Date.now(), title: importTitle, lang: importLang, content: importContent });
+          localStorage.setItem('dictations', JSON.stringify(dictations));
+          alert('✅ 成功匯入默書！');
+        }
+        // 清理網址參數，防止重新整理後再次彈出匯入
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+    
     renderList();
   };
 
@@ -675,7 +711,7 @@
     
     if (isPlayingAuto) togglePlayPause();
     else stopAudio();
-    document.getElementById('playStatus').innerText = '';
+    if(document.getElementById('playStatus')) document.getElementById('playStatus').innerText = '';
   }
 
   function toggleHeaderMenu() {
@@ -1095,22 +1131,49 @@
   function cancelSentenceSelection() { showPage('detail-screen'); }
   function clearSelectionAndPlayAll() { selectAllSentences(true); confirmSentenceSelection(); }
 
-  // --- 右上角選單功能 ---
+  // ===== 🌟 V10 更新：QR Code 產生與分享功能 =====
+  function openShareModal() {
+    if(!currentDictation) return;
+    
+    // 1. 生成專屬分享網址 (把內容編碼放入 URL)
+    const baseUrl = window.location.href.split('?')[0]; 
+    const params = new URLSearchParams({
+      action: 'import',
+      title: currentDictation.title,
+      lang: currentDictation.lang || 'zh',
+      content: currentDictation.content
+    });
+    shareUrl = `${baseUrl}?${params.toString()}`;
+
+    // 2. 顯示 Share Modal
+    document.getElementById('shareModal').classList.add('active');
+    document.getElementById('headerDropdown').classList.remove('active');
+
+    // 3. 繪製 QR Code
+    document.getElementById('qrcode').innerHTML = ""; // 先清空舊的
+    new QRCode(document.getElementById('qrcode'), {
+      text: shareUrl,
+      width: 180,
+      height: 180,
+      colorDark : "#000000",
+      colorLight : "#f8f9fa",
+      correctLevel : QRCode.CorrectLevel.L
+    });
+  }
+
+  function closeShareModal() {
+    document.getElementById('shareModal').classList.remove('active');
+  }
+
+  function copyShareLink() {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      alert('📋 已複製一鍵匯入連結！\n可以直接 WhatsApp 貼上給朋友。');
+    });
+  }
+
   function editCurrentDictation() {
     if(!currentDictation) return;
     openEditScreen(currentDictation.id);
-  }
-
-  function shareCurrentDictation() {
-    if(!currentDictation) return;
-    const textData = `【默書內容：${currentDictation.title}】\n` + currentDictation.content;
-    if(navigator.share) {
-      navigator.share({ title: currentDictation.title, text: textData }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(textData).then(() => {
-        alert('📋 已複製默書內容到剪貼簿！');
-      });
-    }
   }
 
   function deleteCurrentDictation() {
@@ -1177,16 +1240,10 @@
     document.getElementById('editContent').value = text;
   }
 
-  // ===== 🌟 V9 更新：增強智能分段邏輯 =====
   function smartSegment() {
     let text = document.getElementById('editContent').value;
-    
-    // 找出所有的句點、問號、感嘆號（中英文皆可），並將其後方可能連著的空白/換行全部取代為單一個「換行符號」
     text = text.replace(/([.。！？!?]+)\s*/g, "$1\n");
-    
-    // 將多餘的空白行濾掉
     const lines = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-    
     document.getElementById('editContent').value = lines.join('\n');
   }
 
@@ -1241,10 +1298,7 @@
       const result = await Tesseract.recognize(croppedCanvas, 'chi_tra+eng');
       const text = result.data.text.replace(/\n\s*\n/g, '\n').trim();
       document.getElementById('editContent').value = text;
-      
-      // OCR 後自動執行智能分段
       smartSegment(); 
-      
       statusText.innerText = "✅ OCR 辨識成功，並已依據標點符號自動分段！";
     } catch(err) {
       console.error(err);
@@ -1252,7 +1306,6 @@
     }
   }
 
-  // --- 播放設定 Modal ---
   function openSettingsModal() {
     document.getElementById('settingsModal').classList.add('active');
     toggleAutoSettingsDisplay();
