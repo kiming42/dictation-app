@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>默書小助手 V7</title>
+  <title>默書小助手 V8</title>
 
   <!-- 引入 Tesseract.js (OCR), Cropper.js (裁切), PDF.js (PDF 渲染) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -414,7 +414,7 @@
         <button class="btn-circle" onclick="nextSentence()" title="下一句">⏭</button>
       </div>
       
-      <!-- 加入了自動模式狀態顯示文字 -->
+      <!-- 自動模式狀態顯示文字 -->
       <div id="playStatus" style="font-size: 15px; color: var(--primary); font-weight: bold; min-height: 22px; margin-bottom: 12px;"></div>
 
       <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
@@ -537,17 +537,12 @@
   <div id="settings-screen" class="page">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <button class="header-btn" onclick="showPage('home-screen')">❮</button>
-      <h2>⚙️ 系統 API 設定</h2>
+      <h2>⚙️ 系統設定</h2>
       <div style="width: 30px;"></div>
     </div>
 
     <div class="card" style="margin-top: 15px;">
-      <label>Azure API Key (KEY 1):</label>
-      <input type="password" id="apiKey" placeholder="貼上 Key 1" onchange="saveConfig()">
-      
-      <label>Azure Region (地區):</label>
-      <input type="text" id="apiRegion" placeholder="例如: eastasia" value="eastasia" onchange="saveConfig()">
-
+      <!-- Azure Key 已經隱藏至程式碼中 -->
       <label>家長解鎖密碼 (4位數):</label>
       <input type="password" id="parentPin" placeholder="預設: 1234" value="1234" onchange="saveConfig()">
 
@@ -647,6 +642,14 @@
 
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
+  // ==========================================
+  // ⚙️ 系統核心設定 (請在這裡填入你的 Azure Key)
+  // ==========================================
+  const AZURE_API_KEY = 7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS; 
+  const AZURE_REGION = "eastasia";
+  // ==========================================
+
+
   let dictations = JSON.parse(localStorage.getItem('dictations')) || [];
   let currentDictation = null;   
   let activeSentenceIndices = []; 
@@ -673,15 +676,11 @@
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
   window.onload = () => {
-    document.getElementById('apiKey').value = localStorage.getItem('azure_tts_key') || '';
-    document.getElementById('apiRegion').value = localStorage.getItem('azure_tts_region') || 'eastasia';
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
     renderList();
   };
 
   function saveConfig() {
-    localStorage.setItem('azure_tts_key', document.getElementById('apiKey').value.trim());
-    localStorage.setItem('azure_tts_region', document.getElementById('apiRegion').value.trim());
     localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
   }
 
@@ -804,7 +803,6 @@
   function prevSentence() {
     if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) {
-      // 自動模式下發送手動跳轉訊號並截斷當前語音/等待
       forcePrevInAuto = true;
       stopAudio();
       return;
@@ -820,7 +818,6 @@
   function nextSentence() {
     if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) {
-      // 自動模式下發送手動跳轉訊號並截斷當前語音/等待
       forceNextInAuto = true;
       stopAudio();
       return;
@@ -888,12 +885,10 @@
     const delay = parseInt(document.getElementById('setupDelay').value) || 5;
 
     while (isPlayingAuto && currentPlayingIndex < activeSentenceIndices.length) {
-      // 重置手動跳轉標記
       forceNextInAuto = false;
       forcePrevInAuto = false;
       updateDetailUI();
 
-      // 1. 處理重複朗讀
       for (let r = 0; r < repeats; r++) {
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
         
@@ -903,13 +898,12 @@
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
 
         if (r < repeats - 1) {
-          await sleep(1200); // 兩次朗讀之間的微小停頓
+          await sleep(1200); 
         }
       }
 
       if (!isPlayingAuto) break;
 
-      // 如果使用者在朗讀中點擊了 下一句/上一句，跳過等待階段直接進入新回合
       if (forceNextInAuto) {
         if (currentPlayingIndex < activeSentenceIndices.length - 1) { currentPlayingIndex++; } 
         else { isPlayingAuto = false; updatePlayBtnUI(false); document.getElementById('playStatus').innerText = '🎉 默書播放完畢！'; break; }
@@ -921,7 +915,6 @@
         continue;
       }
 
-      // 2. 處理句間停頓倒數
       if (currentPlayingIndex < activeSentenceIndices.length - 1) {
         let waited = 0;
         let totalWaitMs = delay * 1000;
@@ -935,7 +928,6 @@
         
         if (!isPlayingAuto) break;
         
-        // 如果在倒數時點擊了跳轉按鈕
         if (forceNextInAuto) { currentPlayingIndex++; continue; }
         if (forcePrevInAuto) { 
             if(currentPlayingIndex > 0) currentPlayingIndex--; 
@@ -977,16 +969,15 @@
         return;
       }
 
-      const apiKey = localStorage.getItem('azure_tts_key');
-      const region = localStorage.getItem('azure_tts_region') || 'eastasia';
+      const apiKey = AZURE_API_KEY;
+      const region = AZURE_REGION;
       const speed = document.getElementById('setupSpeed').value;
       const accent = document.getElementById('voiceAccent').value;
       const gender = document.getElementById('voiceGender').value;
       const readPunc = document.getElementById('readPunctuation').checked;
 
-      if (!apiKey) {
-        alert('請先點擊首頁⚙️設定 Azure API Key！');
-        showPage('settings-screen');
+      if (!apiKey || apiKey.includes('請在這裡貼上')) {
+        alert('請先在程式碼內部設定 AZURE_API_KEY！\n(位於 index.html 第 440 行左右)');
         if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         return;
       }
@@ -1035,7 +1026,6 @@
     });
   }
 
-  // 處理標點符號發音 (英文句號替換為 full stop)
   function transformPunctuation(text, accent) {
     const isEnglish = accent.startsWith('en');
     if (isEnglish) {
