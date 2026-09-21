@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小朋友默書小助手 (Azure 高音質版)</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; max-width: 600px; margin: auto; background: #f8f9fa; line-height: 1.5; }
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    h2 { margin-top: 0; color: #333; }
+    label { font-weight: bold; display: block; margin-top: 12px; margin-bottom: 5px; color: #555; }
+    input[type="text"], input[type="password"], textarea, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+    textarea { height: 120px; resize: vertical; }
+    .row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .row > div { flex: 1; }
+    .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+    button { flex: 1; padding: 12px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 6px; color: white; transition: 0.2s; }
+    .btn-start { background: #007bff; }
+    .btn-start:disabled { background: #94c2f5; cursor: not-allowed; }
+    .btn-stop { background: #dc3545; }
+    .btn-stop:disabled { background: #f199a3; cursor: not-allowed; }
+    .status { font-size: 16px; font-weight: bold; color: #28a745; margin-top: 15px; min-height: 24px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; background: #e9ecef; color: #495057; margin-left: 5px; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>⚙️ Azure 設定</h2>
+    <div class="row">
+      <div>
+        <label>API Key (KEY 1):</label>
+        <input type="password" id="apiKey" placeholder="貼上你的 Key 1" onchange="saveConfig()">
+      </div>
+      <div>
+        <label>Region (地區):</label>
+        <input type="text" id="apiRegion" placeholder="例如: eastasia" value="eastasia" onchange="saveConfig()">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📖 默書內容與設定</h2>
+    <label>請輸入默書內容（每行一個詞語或句子）：</label>
+    <textarea id="wordList" placeholder="蘋果&#10;香蕉&#10;Apple&#10;Banana"></textarea>
+
+    <div class="row">
+      <div>
+        <label>朗讀速度：</label>
+        <select id="speedSelect">
+          <option value="0.7">慢速 (0.7x)</option>
+          <option value="0.85" selected>適合默書 (0.85x)</option>
+          <option value="1.0">正常 (1.0x)</option>
+        </select>
+      </div>
+      <div>
+        <label>詞語重複次數：</label>
+        <select id="repeatSelect">
+          <option value="1">讀 1 次</option>
+          <option value="2" selected>讀 2 次</option>
+        </select>
+      </div>
+      <div>
+        <label>每詞間隔停頓：</label>
+        <select id="delaySelect">
+          <option value="3">3 秒</option>
+          <option value="5" selected>5 秒</option>
+          <option value="8">8 秒</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button id="startBtn" class="btn-start" onclick="startDictation()">▶ 開始默書</button>
+      <button id="stopBtn" class="btn-stop" onclick="stopDictation()" disabled>⏹ 停止</button>
+    </div>
+
+    <div class="status" id="statusText"></div>
+  </div>
+
+<script>
+  let isSpeaking = false;
+  let currentAudio = null;
+
+  // 網頁載入時自動讀取已儲存的 Azure Key
+  window.onload = () => {
+    document.getElementById('apiKey').value = localStorage.getItem('azure_tts_key') || '';
+    document.getElementById('apiRegion').value = localStorage.getItem('azure_tts_region') || 'eastasia';
+  };
+
+  function saveConfig() {
+    localStorage.setItem('azure_tts_key', document.getElementById('apiKey').value.trim());
+    localStorage.setItem('azure_tts_region', document.getElementById('apiRegion').value.trim());
+  }
+
+  // 自動判斷語言：包含英文字母則用英文發音，否則預設廣東話
+  function detectVoice(text) {
+    const hasEnglish = /[a-zA-Z]/.test(text);
+    if (hasEnglish) {
+      return { lang: 'en-US', voice: 'en-US-AvaNeural', label: '英文' };
+    } else {
+      return { lang: 'zh-HK', voice: 'zh-HK-HiuGaaiNeural', label: '廣東話' };
+    }
+  }
+
+  async function startDictation() {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const region = document.getElementById('apiRegion').value.trim();
+    const text = document.getElementById('wordList').value.trim();
+
+    if (!apiKey) { alert('請輸入 Azure API Key！'); return; }
+    if (!text) { alert('請輸入默書內容！'); return; }
+
+    saveConfig();
+
+    const words = text.split('\n').map(w => w.trim()).filter(w => w.length > 0);
+    const speed = document.getElementById('speedSelect').value;
+    const repeatCount = parseInt(document.getElementById('repeatSelect').value);
+    const delaySec = parseInt(document.getElementById('delaySelect').value);
+    const statusText = document.getElementById('statusText');
+
+    isSpeaking = true;
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+
+    for (let i = 0; i < words.length; i++) {
+      if (!isSpeaking) break;
+
+      const word = words[i];
+      const voiceConfig = detectVoice(word);
+
+      for (let r = 1; r <= repeatCount; r++) {
+        if (!isSpeaking) break;
+
+        statusText.innerHTML = `正在朗讀 (${i + 1}/${words.length}) <span class="badge">${voiceConfig.label}</span> [第 ${r} 次]: <b>${word}</b>`;
+        
+        try {
+          await playAzureTTS(word, voiceConfig.voice, voiceConfig.lang, speed, apiKey, region);
+        } catch (err) {
+          alert('語音播放失敗，請檢查 API Key 及 Region 是否正確！');
+          console.error(err);
+          stopDictation();
+          return;
+        }
+
+        // 兩次朗讀之間的微小停頓 (1.5秒)
+        if (r < repeatCount && isSpeaking) {
+          await sleep(1500);
+        }
+      }
+
+      // 每個詞語讀完後的等待時間（讓小朋友書寫）
+      if (i < words.length - 1 && isSpeaking) {
+        for (let countdown = delaySec; countdown > 0; countdown--) {
+          if (!isSpeaking) break;
+          statusText.innerHTML = `請書寫 ✍️ ... 倒數 <b>${countdown}</b> 秒`;
+          await sleep(1000);
+        }
+      }
+    }
+
+    if (isSpeaking) {
+      statusText.innerHTML = '🎉 默書完成！棒極了！';
+    } else {
+      statusText.innerHTML = '已停止默書。';
+    }
+
+    resetButtons();
+  }
+
+  function playAzureTTS(text, voiceName, lang, speed, apiKey, region) {
+    return new Promise(async (resolve, reject) => {
+      const url = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
+      
+      const ssml = `
+        <speak version='1.0' xml:lang='${lang}'>
+          <voice name='${voiceName}'>
+            <prosody rate='${speed}'>${escapeXml(text)}</prosody>
+          </voice>
+        </speak>
+      `;
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Ocp-Apim-Subscription-Key': apiKey,
+            'Content-Type': 'application/ssml+xml',
+            'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
+          },
+          body: ssml
+        });
+
+        if (!response.ok) {
+          reject(new Error(`Azure API 錯誤，狀態碼: ${response.status}`));
+          return;
+        }
+
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        
+        currentAudio = new Audio(audioUrl);
+        currentAudio.onended = () => resolve();
+        currentAudio.onerror = (e) => reject(e);
+        currentAudio.play();
+
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  function stopDictation() {
+    isSpeaking = false;
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio = null;
+    }
+    document.getElementById('statusText').innerText = '已停止。';
+    resetButtons();
+  }
+
+  function resetButtons() {
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+    isSpeaking = false;
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function escapeXml(unsafe) {
+    return unsafe.replace(/[<>&'"]/g, c => {
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case '\'': return '&apos;';
+        case '"': return '&quot;';
+      }
+    });
+  }
+</script>
+
+</body>
+</html>
