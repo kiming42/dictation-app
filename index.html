@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>默書小助手 V8</title>
+  <title>默書小助手 V9 最終版</title>
 
   <!-- 引入 Tesseract.js (OCR), Cropper.js (裁切), PDF.js (PDF 渲染) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -506,7 +506,7 @@
     <div class="tools-group">
       <button class="btn btn-secondary btn-sm" onclick="filterNumbers()">🧹 過濾數字題號</button>
       <button class="btn btn-secondary btn-sm" onclick="filterPinyin()">🧹 過濾拼音/註音</button>
-      <button class="btn btn-secondary btn-sm" onclick="smartSegment()">✂️ 智能分段 (按標點拆分)</button>
+      <button class="btn btn-secondary btn-sm" onclick="smartSegment()">✂️ 智能分段 (按標點自動換行)</button>
     </div>
 
     <label>默書內容 (每行代表一段或一個詞語)：</label>
@@ -566,7 +566,7 @@
 
       <label>播放模式：</label>
       <select id="playMode" onchange="toggleAutoSettingsDisplay(); savePlaySettings();">
-        <option value="manual">手提模式 (按鍵跳下一句)</option>
+        <option value="manual">手動模式 (按鍵跳下一句)</option>
         <option value="auto">自動默書 (定時朗讀)</option>
       </select>
 
@@ -629,7 +629,7 @@
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
   // ==========================================
-  // ⚙️ 系統核心設定 (已填入你的 Azure Key)
+  // ⚙️ 系統核心設定 (已為您貼上 Azure API Key)
   // ==========================================
   const AZURE_API_KEY = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS"; 
   const AZURE_REGION = "eastasia";
@@ -961,7 +961,7 @@
       const readPunc = document.getElementById('readPunctuation').checked;
 
       if (!apiKey || apiKey.includes('請在這裡貼上')) {
-        alert('API KEY 未設定或錯誤，請重新檢查檔案原始碼！');
+        alert('API KEY 尚未正確設定！');
         if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         return;
       }
@@ -1177,18 +1177,20 @@
     document.getElementById('editContent').value = text;
   }
 
+  // ===== 🌟 V9 更新：增強智能分段邏輯 =====
   function smartSegment() {
     let text = document.getElementById('editContent').value;
-    const sentences = text.split(/([。！？!?\n]+)/).filter(s => s.trim().length > 0);
-    let result = [];
-    for(let i = 0; i < sentences.length; i += 2) {
-      let sentence = sentences[i];
-      let punc = sentences[i+1] || '';
-      if(sentence.trim()) result.push((sentence + punc).trim());
-    }
-    document.getElementById('editContent').value = result.join('\n');
+    
+    // 找出所有的句點、問號、感嘆號（中英文皆可），並將其後方可能連著的空白/換行全部取代為單一個「換行符號」
+    text = text.replace(/([.。！？!?]+)\s*/g, "$1\n");
+    
+    // 將多餘的空白行濾掉
+    const lines = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    
+    document.getElementById('editContent').value = lines.join('\n');
   }
 
+  // --- OCR / Crop ---
   async function handleFileUpload(e) {
     const file = e.target.files[0];
     if(!file) return;
@@ -1239,14 +1241,18 @@
       const result = await Tesseract.recognize(croppedCanvas, 'chi_tra+eng');
       const text = result.data.text.replace(/\n\s*\n/g, '\n').trim();
       document.getElementById('editContent').value = text;
+      
+      // OCR 後自動執行智能分段
       smartSegment(); 
-      statusText.innerText = "✅ OCR 辨識成功，並已自動分段！";
+      
+      statusText.innerText = "✅ OCR 辨識成功，並已依據標點符號自動分段！";
     } catch(err) {
       console.error(err);
       statusText.innerText = "❌ 辨識失敗，請重新嘗試。";
     }
   }
 
+  // --- 播放設定 Modal ---
   function openSettingsModal() {
     document.getElementById('settingsModal').classList.add('active');
     toggleAutoSettingsDisplay();
