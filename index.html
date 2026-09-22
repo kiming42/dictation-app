@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>默書小助手 V11</title>
+  <title>默書小助手 V13 (iOS修復+相機掃描版)</title>
 
-  <!-- 引入套件：OCR, 裁切, PDF 渲染, QRCode 產生器, 以及新增的 LZString 壓縮套件 -->
+  <!-- 引入套件：OCR, 裁切, PDF 渲染, QRCode 產生與掃描, LZString 壓縮 -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+  <!-- 新增：內建 QR Code 掃描器 -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
     :root {
@@ -103,6 +105,7 @@
     .btn-danger { background: var(--danger); }
     .btn-secondary { background: #e9ecef; color: #495057; }
     .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+    .btn-outline-success { background: transparent; border: 1.5px solid var(--success); color: var(--success); }
     .btn-block { width: 100%; }
     .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
 
@@ -359,9 +362,30 @@
       user-select: none;
       transition: filter 0.3s;
     }
+
+    .wakelock-indicator {
+      font-size: 12px;
+      color: #ff9800;
+      margin-top: -5px;
+      margin-bottom: 10px;
+      display: none;
+    }
+    .wakelock-indicator.active {
+      display: block;
+    }
+
+    /* 掃描器相機框樣式 */
+    #qr-reader video {
+      border-radius: 12px;
+      object-fit: cover;
+    }
   </style>
 </head>
 <body>
+
+  <!-- ================= 全局 Audio 播放器 (解決 iOS 限制) ================= -->
+  <audio id="globalAudio" playsinline style="display:none;"></audio>
+  <!-- ==================================================================== -->
 
   <!-- ==================== 1. 首頁 (默書清單) ==================== -->
   <div id="home-screen" class="page active">
@@ -386,7 +410,6 @@
 
       <div id="headerDropdown" class="dropdown-menu">
         <div class="dropdown-item" onclick="editCurrentDictation()">✏️ 編輯默書</div>
-        <!-- 分享按鈕會觸發 QR Code 彈窗 -->
         <div class="dropdown-item" onclick="openShareModal()">📤 分享默書 (QR Code)</div>
         <div class="dropdown-item" style="color: var(--danger);" onclick="deleteCurrentDictation()">🗑️ 刪除默書</div>
       </div>
@@ -399,13 +422,14 @@
         <button class="btn-circle" onclick="nextSentence()" title="下一句">⏭</button>
       </div>
       
-      <div id="playStatus" style="font-size: 15px; color: var(--primary); font-weight: bold; min-height: 22px; margin-bottom: 12px;"></div>
+      <div id="playStatus" style="font-size: 15px; color: var(--primary); font-weight: bold; min-height: 22px; margin-bottom: 5px;"></div>
+      <div id="wakeLockIndicator" class="wakelock-indicator">💡 螢幕常亮已啟用</div>
 
       <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
         <div class="mode-pill-btn" onclick="openSentenceSelection()">
           🎮 溫習模式 <span class="mode-pill-badge" id="selectedCountBadge">0/0</span>
         </div>
-        <button class="btn-circle" style="width:42px; height:42px; font-size:16px;" onclick="playCurrentSentence()" title="試聽目前句">🎙️</button>
+        <button class="btn-circle" style="width:42px; height:42px; font-size:16px;" onclick="selectSentenceToPlay(currentPlayingIndex)" title="試聽目前句">🎙️</button>
       </div>
     </div>
 
@@ -489,12 +513,16 @@
       </div>
     </div>
     
-    <label>拍照 / 上傳圖片 / PDF 檔案：</label>
-    <div style="margin-bottom: 12px;">
+    <label>匯入方式：</label>
+    <div class="row" style="margin-bottom: 6px;">
       <button class="btn btn-outline btn-block" onclick="document.getElementById('fileInput').click()">
-        📷 上傳圖片 / PDF 裁切識別 OCR
+        📄 上傳圖片/PDF 裁切 OCR
       </button>
       <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(event)">
+      <!-- 新增相機掃描分享 QR Code 的按鈕 -->
+      <button class="btn btn-outline-success btn-block" onclick="openQrScanner()">
+        📷 掃描朋友的 QR Code
+      </button>
     </div>
     
     <label>快捷清理與分段工具：</label>
@@ -634,7 +662,6 @@
       </p>
       
       <div style="display:flex; justify-content:center; align-items:center; background:#f8f9fa; border-radius:12px; padding:20px; margin-bottom: 20px;">
-        <!-- QR Code 容器 -->
         <div id="qrcode"></div>
       </div>
       
@@ -643,10 +670,23 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL 4: 相機掃描 QR Code 彈窗 ==================== -->
+  <div id="qrScanModal" class="modal">
+    <div class="modal-box" style="text-align: center; padding: 15px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="margin:0;">📷 掃描默書 QR Code</h3>
+        <button class="header-btn" onclick="closeQrScanner()">✕</button>
+      </div>
+      <div id="qr-reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000;"></div>
+      <p style="font-size: 13px; color: #666; margin-top: 15px;">請將朋友分享的 QR Code 放入畫面中</p>
+      <button class="btn btn-danger btn-block" style="margin-top: 10px;" onclick="closeQrScanner()">取消掃描</button>
+    </div>
+  </div>
+
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
   // ==========================================
-  // ⚙️ 系統核心設定 (請確保填入正確的 Azure Key)
+  // ⚙️ 系統核心設定 (請填入你的 Azure Key)
   // ==========================================
   const AZURE_API_KEY = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS"; 
   const AZURE_REGION = "eastasia";
@@ -658,15 +698,19 @@
   let currentPlayingIndex = 0;   
   
   let isPlayingAuto = false;
-  let playAudio = null;
   let currentAudioResolve = null;
+
+  // iOS 防休眠與音訊解鎖機制
+  const globalAudio = document.getElementById('globalAudio');
+  let audioUnlocked = false;
 
   let forceNextInAuto = false;
   let forcePrevInAuto = false;
-
   let cropper = null;
   let isTextHidden = false;
   let shareUrl = "";
+  let html5QrCode = null;
+  let wakeLock = null;
 
   const voiceMap = {
     'zh-HK': { female: 'zh-HK-HiuGaaiNeural', male: 'zh-HK-WanLungNeural' },
@@ -680,17 +724,18 @@
   // --- 系統載入與一鍵匯入檢查 ---
   window.onload = () => {
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
-    
-    // 檢查網址是否帶有匯入參數
+    checkUrlImport();
+    renderList();
+  };
+
+  function checkUrlImport() {
     const urlParams = new URLSearchParams(window.location.search);
     const action = urlParams.get('action');
-    
     if (action === 'import' || action === 'import_v2') {
       const importTitle = urlParams.get('title');
       const importLang = urlParams.get('lang');
       let importContent = urlParams.get('content');
 
-      // 如果是 V11 壓縮版 (import_v2)，先進行解壓縮
       if (action === 'import_v2' && importContent) {
         importContent = LZString.decompressFromEncodedURIComponent(importContent);
       }
@@ -701,13 +746,47 @@
           localStorage.setItem('dictations', JSON.stringify(dictations));
           alert('✅ 成功匯入默書！');
         }
-        // 清理網址參數，防止重新整理後再次彈出匯入
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
-    
-    renderList();
-  };
+  }
+
+  // --- iOS 音訊解鎖 (必須在使用者點擊時觸發) ---
+  function unlockAudioEngine() {
+    if (!audioUnlocked) {
+      // 播放一段極短的空音訊以獲得 Safari 權限
+      globalAudio.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//NXQAAAAAAASW5mbwAAAA8AAAAEAAABIwBRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpv/zV0AAADQAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
+      globalAudio.play().then(() => {
+        globalAudio.pause();
+        audioUnlocked = true;
+      }).catch(err => { console.log('解鎖音訊失敗', err); });
+    }
+  }
+
+  // --- 螢幕常亮控制 (Wake Lock) 解決鎖定問題 ---
+  async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        document.getElementById('wakeLockIndicator').classList.add('active');
+      } catch (err) {}
+    }
+  }
+
+  function releaseWakeLock() {
+    if (wakeLock !== null) {
+      wakeLock.release().then(() => {
+        wakeLock = null;
+        document.getElementById('wakeLockIndicator').classList.remove('active');
+      }).catch(err => {});
+    }
+  }
+
+  document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible' && isPlayingAuto) {
+      await requestWakeLock();
+    }
+  });
 
   function saveConfig() {
     localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
@@ -719,7 +798,7 @@
     document.getElementById('headerDropdown').classList.remove('active');
     
     if (isPlayingAuto) togglePlayPause();
-    else stopAudio();
+    else { stopAudio(); releaseWakeLock(); }
     if(document.getElementById('playStatus')) document.getElementById('playStatus').innerText = '';
   }
 
@@ -823,6 +902,7 @@
   }
 
   function selectSentenceToPlay(pos) {
+    unlockAudioEngine();
     if (isPlayingAuto) togglePlayPause(); 
     currentPlayingIndex = pos;
     updateDetailUI();
@@ -830,6 +910,7 @@
   }
 
   function prevSentence() {
+    unlockAudioEngine();
     if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) {
       forcePrevInAuto = true;
@@ -845,6 +926,7 @@
   }
 
   function nextSentence() {
+    unlockAudioEngine();
     if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) {
       forceNextInAuto = true;
@@ -871,10 +953,7 @@
   }
 
   function stopAudio() {
-    if (playAudio) {
-      playAudio.pause();
-      playAudio = null;
-    }
+    globalAudio.pause();
     if (currentAudioResolve) {
       currentAudioResolve();
       currentAudioResolve = null;
@@ -882,22 +961,25 @@
   }
 
   function togglePlayPause() {
+    unlockAudioEngine();
     const playMode = document.getElementById('playMode').value;
     
     if (playMode === 'auto') {
       if (isPlayingAuto) {
         isPlayingAuto = false;
         stopAudio();
+        releaseWakeLock();
         updatePlayBtnUI(false);
         document.getElementById('playStatus').innerText = '⏸ 已暫停自動播放';
       } else {
         if(activeSentenceIndices.length === 0) return;
         isPlayingAuto = true;
+        requestWakeLock();
         updatePlayBtnUI(true);
         runAutoPlayLoop();
       }
     } else {
-      if (playAudio && !playAudio.paused) {
+      if (!globalAudio.paused) {
         stopAudio();
         updatePlayBtnUI(false);
         document.getElementById('playStatus').innerText = '⏸ 已暫停';
@@ -935,7 +1017,7 @@
 
       if (forceNextInAuto) {
         if (currentPlayingIndex < activeSentenceIndices.length - 1) { currentPlayingIndex++; } 
-        else { isPlayingAuto = false; updatePlayBtnUI(false); document.getElementById('playStatus').innerText = '🎉 默書播放完畢！'; break; }
+        else { isPlayingAuto = false; releaseWakeLock(); updatePlayBtnUI(false); document.getElementById('playStatus').innerText = '🎉 默書播放完畢！'; break; }
         continue;
       }
       if (forcePrevInAuto) {
@@ -967,6 +1049,7 @@
         currentPlayingIndex++;
       } else {
         isPlayingAuto = false;
+        releaseWakeLock();
         updatePlayBtnUI(false);
         document.getElementById('playStatus').innerText = '🎉 默書播放完畢！';
         break;
@@ -975,6 +1058,7 @@
     
     if (!isPlayingAuto && !document.getElementById('playStatus').innerText.includes('完畢')) {
         updatePlayBtnUI(false);
+        releaseWakeLock();
         document.getElementById('playStatus').innerText = '⏸ 已暫停';
     }
   }
@@ -1006,7 +1090,7 @@
       const readPunc = document.getElementById('readPunctuation').checked;
 
       if (!apiKey || apiKey.includes('請在這裡貼上')) {
-        alert('API KEY 尚未正確設定！');
+        alert('API KEY 未設定，無法播放語音！');
         if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         return;
       }
@@ -1030,23 +1114,32 @@
         if (!response.ok) throw new Error('TTS Fetch Error');
 
         const blob = await response.blob();
-        playAudio = new Audio(URL.createObjectURL(blob));
+        
+        // 釋放舊的 URL
+        if(globalAudio.src) URL.revokeObjectURL(globalAudio.src);
+        
+        // 賦予新的音訊來源 (iOS 現在會允許，因為 globalAudio 已經在點擊時解鎖過)
+        globalAudio.src = URL.createObjectURL(blob);
         
         if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(true);
 
-        playAudio.onended = () => {
+        globalAudio.onended = () => {
           if (document.getElementById('playMode').value === 'manual') {
               updatePlayBtnUI(false);
               document.getElementById('playStatus').innerText = '準備就緒';
           }
           if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         };
-        playAudio.onerror = () => {
+        globalAudio.onerror = () => {
           if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(false);
           if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         };
         
-        playAudio.play();
+        globalAudio.play().catch(e => {
+            console.error("iOS Audio Playback Prevented: ", e);
+            if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+        });
+
       } catch(err) {
         console.error(err);
         if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(false);
@@ -1140,16 +1233,14 @@
   function cancelSentenceSelection() { showPage('detail-screen'); }
   function clearSelectionAndPlayAll() { selectAllSentences(true); confirmSentenceSelection(); }
 
-  // ===== 🌟 V11 更新：QR Code 產生與 LZString 壓縮分享功能 =====
+  // ===== QR Code 產生與分享功能 =====
   function openShareModal() {
     if(!currentDictation) return;
     
-    // 使用 LZString 壓縮內容
     const compressedContent = LZString.compressToEncodedURIComponent(currentDictation.content);
-
     const baseUrl = window.location.href.split('?')[0]; 
     const params = new URLSearchParams({
-      action: 'import_v2', // 標記為 V11 壓縮版
+      action: 'import_v2',
       title: currentDictation.title,
       lang: currentDictation.lang || 'zh',
       content: compressedContent
@@ -1159,21 +1250,18 @@
     document.getElementById('shareModal').classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
 
-    // 生成較大的 QR Code 提升掃描成功率
     document.getElementById('qrcode').innerHTML = ""; 
     new QRCode(document.getElementById('qrcode'), {
       text: shareUrl,
-      width: 260,  // 尺寸由 180 放大至 260
+      width: 260,
       height: 260,
       colorDark : "#000000",
       colorLight : "#f8f9fa",
-      correctLevel : QRCode.CorrectLevel.L // 保持最低糾錯率以換取最疏落的點陣
+      correctLevel : QRCode.CorrectLevel.L
     });
   }
 
-  function closeShareModal() {
-    document.getElementById('shareModal').classList.remove('active');
-  }
+  function closeShareModal() { document.getElementById('shareModal').classList.remove('active'); }
 
   function copyShareLink() {
     navigator.clipboard.writeText(shareUrl).then(() => {
@@ -1313,6 +1401,63 @@
     } catch(err) {
       console.error(err);
       statusText.innerText = "❌ 辨識失敗，請重新嘗試。";
+    }
+  }
+
+  // ===== 🌟 V13 更新：相機掃描 QR Code 匯入功能 =====
+  function openQrScanner() {
+    document.getElementById('qrScanModal').classList.add('active');
+    html5QrCode = new Html5Qrcode("qr-reader");
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => {
+        // 掃描成功時
+        handleQrCodeScanned(decodedText);
+      },
+      (errorMessage) => {
+        // 忽略掃描過程中的雜訊錯誤
+      }
+    ).catch(err => {
+      alert("無法啟動相機權限：" + err);
+      closeQrScanner();
+    });
+  }
+
+  function closeQrScanner() {
+    if (html5QrCode) {
+      html5QrCode.stop().then(() => { html5QrCode.clear(); }).catch(e => {});
+    }
+    document.getElementById('qrScanModal').classList.remove('active');
+  }
+
+  function handleQrCodeScanned(urlText) {
+    closeQrScanner();
+    try {
+      const url = new URL(urlText);
+      const action = url.searchParams.get('action');
+      if (action === 'import' || action === 'import_v2') {
+        const importTitle = url.searchParams.get('title');
+        const importLang = url.searchParams.get('lang') || 'zh';
+        let importContent = url.searchParams.get('content');
+
+        if (action === 'import_v2' && importContent) {
+          importContent = LZString.decompressFromEncodedURIComponent(importContent);
+        }
+
+        if (importTitle && importContent) {
+          document.getElementById('editTitle').value = importTitle;
+          document.getElementById('editLang').value = importLang;
+          document.getElementById('editContent').value = importContent;
+          alert('✅ 已成功掃描並讀取朋友的默書內容，請確認後按「儲存默書」！');
+        } else {
+          alert('❌ QR Code 內容不完整或已損壞。');
+        }
+      } else {
+        alert('❌ 掃描失敗：這不是本系統的有效默書 QR Code。');
+      }
+    } catch(e) {
+      alert('❌ 無法解析此 QR Code，請確認掃描對象是否正確。');
     }
   }
 
