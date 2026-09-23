@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手</title>
+  <title>默書小助手 V16</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -403,28 +403,13 @@
     }
     .qr-instruction-box li::marker { color: #0066ff; font-weight: bold; }
 
+    /* 高解析度 QR Code 縮放顯示 */
     #qrcode canvas, #qrcode img {
       width: 100% !important;
-      max-width: 300px;
+      max-width: 250px;
       height: auto !important;
       display: block;
       margin: 0 auto;
-    }
-
-    /* 分享連結顯示框 */
-    .share-link-box {
-      margin-top: 15px; 
-      padding: 10px 12px; 
-      background: #e9ecef; 
-      border-radius: 8px; 
-      font-size: 11px; 
-      word-break: break-all; 
-      color: #555; 
-      max-height: 60px; 
-      overflow-y: auto; 
-      text-align: left; 
-      user-select: text; 
-      border: 1px solid #ced4da;
     }
   </style>
 </head>
@@ -589,8 +574,8 @@
 
     <div class="card" style="margin-top: 15px;">
       <label>更改家長解鎖密碼 (4位數字):</label>
-      <input type="password" id="parentPin" placeholder="預設密碼: 1234" value="1234" onchange="saveConfig()">
-      <p style="font-size: 13px; color: #666; margin-top: 5px;">保護設定與防止小朋友偷看答案。忘記時只需輸入 0000 即可重置。</p>
+      <input type="password" id="parentPin" placeholder="設定新密碼..." value="" onchange="saveConfig()">
+      <p style="font-size: 13px; color: #666; margin-top: 5px;">保護設定與防止小朋友偷看答案。</p>
 
       <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 15px;">
         儲存並返回
@@ -686,20 +671,20 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 分享與 QR Code ==================== -->
+  <!-- ==================== MODAL: 分享與 QR Code (圖3完整還原) ==================== -->
   <div id="shareModal" class="modal">
-    <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9;">
-      <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+    <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9; display: flex; flex-direction: column; max-height: 90vh;">
+      <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; flex-shrink: 0;">
         <h3 style="margin:0; font-size:18px; color: #333;">📤 QR Code 分享</h3>
         <button class="header-btn" onclick="closeShareModal()">✕</button>
       </div>
       
-      <div style="padding: 20px; text-align: center;">
+      <div style="padding: 20px; text-align: center; overflow-y: auto; flex: 1;">
         <h2 id="shareTitle" style="margin: 0 0 5px 0; font-size: 22px; color: #111;">默書標題</h2>
-        <p id="shareWordCount" style="color: #6c757d; margin: 0 0 15px 0; font-size: 15px;">X 個詞語</p>
+        <p id="shareWordCount" style="color: #6c757d; margin: 0 0 15px 0; font-size: 15px;">X 個詞語 / 段落</p>
         
         <div style="background: white; padding: 15px; border-radius: 20px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 15px;">
-          <div id="qrcode" style="width: 100%; max-width: 300px; margin: 0 auto;"></div>
+          <div id="qrcode" style="width: 100%; max-width: 250px; margin: 0 auto;"></div>
         </div>
         
         <div class="qr-instruction-box">
@@ -712,12 +697,11 @@
           </ol>
         </div>
 
-        <!-- 分享連結顯示框 (V16修復) -->
-        <div class="share-link-box" id="shareUrlDisplayBox"></div>
+        <p style="font-size:13px; color:#999; margin: 15px 0 5px 0; text-align: left;">或者直接複製連結傳給朋友：</p>
+        <!-- 顯示分享連結的文字框 -->
+        <div id="shareUrlDisplayBox" style="background:#e9ecef; padding:10px; border-radius:8px; font-size:11px; color:#555; word-break:break-all; max-height:60px; overflow-y:auto; text-align:left; border:1px solid #ced4da; margin-bottom:15px; user-select:all;"></div>
         
-        <div class="row" style="margin-top: 15px;">
-          <button class="btn btn-outline" style="flex:1;" onclick="copyShareLink()">📋 複製連結</button>
-        </div>
+        <button class="btn btn-primary btn-block" onclick="copyShareLink()">📋 複製一鍵匯入連結</button>
       </div>
     </div>
   </div>
@@ -817,46 +801,30 @@
 
   function checkUrlImport() {
     const urlParams = new URLSearchParams(window.location.search);
-    
-    if (urlParams.has('d')) {
+    if (urlParams.has('v3')) {
       try {
-        const compressed = urlParams.get('d');
-        const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
-        const data = JSON.parse(jsonStr);
-        if (data.t && data.c) {
-          if (confirm(`📬 收到一份新的默書：\n「${data.t}」\n\n請問是否要匯入到你的清單中？`)) {
-            dictations.unshift({ id: Date.now(), title: data.t, lang: data.l || 'zh', content: data.c });
-            localStorage.setItem('dictations', JSON.stringify(dictations));
-            alert('✅ 成功匯入默書！');
+        const compressed = urlParams.get('v3');
+        const decompressed = LZString.decompressFromEncodedURIComponent(compressed);
+        if (decompressed) {
+          const parts = decompressed.split('|||');
+          if (parts.length >= 3) {
+            const importTitle = parts[0];
+            const importLang = parts[1];
+            const importContent = parts.slice(2).join('|||');
+            if (confirm(`📬 收到一份新的默書：\n「${importTitle}」\n\n請問是否要匯入到你的清單中？`)) {
+              dictations.unshift({ id: Date.now(), title: importTitle, lang: importLang, content: importContent });
+              localStorage.setItem('dictations', JSON.stringify(dictations));
+              alert('✅ 成功匯入默書！');
+            }
+            window.history.replaceState({}, document.title, window.location.pathname);
           }
-          window.history.replaceState({}, document.title, window.location.pathname);
         }
       } catch(e) { console.error('匯入解析失敗', e); }
       return;
     }
-
-    const action = urlParams.get('action');
-    if (action === 'import' || action === 'import_v2') {
-      const importTitle = urlParams.get('title');
-      const importLang = urlParams.get('lang');
-      let importContent = urlParams.get('content');
-
-      if (action === 'import_v2' && importContent) {
-        importContent = LZString.decompressFromEncodedURIComponent(importContent);
-      }
-
-      if (importTitle && importContent) {
-        if (confirm(`📬 收到一份新的默書：\n「${importTitle}」\n\n請問是否要匯入到你的清單中？`)) {
-          dictations.unshift({ id: Date.now(), title: importTitle, lang: importLang, content: importContent });
-          localStorage.setItem('dictations', JSON.stringify(dictations));
-          alert('✅ 成功匯入默書！');
-        }
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
   }
 
-  // --- 🔓 完美保護機制 ---
+  // --- 🔓 完美保護機制：隱藏 0000 提示 ---
   function getParentPin() { return localStorage.getItem('parent_pin') || '1234'; }
 
   function verifyParentPin(actionName) {
@@ -897,35 +865,20 @@
     openEditScreen(currentDictation.id);
   }
 
-  function deleteCurrentDictation() {
-    if(!currentDictation) return;
-    document.getElementById('headerDropdown').classList.remove('active');
-    
-    setTimeout(() => {
-        if(confirm(`確定要刪除「${currentDictation.title}」嗎？`)) {
-          dictations = dictations.filter(d => d.id !== currentDictation.id);
-          localStorage.setItem('dictations', JSON.stringify(dictations));
-          renderList();
-          showPage('home-screen');
-        }
-    }, 50);
-  }
-
-  // ===== V16 極限壓縮分享 & 雙軌按鈕 =====
+  // ===== V16 極限壓縮分享 & 連結顯示框 =====
   function openShareModal() {
     if(!currentDictation) return;
     if(isTextHidden && !verifyParentPin('分享默書')) return;
     
-    const dataObj = { t: currentDictation.title, l: currentDictation.lang || 'zh', c: currentDictation.content };
-    const compressedData = LZString.compressToEncodedURIComponent(JSON.stringify(dataObj));
+    const rawData = currentDictation.title + "|||" + (currentDictation.lang||'zh') + "|||" + currentDictation.content;
+    const compressedData = LZString.compressToEncodedURIComponent(rawData);
     
     const baseUrl = window.location.href.split('?')[0]; 
-    shareUrl = `${baseUrl}?d=${compressedData}`;
+    shareUrl = `${baseUrl}?v3=${compressedData}`;
 
     document.getElementById('shareTitle').innerText = currentDictation.title;
     document.getElementById('shareWordCount').innerText = `${getSentences(currentDictation.content).length} 個詞語 / 段落`;
     
-    // 顯示分享連結文本
     document.getElementById('shareUrlDisplayBox').innerText = shareUrl;
 
     document.getElementById('shareModal').classList.add('active');
@@ -934,8 +887,8 @@
     document.getElementById('qrcode').innerHTML = ""; 
     new QRCode(document.getElementById('qrcode'), {
       text: shareUrl,
-      width: 400,  
-      height: 400,
+      width: 1024,  
+      height: 1024,
       colorDark : "#000000",
       colorLight : "#ffffff",
       correctLevel : QRCode.CorrectLevel.L 
@@ -950,7 +903,7 @@
     });
   }
 
-  // --- iOS 音訊解鎖 (同步觸發) ---
+  // --- iOS 音訊解鎖 ---
   function unlockAudioEngine() {
     if (!audioUnlocked) {
       globalAudio.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//NXQAAAAAAASW5mbwAAAA8AAAAEAAABIwBRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpv/zV0AAADQAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
@@ -1117,12 +1070,10 @@
 
   function stopAudio() {
     globalAudio.pause();
-    if (currentAudioResolve) {
-      currentAudioResolve();
-      currentAudioResolve = null;
-    }
+    if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
   }
 
+  // --- 修復自動播放與手動播放邏輯 ---
   function togglePlayPause() {
     unlockAudioEngine();
     const playMode = document.getElementById('playMode').value;
@@ -1140,7 +1091,7 @@
         runAutoPlayLoop();
       }
     } else {
-      // 修復手動模式判斷邏輯，避免與解鎖音訊衝突
+      // 手動模式
       if (!globalAudio.paused && globalAudio.src.startsWith('blob:')) {
         stopAudio();
         updatePlayBtnUI(false);
@@ -1376,6 +1327,22 @@
   function cancelSentenceSelection() { showPage('detail-screen'); }
   function clearSelectionAndPlayAll() { selectAllSentences(true); confirmSentenceSelection(); }
 
+  // --- 刪除默書修復 ---
+  function deleteCurrentDictation() {
+    if(!currentDictation) return;
+    document.getElementById('headerDropdown').classList.remove('active');
+    
+    // 加入延遲，防止 Confirm 彈窗與 UI 操作衝突
+    setTimeout(() => {
+        if(confirm(`確定要刪除「${currentDictation.title}」嗎？`)) {
+          dictations = dictations.filter(d => d.id !== currentDictation.id);
+          localStorage.setItem('dictations', JSON.stringify(dictations));
+          renderList();
+          showPage('home-screen');
+        }
+    }, 50);
+  }
+
   // --- 新增/編輯頁面 ---
   function openEditScreen(id) {
     if(id) {
@@ -1579,7 +1546,6 @@
     }
   }
 
-  // ===== 相機掃描 QR Code 匯入功能 =====
   function openQrScanner() {
     document.getElementById('qrScanModal').classList.add('active');
     html5QrCode = new Html5Qrcode("qr-reader");
@@ -1603,36 +1569,18 @@
     closeQrScanner();
     try {
       const url = new URL(urlText);
-      if (url.searchParams.has('d')) {
-        const compressed = url.searchParams.get('d');
+      if (url.searchParams.has('v3')) {
+        const compressed = url.searchParams.get('v3');
         const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
-        const data = JSON.parse(jsonStr);
-        if (data.t && data.c) {
-          document.getElementById('editTitle').value = data.t;
-          document.getElementById('editLang').value = data.l || 'zh';
-          document.getElementById('editContent').value = data.c;
+        const parts = jsonStr.split('|||');
+        if (parts.length >= 3) {
+          document.getElementById('editTitle').value = parts[0];
+          document.getElementById('editLang').value = parts[1];
+          document.getElementById('editContent').value = parts.slice(2).join('|||');
           alert('✅ 已成功掃描並讀取默書內容，請確認後按「儲存默書」！');
         } else { alert('❌ QR Code 內容不完整。'); }
         return;
       }
-
-      const action = url.searchParams.get('action');
-      if (action === 'import' || action === 'import_v2') {
-        const importTitle = url.searchParams.get('title');
-        const importLang = url.searchParams.get('lang') || 'zh';
-        let importContent = url.searchParams.get('content');
-
-        if (action === 'import_v2' && importContent) {
-          importContent = LZString.decompressFromEncodedURIComponent(importContent);
-        }
-
-        if (importTitle && importContent) {
-          document.getElementById('editTitle').value = importTitle;
-          document.getElementById('editLang').value = importLang;
-          document.getElementById('editContent').value = importContent;
-          alert('✅ 已成功讀取默書內容，請確認後按「儲存默書」！');
-        } else { alert('❌ QR Code 內容不完整。'); }
-      } else { alert('❌ 掃描失敗：這不是本系統的有效默書 QR Code。'); }
     } catch(e) { alert('❌ 無法解析此 QR Code。'); }
   }
 
