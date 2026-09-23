@@ -6,32 +6,14 @@
   <!-- 強制淺色模式，防止暗黑模式導致輸入框文字反白看不清 -->
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手</title>
+  <title>默書小助手 V15</title>
 
-  <!-- ================= PWA 漸進式 App 設定 ================= -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="默書助手">
   <meta name="theme-color" content="#0066ff">
-  <!-- PWA App 圖示 -->
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3364/3364024.png">
-  <!-- 動態生成 Manifest 讓 Android/iOS 可以當作原生 App 安裝 -->
-  <link rel="manifest" id="pwa-manifest">
-  <script>
-    const manifestJSON = {
-      "name": "默書小助手",
-      "short_name": "默書助手",
-      "start_url": ".",
-      "display": "standalone",
-      "background_color": "#f4f6f9",
-      "theme_color": "#0066ff",
-      "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/3364/3364024.png", "sizes": "512x512", "type": "image/png"}]
-    };
-    document.getElementById('pwa-manifest').setAttribute('href', 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifestJSON)));
-  </script>
-  <!-- ======================================================= -->
-
-  <!-- 引入套件：OCR, 裁切, PDF 渲染, QRCode 產生與掃描, LZString 壓縮 -->
+  
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -62,7 +44,7 @@
       padding: 0;
       color: var(--text);
       -webkit-tap-highlight-color: transparent;
-      user-select: none; /* 防止小朋友不小心選取文字 */
+      user-select: none; 
     }
 
     .app-header {
@@ -126,39 +108,43 @@
       transition: opacity 0.2s;
     }
     button.btn:active { opacity: 0.8; }
-    .btn-primary { background: var(--primary); }
-    .btn-success { background: var(--success); }
-    .btn-danger { background: var(--danger); }
-    .btn-secondary { background: #e9ecef; color: #495057; }
-    .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
-    .btn-outline-success { background: transparent; border: 1.5px solid var(--success); color: var(--success); }
+    .btn-primary { background: var(--primary) !important; color: white !important; }
+    .btn-success { background: var(--success) !important; color: white !important; }
+    .btn-danger { background: var(--danger) !important; color: white !important; }
+    .btn-secondary { background: #e9ecef !important; color: #495057 !important; border: 1px solid #ced4da !important; }
+    .btn-outline { background: transparent !important; border: 1.5px solid var(--primary) !important; color: var(--primary) !important; }
+    .btn-outline-success { background: transparent !important; border: 1.5px solid var(--success) !important; color: var(--success) !important; }
     .btn-block { width: 100%; }
     .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
 
     label { font-weight: 600; font-size: 14px; margin-top: 10px; display: block; color: #495057; }
     
-    /* 強制輸入框樣式，防止白色字體 */
+    /* 徹底修復暗黑模式導致的文字反白問題 */
     input[type="text"], input[type="password"], select, textarea {
       width: 100%;
       padding: 12px;
       margin-top: 6px;
       margin-bottom: 12px;
-      border: 1.5px solid #dee2e6 !important;
+      border: 1.5px solid #ced4da !important;
       border-radius: 10px !important;
       font-size: 16px !important;
-      color: #111111 !important;
+      color: #000000 !important;
       background-color: #ffffff !important;
       box-sizing: border-box;
-      user-select: text; /* 允許文字輸入區被選取 */
+      user-select: text; 
     }
     input:focus, select:focus, textarea:focus {
       border-color: var(--primary) !important;
       outline: none;
     }
+    textarea::placeholder, input::placeholder {
+      color: #888888 !important;
+      opacity: 1 !important;
+    }
     
     textarea#editContent {
-      height: 260px;
-      min-height: 220px;
+      height: 200px;
+      min-height: 180px;
       resize: vertical;
       line-height: 1.6;
     }
@@ -357,8 +343,6 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
 
-    .cropper-container-box { max-height: 60vh; overflow: hidden; margin-bottom: 15px; }
-
     .dropdown-menu {
       position: absolute;
       right: 16px;
@@ -390,37 +374,49 @@
       filter: blur(10px);
       opacity: 0.7;
       user-select: none;
-      pointer-events: none; /* 防止任何點擊或選取 */
+      pointer-events: none; 
     }
 
-    .wakelock-indicator {
-      font-size: 12px;
-      color: #ff9800;
-      margin-top: -5px;
-      margin-bottom: 10px;
-      display: none;
+    /* 智能分段 UI 樣式 */
+    .segment-item {
+      background: #ffffff; border-radius: 12px; padding: 12px 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid #eee; display: flex; align-items: center; gap: 12px;
     }
-    .wakelock-indicator.active {
-      display: block;
+    .segment-idx {
+      width: 26px; height: 26px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 13px; font-weight: bold; flex-shrink: 0;
     }
+    .segment-text { flex: 1; font-size: 16px; line-height: 1.5; color: #333; }
+    .segment-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .btn-action { padding: 5px 10px; font-size: 12px; border: 1px solid #ced4da; background: #f8f9fa; border-radius: 6px; cursor: pointer; color: #495057; font-weight: 600; }
+    .btn-action:hover { background: #e2e6ea; }
 
-    #qr-reader video {
-      border-radius: 12px;
-      object-fit: cover;
+    /* 拆分符號 | 樣式 */
+    .split-token { display: inline-block; }
+    .split-divider {
+      display: inline-block; width: 14px; color: #ccc; cursor: pointer; font-weight: bold; margin: 0 2px; user-select: none; transition: all 0.2s;
     }
+    .split-divider:hover { color: var(--danger); transform: scale(1.6); }
+
+    /* QR Code 教學框 */
+    .qr-instruction-box {
+      background: #e6f0ff; border-radius: 12px; padding: 15px 20px; text-align: left; margin-top: 15px;
+    }
+    .qr-instruction-box h4 {
+      margin: 0 0 10px 0; color: #0056b3; display: flex; align-items: center; gap: 8px; font-size: 16px;
+    }
+    .qr-instruction-box ol {
+      margin: 0; padding-left: 20px; color: #333; font-size: 14px; line-height: 1.8;
+    }
+    .qr-instruction-box li::marker { color: #0066ff; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <!-- ================= 全局 Audio 播放器 (解決 iOS 限制) ================= -->
   <audio id="globalAudio" playsinline style="display:none;"></audio>
-  <!-- ==================================================================== -->
 
-  <!-- ==================== 1. 首頁 (默書清單) ==================== -->
+  <!-- ==================== 1. 首頁 ==================== -->
   <div id="home-screen" class="page active">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <h1>📚 我的默書清單</h1>
-      <!-- 加入密碼防護：只有家長能進入設定 -->
       <button class="header-btn" onclick="checkAndShowSettings()" title="系統設定">⚙️</button>
     </div>
 
@@ -453,10 +449,8 @@
       </div>
       
       <div id="playStatus" style="font-size: 15px; color: var(--primary); font-weight: bold; min-height: 22px; margin-bottom: 5px;"></div>
-      <div id="wakeLockIndicator" class="wakelock-indicator">💡 螢幕常亮已啟用</div>
 
       <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-        <!-- 點擊溫習模式會觸發防護檢查 -->
         <div class="mode-pill-btn" onclick="checkAndOpenSentenceSelection()">
           🎮 溫習模式 <span class="mode-pill-badge" id="selectedCountBadge">0/0</span>
         </div>
@@ -498,10 +492,6 @@
       <button class="header-btn" style="color: var(--primary); font-weight: bold; font-size: 16px;" onclick="confirmSentenceSelection()">完成</button>
     </div>
 
-    <div style="font-size: 13px; color: #666; margin-top: 10px;">
-      ⓘ 勾選今天要溫習的內容，只播放勾選項目
-    </div>
-
     <div class="selection-header-tools">
       <span onclick="selectAllSentences(true)">全選</span>
       <span onclick="selectAllSentences(false)">取消全選</span>
@@ -514,9 +504,6 @@
       <button class="btn btn-primary btn-block" id="startPracticeBtn" onclick="confirmSentenceSelection()" style="padding: 15px; font-size: 17px;">
         開始練習 (0 項)
       </button>
-      <div style="margin-top: 12px; color: var(--danger); font-size: 14px; cursor: pointer;" onclick="clearSelectionAndPlayAll()">
-        清除勾選，播放全部
-      </div>
     </div>
   </div>
 
@@ -524,7 +511,7 @@
   <div id="edit-screen" class="page">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <button class="header-btn" onclick="showPage('home-screen')">❮</button>
-      <h2 id="editScreenTitle">✏️ 編輯默書</h2>
+      <h2 id="editScreenTitle">✏️ 新增/編輯默書</h2>
       <div style="width: 30px;"></div>
     </div>
 
@@ -559,11 +546,11 @@
     <div class="tools-group">
       <button class="btn btn-secondary btn-sm" onclick="filterNumbers()">🧹 過濾題號</button>
       <button class="btn btn-secondary btn-sm" onclick="filterPinyin()">🧹 過濾拼音</button>
-      <button class="btn btn-secondary btn-sm" onclick="smartSegment()">✂️ 智能分段</button>
+      <button class="btn btn-primary btn-sm" onclick="openSegmentEditor()" style="background:#e6f0ff !important; color:#0066ff !important; border:1px solid #0066ff !important;">✂️ 智能分段與編輯</button>
     </div>
 
     <label>默書內容 (每行代表一段或一個詞語)：</label>
-    <textarea id="editContent" placeholder="請在此輸入或貼上默書內容...&#10;如果是一整段文字，可點擊上方「智能分段」自動換行拆分"></textarea>
+    <textarea id="editContent" placeholder="請在此輸入或貼上默書內容..."></textarea>
     
     <p id="ocrStatus" style="color: #666; font-size: 13px; margin: 0 0 12px 0;"></p>
 
@@ -582,8 +569,8 @@
     </div>
 
     <div class="card" style="margin-top: 15px;">
-      <label>家長解鎖密碼 (4位數):</label>
-      <input type="password" id="parentPin" placeholder="預設: 1234" value="1234" onchange="saveConfig()">
+      <label>更改家長解鎖密碼 (4位數字):</label>
+      <input type="password" id="parentPin" placeholder="預設密碼: 1234" value="1234" onchange="saveConfig()">
       <p style="font-size: 13px; color: #666; margin-top: 5px;">這組密碼將用來保護「設定」、「顯示文字」、「編輯」與「溫習模式」，防止小朋友偷看答案。</p>
 
       <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 15px;">
@@ -592,7 +579,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 1: 播放設定彈窗 ==================== -->
+  <!-- ==================== MODAL: 播放設定彈窗 ==================== -->
   <div id="settingsModal" class="modal">
     <div class="modal-box">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -666,7 +653,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 2: 圖片裁切 Modal ==================== -->
+  <!-- ==================== MODAL: 圖片裁切 ==================== -->
   <div id="cropModal" class="modal">
     <div class="modal-box" style="max-width: 95%;">
       <h3 style="margin-top:0;">✂️ 裁切默書範圍</h3>
@@ -680,32 +667,42 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 3: 分享與 QR Code 彈窗 ==================== -->
+  <!-- ==================== MODAL: 分享與 QR Code (圖2復刻版) ==================== -->
   <div id="shareModal" class="modal">
-    <div class="modal-box" style="text-align: center;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <h3 style="margin:0;">📤 分享此默書</h3>
+    <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9;">
+      <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+        <h3 style="margin:0; font-size:18px; color: #333;">📤 QR Code 分享</h3>
         <button class="header-btn" onclick="closeShareModal()">✕</button>
       </div>
       
-      <p style="font-size:14px; color:#666; margin-bottom: 20px;">
-        用另一部手機或 iPad 的相機掃描下方 QR Code，<br>即可直接匯入這份默書到該裝置！
-      </p>
-      
-      <div style="display:flex; justify-content:center; align-items:center; background:#f8f9fa; border-radius:12px; padding:20px; margin-bottom: 20px;">
-        <div id="qrcode"></div>
+      <div style="padding: 20px; text-align: center;">
+        <h2 id="shareTitle" style="margin: 0 0 5px 0; font-size: 22px; color: #111;">默書標題</h2>
+        <p id="shareWordCount" style="color: #6c757d; margin: 0 0 20px 0; font-size: 15px;">X 個詞語</p>
+        
+        <div style="background: white; padding: 20px; border-radius: 20px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 20px;">
+          <div id="qrcode"></div>
+        </div>
+        
+        <div class="qr-instruction-box">
+          <h4><span style="font-size: 18px; color: #0066ff;">ⓘ</span> 使用方法</h4>
+          <ol>
+            <li>讓學生打開「默書助手」App</li>
+            <li>點擊新增默書的「📷 掃描 QR Code」</li>
+            <li>對準此 QR Code 掃描</li>
+            <li>默書內容會自動匯入</li>
+          </ol>
+        </div>
+        
+        <button class="btn btn-outline btn-block" style="margin-top: 15px;" onclick="copyShareLink()">📋 複製一鍵匯入連結 (備用)</button>
       </div>
-      
-      <p style="font-size:13px; color:#999; margin-bottom: 15px;">或者你也可以直接複製壓縮連結傳給朋友：</p>
-      <button class="btn btn-outline btn-block" onclick="copyShareLink()">📋 複製一鍵匯入連結</button>
     </div>
   </div>
 
-  <!-- ==================== MODAL 4: 相機掃描 QR Code 彈窗 ==================== -->
+  <!-- ==================== MODAL: 相機掃描 QR Code ==================== -->
   <div id="qrScanModal" class="modal">
     <div class="modal-box" style="text-align: center; padding: 15px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <h3 style="margin:0;">📷 掃描默書 QR Code</h3>
+        <h3 style="margin:0;">📷 掃描 QR Code</h3>
         <button class="header-btn" onclick="closeQrScanner()">✕</button>
       </div>
       <div id="qr-reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000;"></div>
@@ -714,10 +711,44 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL: 智能分段與編輯器 (圖3復刻版) ==================== -->
+  <div id="segmentModal" class="modal">
+    <div class="modal-box" style="width: 95%; max-width: 600px; height: 85vh; display: flex; flex-direction: column; padding: 0;">
+      <div style="padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white;">
+        <h3 style="margin:0;">✂️ 分段預覽與編輯</h3>
+        <button class="header-btn" onclick="closeSegmentModal()">✕</button>
+      </div>
+      <div style="padding: 12px 20px; background: #f8f9fa; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+        <span id="segmentCountLabel" style="font-size:14px; font-weight:bold; color:var(--primary);">分段結果 (0 個詞)</span>
+        <button class="btn btn-outline btn-sm" onclick="autoSmartSegment()">✨ 自動按標點分段</button>
+      </div>
+      <div id="segmentListContainer" style="flex: 1; overflow-y: auto; padding: 15px; background: #f4f6f9;">
+         <!-- 分段內容將生成於此 -->
+      </div>
+      <div style="padding: 15px 20px; border-top: 1px solid #eee; background: white;">
+        <button class="btn btn-primary btn-block" onclick="saveSegmentsToTextarea()">套用分段結果</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: 拆分位置選擇器 ==================== -->
+  <div id="splitModal" class="modal" style="z-index: 1001;">
+    <div class="modal-box" style="text-align: center;">
+      <h3 style="margin-top:0;">選擇拆分位置</h3>
+      <p style="font-size:14px; color:#666; margin-bottom: 20px;">點擊「 <span style="color:var(--danger); font-weight:bold;">|</span> 」選擇在哪裡拆分成兩段</p>
+      
+      <div id="splitContent" style="margin: 20px 0; font-size: 20px; line-height: 2.2; word-break: break-all; background: #f8f9fa; padding: 15px; border-radius: 12px;">
+         <!-- 單詞與拆分符號生成於此 -->
+      </div>
+      
+      <button class="btn btn-secondary btn-block" onclick="closeSplitModal()">取消</button>
+    </div>
+  </div>
+
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
   // ==========================================
-  // ⚙️ 系統核心設定 (請確保填入正確的 Azure Key)
+  // ⚙️ 系統核心設定 (請填入你的 Azure Key)
   // ==========================================
   const AZURE_API_KEY = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS"; 
   const AZURE_REGION = "eastasia";
@@ -731,7 +762,6 @@
   let isPlayingAuto = false;
   let currentAudioResolve = null;
 
-  // iOS 防休眠與音訊解鎖機制
   const globalAudio = document.getElementById('globalAudio');
   let audioUnlocked = false;
 
@@ -743,6 +773,10 @@
   let html5QrCode = null;
   let wakeLock = null;
 
+  // 智能分段編輯器狀態
+  let tempSegments = [];
+  let currentSplitIndex = -1;
+
   const voiceMap = {
     'zh-HK': { female: 'zh-HK-HiuGaaiNeural', male: 'zh-HK-WanLungNeural' },
     'zh-CN': { female: 'zh-CN-XiaoxiaoNeural', male: 'zh-CN-YunxiNeural' },
@@ -752,7 +786,6 @@
 
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-  // --- 系統載入與一鍵匯入檢查 ---
   window.onload = () => {
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
     checkUrlImport();
@@ -782,17 +815,85 @@
     }
   }
 
-  // --- 🔓 保護機制：檢查家長密碼 ---
+  // --- 🔓 完美保護機制：驗證家長密碼 (支援 0000 忘記密碼重置) ---
   function getParentPin() {
     return localStorage.getItem('parent_pin') || '1234';
   }
 
-  function checkAndShowSettings() {
-    if (prompt('🔒 請輸入家長密碼以進入系統設定：') === getParentPin()) {
-      showPage('settings-screen');
-    } else {
-      alert('密碼錯誤，無法進入設定！');
+  function verifyParentPin(actionName) {
+    const currentPin = getParentPin();
+    const input = prompt(`🔒 ${actionName}：請輸入家長解鎖密碼\n(預設為 1234。若忘記密碼，請輸入 0000 進行重置)`);
+    
+    if (input === currentPin) {
+      return true;
+    } else if (input === '0000') {
+      localStorage.setItem('parent_pin', '1234');
+      document.getElementById('parentPin').value = '1234';
+      alert('✅ 密碼已成功重置為預設的 1234！');
+      return true;
+    } else if (input !== null) {
+      alert('❌ 密碼錯誤，拒絕存取！');
     }
+    return false;
+  }
+
+  function checkAndShowSettings() {
+    if (verifyParentPin('系統設定')) showPage('settings-screen');
+  }
+
+  function toggleHideText() {
+    if(!isTextHidden) {
+      isTextHidden = true;
+    } else {
+      if(verifyParentPin('顯示文字')) {
+        isTextHidden = false;
+      } else return;
+    }
+    updateDetailUI();
+  }
+
+  function checkAndOpenSentenceSelection() {
+    if(isTextHidden && !verifyParentPin('進入溫習模式')) return;
+    openSentenceSelection();
+  }
+
+  function editCurrentDictation() {
+    if(!currentDictation) return;
+    if(isTextHidden && !verifyParentPin('編輯默書')) return;
+    openEditScreen(currentDictation.id);
+  }
+
+  function openShareModal() {
+    if(!currentDictation) return;
+    if(isTextHidden && !verifyParentPin('分享默書')) return;
+    
+    // 生成 QR Code (V15 復刻圖2介面)
+    const compressedContent = LZString.compressToEncodedURIComponent(currentDictation.content);
+    const baseUrl = window.location.href.split('?')[0]; 
+    const params = new URLSearchParams({
+      action: 'import_v2',
+      title: currentDictation.title,
+      lang: currentDictation.lang || 'zh',
+      content: compressedContent
+    });
+    shareUrl = `${baseUrl}?${params.toString()}`;
+
+    // 更新介面文字
+    document.getElementById('shareTitle').innerText = currentDictation.title;
+    document.getElementById('shareWordCount').innerText = `${getSentences(currentDictation.content).length} 個詞語 / 段落`;
+
+    document.getElementById('shareModal').classList.add('active');
+    document.getElementById('headerDropdown').classList.remove('active');
+
+    document.getElementById('qrcode').innerHTML = ""; 
+    new QRCode(document.getElementById('qrcode'), {
+      text: shareUrl,
+      width: 250,  
+      height: 250,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.L 
+    });
   }
 
   // --- iOS 音訊解鎖 ---
@@ -811,17 +912,13 @@
     if ('wakeLock' in navigator) {
       try {
         wakeLock = await navigator.wakeLock.request('screen');
-        document.getElementById('wakeLockIndicator').classList.add('active');
       } catch (err) {}
     }
   }
 
   function releaseWakeLock() {
     if (wakeLock !== null) {
-      wakeLock.release().then(() => {
-        wakeLock = null;
-        document.getElementById('wakeLockIndicator').classList.remove('active');
-      }).catch(err => {});
+      wakeLock.release().then(() => { wakeLock = null; }).catch(err => {});
     }
   }
 
@@ -833,7 +930,7 @@
 
   function saveConfig() {
     localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
-    alert('設定已儲存！');
+    alert('✅ 設定已儲存！');
   }
 
   function showPage(pageId) {
@@ -930,79 +1027,6 @@
     });
   }
 
-  // --- 文字防偷看保護機制 ---
-  function toggleHideText() {
-    if(!isTextHidden) {
-      isTextHidden = true;
-    } else {
-      if(prompt('🔒 顯示文字：請輸入家長解鎖密碼') === getParentPin()) {
-        isTextHidden = false;
-      } else {
-        alert('密碼錯誤！');
-        return;
-      }
-    }
-    updateDetailUI();
-  }
-
-  // 進入溫習模式前檢查
-  function checkAndOpenSentenceSelection() {
-    if(isTextHidden) {
-      if(prompt('🔒 溫習模式：請輸入家長解鎖密碼以顯示選項') !== getParentPin()) {
-        alert('密碼錯誤，無法進入溫習模式！');
-        return;
-      }
-    }
-    openSentenceSelection();
-  }
-
-  // 進入編輯前檢查
-  function editCurrentDictation() {
-    if(!currentDictation) return;
-    if(isTextHidden) {
-      if(prompt('🔒 編輯默書：請輸入家長解鎖密碼') !== getParentPin()) {
-        alert('密碼錯誤，無法編輯！');
-        return;
-      }
-    }
-    openEditScreen(currentDictation.id);
-  }
-
-  // 分享前檢查
-  function openShareModal() {
-    if(!currentDictation) return;
-    if(isTextHidden) {
-      if(prompt('🔒 分享默書：請輸入家長解鎖密碼') !== getParentPin()) {
-        alert('密碼錯誤，無法分享！');
-        return;
-      }
-    }
-    
-    // 生成 QR Code 邏輯
-    const compressedContent = LZString.compressToEncodedURIComponent(currentDictation.content);
-    const baseUrl = window.location.href.split('?')[0]; 
-    const params = new URLSearchParams({
-      action: 'import_v2',
-      title: currentDictation.title,
-      lang: currentDictation.lang || 'zh',
-      content: compressedContent
-    });
-    shareUrl = `${baseUrl}?${params.toString()}`;
-
-    document.getElementById('shareModal').classList.add('active');
-    document.getElementById('headerDropdown').classList.remove('active');
-
-    document.getElementById('qrcode').innerHTML = ""; 
-    new QRCode(document.getElementById('qrcode'), {
-      text: shareUrl,
-      width: 260,  
-      height: 260,
-      colorDark : "#000000",
-      colorLight : "#f8f9fa",
-      correctLevel : QRCode.CorrectLevel.L 
-    });
-  }
-
   function selectSentenceToPlay(pos) {
     unlockAudioEngine();
     if (isPlayingAuto) togglePlayPause(); 
@@ -1014,11 +1038,7 @@
   function prevSentence() {
     unlockAudioEngine();
     if(activeSentenceIndices.length === 0) return;
-    if (isPlayingAuto) {
-      forcePrevInAuto = true;
-      stopAudio();
-      return;
-    }
+    if (isPlayingAuto) { forcePrevInAuto = true; stopAudio(); return; }
     
     if(currentPlayingIndex > 0) currentPlayingIndex--;
     else currentPlayingIndex = activeSentenceIndices.length - 1;
@@ -1030,11 +1050,7 @@
   function nextSentence() {
     unlockAudioEngine();
     if(activeSentenceIndices.length === 0) return;
-    if (isPlayingAuto) {
-      forceNextInAuto = true;
-      stopAudio();
-      return;
-    }
+    if (isPlayingAuto) { forceNextInAuto = true; stopAudio(); return; }
 
     if(currentPlayingIndex < activeSentenceIndices.length - 1) currentPlayingIndex++;
     else currentPlayingIndex = 0;
@@ -1056,10 +1072,7 @@
 
   function stopAudio() {
     globalAudio.pause();
-    if (currentAudioResolve) {
-      currentAudioResolve();
-      currentAudioResolve = null;
-    }
+    if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
   }
 
   function togglePlayPause() {
@@ -1110,9 +1123,7 @@
         
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
 
-        if (r < repeats - 1) {
-          await sleep(1200); 
-        }
+        if (r < repeats - 1) await sleep(1200); 
       }
 
       if (!isPlayingAuto) break;
@@ -1147,7 +1158,6 @@
             else currentPlayingIndex = activeSentenceIndices.length - 1; 
             continue; 
         }
-
         currentPlayingIndex++;
       } else {
         isPlayingAuto = false;
@@ -1192,7 +1202,7 @@
       const readPunc = document.getElementById('readPunctuation').checked;
 
       if (!apiKey || apiKey.includes('請在這裡貼上')) {
-        alert('API KEY 尚未正確設定！');
+        alert('API KEY 尚未正確設定！請開發者檢查。');
         if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         return;
       }
@@ -1216,11 +1226,9 @@
         if (!response.ok) throw new Error('TTS Fetch Error');
 
         const blob = await response.blob();
-        
         if(globalAudio.src) URL.revokeObjectURL(globalAudio.src);
         
         globalAudio.src = URL.createObjectURL(blob);
-        
         if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(true);
 
         globalAudio.onended = () => {
@@ -1251,25 +1259,14 @@
   function transformPunctuation(text, accent) {
     const isEnglish = accent.startsWith('en');
     if (isEnglish) {
-      return text
-        .replace(/,/g, ' comma ')
-        .replace(/\./g, ' full stop ')
-        .replace(/\?/g, ' question mark ')
-        .replace(/!/g, ' exclamation mark ');
+      return text.replace(/,/g, ' comma ').replace(/\./g, ' full stop ').replace(/\?/g, ' question mark ').replace(/!/g, ' exclamation mark ');
     } else {
-      return text
-        .replace(/，/g, '，逗號，')
-        .replace(/。/g, '，句號，')
-        .replace(/！/g, '，感嘆號，')
-        .replace(/？/g, '，問號，')
-        .replace(/；/g, '，分號，')
-        .replace(/：/g, '，冒號，');
+      return text.replace(/，/g, '，逗號，').replace(/。/g, '，句號，').replace(/！/g, '，感嘆號，').replace(/？/g, '，問號，').replace(/；/g, '，分號，').replace(/：/g, '，冒號，');
     }
   }
 
-  // --- 句子勾選頁面 (今日練習) ---
+  // --- 句子勾選頁面 ---
   function openSentenceSelection() {
-    if(!currentDictation) return;
     const sentences = getSentences(currentDictation.content);
     tempSelectedIndices = [...activeSentenceIndices];
     renderSelectionList();
@@ -1331,17 +1328,10 @@
   function cancelSentenceSelection() { showPage('detail-screen'); }
   function clearSelectionAndPlayAll() { selectAllSentences(true); confirmSentenceSelection(); }
 
-  // ===== 🌟 QR Code 分享功能 =====
-  function closeShareModal() {
-    document.getElementById('shareModal').classList.remove('active');
-  }
-
+  function closeShareModal() { document.getElementById('shareModal').classList.remove('active'); }
   function copyShareLink() {
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      alert('📋 已複製一鍵匯入連結！\n可以直接 WhatsApp 貼上給朋友。');
-    });
+    navigator.clipboard.writeText(shareUrl).then(() => { alert('📋 已複製一鍵匯入連結！'); });
   }
-
   function deleteCurrentDictation() {
     if(!currentDictation) return;
     if(confirm(`確定要刪除「${currentDictation.title}」嗎？`)) {
@@ -1392,12 +1382,12 @@
     openDetailScreen(id ? parseInt(id) : dictations[0].id);
   }
 
+  // --- 清理工具 ---
   function filterNumbers() {
     let text = document.getElementById('editContent').value;
     text = text.replace(/^[\s]*([0-9一二三四五六七八九十]+[\.\)、、\s]+|\([0-9]+\)[\s]*)/gm, '');
     document.getElementById('editContent').value = text;
   }
-
   function filterPinyin() {
     let text = document.getElementById('editContent').value;
     text = text.replace(/\([a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+\)/g, '');
@@ -1406,11 +1396,113 @@
     document.getElementById('editContent').value = text;
   }
 
-  function smartSegment() {
-    let text = document.getElementById('editContent').value;
+  // ===== 🌟 V15 更新：超強智能分段編輯器 =====
+  function openSegmentEditor() {
+    const text = document.getElementById('editContent').value.trim();
+    if(!text) { alert('請先輸入默書內容！'); return; }
+    
+    // 初始化段落清單
+    tempSegments = getSentences(text);
+    document.getElementById('segmentModal').classList.add('active');
+    renderSegmentList();
+  }
+
+  function closeSegmentModal() {
+    document.getElementById('segmentModal').classList.remove('active');
+  }
+
+  function autoSmartSegment() {
+    let text = tempSegments.join('\n');
+    // 自動按句號、問號、感嘆號分段
     text = text.replace(/([.。！？!?]+)\s*/g, "$1\n");
-    const lines = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-    document.getElementById('editContent').value = lines.join('\n');
+    tempSegments = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    renderSegmentList();
+  }
+
+  function renderSegmentList() {
+    const container = document.getElementById('segmentListContainer');
+    document.getElementById('segmentCountLabel').innerText = `分段結果 (${tempSegments.length} 個詞/句)`;
+    container.innerHTML = '';
+    
+    tempSegments.forEach((seg, idx) => {
+      container.innerHTML += `
+        <div class="segment-item">
+          <div class="segment-idx">${idx + 1}</div>
+          <div class="segment-text">${escapeXml(seg)}</div>
+          <div class="segment-actions">
+            <button class="btn-action" onclick="openSplitModal(${idx})">✂️ 拆分</button>
+            ${idx < tempSegments.length - 1 ? `<button class="btn-action" onclick="mergeSegmentDown(${idx})">🔗 合併</button>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function mergeSegmentDown(idx) {
+    if (idx < tempSegments.length - 1) {
+      tempSegments[idx] = tempSegments[idx] + ' ' + tempSegments[idx+1];
+      tempSegments.splice(idx + 1, 1);
+      renderSegmentList();
+    }
+  }
+
+  // --- 拆分位置選擇器 ---
+  function openSplitModal(idx) {
+    currentSplitIndex = idx;
+    const text = tempSegments[idx];
+    
+    // 拆分邏輯：英文單字保持完整，中文字和標點符號逐個拆開
+    const regex = /([a-zA-Z0-9_']+)|([^a-zA-Z0-9_'\s]+)/g;
+    let tokens = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      if(match[0].trim()) tokens.push(match[0]);
+    }
+    if (tokens.length === 0) tokens = Array.from(text);
+
+    const splitContainer = document.getElementById('splitContent');
+    splitContainer.innerHTML = '';
+
+    tokens.forEach((token, tIdx) => {
+      const span = document.createElement('span');
+      span.className = 'split-token';
+      span.innerText = token;
+      splitContainer.appendChild(span);
+
+      // 在 Token 之間插入可點擊的分隔符 |
+      if (tIdx < tokens.length - 1) {
+        const divider = document.createElement('span');
+        divider.className = 'split-divider';
+        divider.innerText = '|';
+        divider.onclick = () => executeSplit(tIdx, tokens);
+        splitContainer.appendChild(divider);
+      }
+    });
+
+    document.getElementById('splitModal').classList.add('active');
+  }
+
+  function executeSplit(tokenIdx, tokens) {
+    // 重新組合左邊與右邊的字串，並清理多餘空白
+    const leftPart = tokens.slice(0, tokenIdx + 1).join(' ')
+      .replace(/\s+([.,!?])/g, '$1') // 標點符號黏住前面的字
+      .replace(/([\u4e00-\u9fa5])\s+(?=[\u4e00-\u9fa5，。！？])/g, '$1'); // 中文字之間不要空白
+    
+    const rightPart = tokens.slice(tokenIdx + 1).join(' ')
+      .replace(/\s+([.,!?])/g, '$1')
+      .replace(/([\u4e00-\u9fa5])\s+(?=[\u4e00-\u9fa5，。！？])/g, '$1');
+
+    // 替換原本的段落成為兩段
+    tempSegments.splice(currentSplitIndex, 1, leftPart.trim(), rightPart.trim());
+    closeSplitModal();
+    renderSegmentList();
+  }
+
+  function closeSplitModal() { document.getElementById('splitModal').classList.remove('active'); }
+
+  function saveSegmentsToTextarea() {
+    document.getElementById('editContent').value = tempSegments.join('\n');
+    closeSegmentModal();
   }
 
   // --- OCR / Crop ---
@@ -1442,7 +1534,6 @@
     const img = document.getElementById('cropImage');
     img.src = imageSrc;
     document.getElementById('cropModal').classList.add('active');
-    
     if(cropper) cropper.destroy();
     cropper = new Cropper(img, { viewMode: 1, autoCropArea: 0.85, responsive: true });
   }
@@ -1456,7 +1547,6 @@
     if(!cropper) return;
     const croppedCanvas = cropper.getCroppedCanvas();
     closeCropModal();
-    
     const statusText = document.getElementById('ocrStatus');
     statusText.innerText = "⏳ 正在辨識文字 (Tesseract OCR)...";
     
@@ -1464,8 +1554,7 @@
       const result = await Tesseract.recognize(croppedCanvas, 'chi_tra+eng');
       const text = result.data.text.replace(/\n\s*\n/g, '\n').trim();
       document.getElementById('editContent').value = text;
-      smartSegment(); 
-      statusText.innerText = "✅ OCR 辨識成功，並已依據標點符號自動分段！";
+      statusText.innerText = "✅ OCR 辨識成功！可點擊「✂️ 智能分段與編輯」進一步調整。";
     } catch(err) {
       console.error(err);
       statusText.innerText = "❌ 辨識失敗，請重新嘗試。";
@@ -1479,12 +1568,8 @@
     html5QrCode.start(
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 250, height: 250 } },
-      (decodedText) => {
-        handleQrCodeScanned(decodedText);
-      },
-      (errorMessage) => {
-        // 忽略掃描過程中的雜訊錯誤
-      }
+      (decodedText) => { handleQrCodeScanned(decodedText); },
+      (errorMessage) => {}
     ).catch(err => {
       alert("無法啟動相機權限：" + err);
       closeQrScanner();
@@ -1516,43 +1601,21 @@
           document.getElementById('editTitle').value = importTitle;
           document.getElementById('editLang').value = importLang;
           document.getElementById('editContent').value = importContent;
-          alert('✅ 已成功掃描並讀取朋友的默書內容，請確認後按「儲存默書」！');
-        } else {
-          alert('❌ QR Code 內容不完整或已損壞。');
-        }
-      } else {
-        alert('❌ 掃描失敗：這不是本系統的有效默書 QR Code。');
-      }
-    } catch(e) {
-      alert('❌ 無法解析此 QR Code，請確認掃描對象是否正確。');
-    }
+          alert('✅ 已成功讀取朋友的默書內容，請確認後按「儲存默書」！');
+        } else alert('❌ QR Code 內容不完整。');
+      } else alert('❌ 掃描失敗：這不是本系統的默書 QR Code。');
+    } catch(e) { alert('❌ 無法解析此 QR Code。'); }
   }
 
-  function openSettingsModal() {
-    document.getElementById('settingsModal').classList.add('active');
-    toggleAutoSettingsDisplay();
-  }
-  function closeSettingsModal() {
-    document.getElementById('settingsModal').classList.remove('active');
-    updateDetailUI();
-  }
-  function toggleAutoSettingsDisplay() {
-    const mode = document.getElementById('playMode').value;
-    document.getElementById('autoSettingsBox').style.display = (mode === 'auto') ? 'flex' : 'none';
-  }
+  function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); toggleAutoSettingsDisplay(); }
+  function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('active'); updateDetailUI(); }
+  function toggleAutoSettingsDisplay() { document.getElementById('autoSettingsBox').style.display = (document.getElementById('playMode').value === 'auto') ? 'flex' : 'none'; }
   function savePlaySettings() { updateDetailUI(); }
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  
   function escapeXml(unsafe) {
     return unsafe.replace(/[<>&'"]/g, function(c) {
-      switch (c) {
-        case '<': return '&lt;';
-        case '>': return '&gt;';
-        case '&': return '&amp;';
-        case "'": return '&apos;';
-        case '"': return '&quot;';
-      }
+      switch (c) { case '<': return '&lt;'; case '>': return '&gt;'; case '&': return '&amp;'; case "'": return '&apos;'; case '"': return '&quot;'; }
       return c;
     });
   }
