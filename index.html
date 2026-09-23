@@ -3,7 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>默書小助手 V13 (iOS修復+相機掃描版)</title>
+  <!-- 強制淺色模式，防止暗黑模式導致輸入框文字反白看不清 -->
+  <meta name="color-scheme" content="light">
+  
+  <title>默書小助手</title>
+
+  <!-- ================= PWA 漸進式 App 設定 ================= -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="默書助手">
+  <meta name="theme-color" content="#0066ff">
+  <!-- PWA App 圖示 -->
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3364/3364024.png">
+  <!-- 動態生成 Manifest 讓 Android/iOS 可以當作原生 App 安裝 -->
+  <link rel="manifest" id="pwa-manifest">
+  <script>
+    const manifestJSON = {
+      "name": "默書小助手",
+      "short_name": "默書助手",
+      "start_url": ".",
+      "display": "standalone",
+      "background_color": "#f4f6f9",
+      "theme_color": "#0066ff",
+      "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/3364/3364024.png", "sizes": "512x512", "type": "image/png"}]
+    };
+    document.getElementById('pwa-manifest').setAttribute('href', 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifestJSON)));
+  </script>
+  <!-- ======================================================= -->
 
   <!-- 引入套件：OCR, 裁切, PDF 渲染, QRCode 產生與掃描, LZString 壓縮 -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -12,7 +38,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
-  <!-- 新增：內建 QR Code 掃描器 -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
@@ -37,6 +62,7 @@
       padding: 0;
       color: var(--text);
       -webkit-tap-highlight-color: transparent;
+      user-select: none; /* 防止小朋友不小心選取文字 */
     }
 
     .app-header {
@@ -110,20 +136,24 @@
     .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
 
     label { font-weight: 600; font-size: 14px; margin-top: 10px; display: block; color: #495057; }
+    
+    /* 強制輸入框樣式，防止白色字體 */
     input[type="text"], input[type="password"], select, textarea {
       width: 100%;
       padding: 12px;
       margin-top: 6px;
       margin-bottom: 12px;
-      border: 1.5px solid #dee2e6;
-      border-radius: 10px;
-      font-size: 15px;
-      background-color: #fdfdfd;
+      border: 1.5px solid #dee2e6 !important;
+      border-radius: 10px !important;
+      font-size: 16px !important;
+      color: #111111 !important;
+      background-color: #ffffff !important;
+      box-sizing: border-box;
+      user-select: text; /* 允許文字輸入區被選取 */
     }
     input:focus, select:focus, textarea:focus {
-      border-color: var(--primary);
+      border-color: var(--primary) !important;
       outline: none;
-      background-color: #fff;
     }
     
     textarea#editContent {
@@ -131,7 +161,6 @@
       min-height: 220px;
       resize: vertical;
       line-height: 1.6;
-      font-size: 16px;
     }
 
     .row { display: flex; gap: 10px; }
@@ -358,9 +387,10 @@
     .dropdown-item:hover, .dropdown-item:active { background: #f8f9fa; }
 
     .blur-text {
-      filter: blur(8px);
+      filter: blur(10px);
+      opacity: 0.7;
       user-select: none;
-      transition: filter 0.3s;
+      pointer-events: none; /* 防止任何點擊或選取 */
     }
 
     .wakelock-indicator {
@@ -374,7 +404,6 @@
       display: block;
     }
 
-    /* 掃描器相機框樣式 */
     #qr-reader video {
       border-radius: 12px;
       object-fit: cover;
@@ -391,7 +420,8 @@
   <div id="home-screen" class="page active">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <h1>📚 我的默書清單</h1>
-      <button class="header-btn" onclick="showPage('settings-screen')" title="設定">⚙️</button>
+      <!-- 加入密碼防護：只有家長能進入設定 -->
+      <button class="header-btn" onclick="checkAndShowSettings()" title="系統設定">⚙️</button>
     </div>
 
     <div id="dictation-list"></div>
@@ -426,10 +456,11 @@
       <div id="wakeLockIndicator" class="wakelock-indicator">💡 螢幕常亮已啟用</div>
 
       <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-        <div class="mode-pill-btn" onclick="openSentenceSelection()">
+        <!-- 點擊溫習模式會觸發防護檢查 -->
+        <div class="mode-pill-btn" onclick="checkAndOpenSentenceSelection()">
           🎮 溫習模式 <span class="mode-pill-badge" id="selectedCountBadge">0/0</span>
         </div>
-        <button class="btn-circle" style="width:42px; height:42px; font-size:16px;" onclick="selectSentenceToPlay(currentPlayingIndex)" title="試聽目前句">🎙️</button>
+        <button class="btn-circle" style="width:42px; height:42px; font-size:16px;" onclick="playCurrentSentence()" title="試聽目前句">🎙️</button>
       </div>
     </div>
 
@@ -516,20 +547,19 @@
     <label>匯入方式：</label>
     <div class="row" style="margin-bottom: 6px;">
       <button class="btn btn-outline btn-block" onclick="document.getElementById('fileInput').click()">
-        📄 上傳圖片/PDF 裁切 OCR
+        📄 圖片/PDF 裁切 OCR
       </button>
       <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(event)">
-      <!-- 新增相機掃描分享 QR Code 的按鈕 -->
       <button class="btn btn-outline-success btn-block" onclick="openQrScanner()">
-        📷 掃描朋友的 QR Code
+        📷 掃描 QR Code
       </button>
     </div>
     
     <label>快捷清理與分段工具：</label>
     <div class="tools-group">
-      <button class="btn btn-secondary btn-sm" onclick="filterNumbers()">🧹 過濾數字題號</button>
-      <button class="btn btn-secondary btn-sm" onclick="filterPinyin()">🧹 過濾拼音/註音</button>
-      <button class="btn btn-secondary btn-sm" onclick="smartSegment()">✂️ 智能分段 (按標點自動換行)</button>
+      <button class="btn btn-secondary btn-sm" onclick="filterNumbers()">🧹 過濾題號</button>
+      <button class="btn btn-secondary btn-sm" onclick="filterPinyin()">🧹 過濾拼音</button>
+      <button class="btn btn-secondary btn-sm" onclick="smartSegment()">✂️ 智能分段</button>
     </div>
 
     <label>默書內容 (每行代表一段或一個詞語)：</label>
@@ -554,6 +584,7 @@
     <div class="card" style="margin-top: 15px;">
       <label>家長解鎖密碼 (4位數):</label>
       <input type="password" id="parentPin" placeholder="預設: 1234" value="1234" onchange="saveConfig()">
+      <p style="font-size: 13px; color: #666; margin-top: 5px;">這組密碼將用來保護「設定」、「顯示文字」、「編輯」與「溫習模式」，防止小朋友偷看答案。</p>
 
       <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 15px;">
         儲存並返回
@@ -686,7 +717,7 @@
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
   // ==========================================
-  // ⚙️ 系統核心設定 (請填入你的 Azure Key)
+  // ⚙️ 系統核心設定 (請確保填入正確的 Azure Key)
   // ==========================================
   const AZURE_API_KEY = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS"; 
   const AZURE_REGION = "eastasia";
@@ -751,10 +782,22 @@
     }
   }
 
-  // --- iOS 音訊解鎖 (必須在使用者點擊時觸發) ---
+  // --- 🔓 保護機制：檢查家長密碼 ---
+  function getParentPin() {
+    return localStorage.getItem('parent_pin') || '1234';
+  }
+
+  function checkAndShowSettings() {
+    if (prompt('🔒 請輸入家長密碼以進入系統設定：') === getParentPin()) {
+      showPage('settings-screen');
+    } else {
+      alert('密碼錯誤，無法進入設定！');
+    }
+  }
+
+  // --- iOS 音訊解鎖 ---
   function unlockAudioEngine() {
     if (!audioUnlocked) {
-      // 播放一段極短的空音訊以獲得 Safari 權限
       globalAudio.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//NXQAAAAAAASW5mbwAAAA8AAAAEAAABIwBRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpv/zV0AAADQAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
       globalAudio.play().then(() => {
         globalAudio.pause();
@@ -763,7 +806,7 @@
     }
   }
 
-  // --- 螢幕常亮控制 (Wake Lock) 解決鎖定問題 ---
+  // --- 螢幕常亮控制 (Wake Lock) ---
   async function requestWakeLock() {
     if ('wakeLock' in navigator) {
       try {
@@ -790,6 +833,7 @@
 
   function saveConfig() {
     localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
+    alert('設定已儲存！');
   }
 
   function showPage(pageId) {
@@ -886,12 +930,12 @@
     });
   }
 
+  // --- 文字防偷看保護機制 ---
   function toggleHideText() {
     if(!isTextHidden) {
       isTextHidden = true;
     } else {
-      const pin = localStorage.getItem('parent_pin') || '1234';
-      if(prompt('請輸入家長解鎖密碼：') === pin) {
+      if(prompt('🔒 顯示文字：請輸入家長解鎖密碼') === getParentPin()) {
         isTextHidden = false;
       } else {
         alert('密碼錯誤！');
@@ -899,6 +943,64 @@
       }
     }
     updateDetailUI();
+  }
+
+  // 進入溫習模式前檢查
+  function checkAndOpenSentenceSelection() {
+    if(isTextHidden) {
+      if(prompt('🔒 溫習模式：請輸入家長解鎖密碼以顯示選項') !== getParentPin()) {
+        alert('密碼錯誤，無法進入溫習模式！');
+        return;
+      }
+    }
+    openSentenceSelection();
+  }
+
+  // 進入編輯前檢查
+  function editCurrentDictation() {
+    if(!currentDictation) return;
+    if(isTextHidden) {
+      if(prompt('🔒 編輯默書：請輸入家長解鎖密碼') !== getParentPin()) {
+        alert('密碼錯誤，無法編輯！');
+        return;
+      }
+    }
+    openEditScreen(currentDictation.id);
+  }
+
+  // 分享前檢查
+  function openShareModal() {
+    if(!currentDictation) return;
+    if(isTextHidden) {
+      if(prompt('🔒 分享默書：請輸入家長解鎖密碼') !== getParentPin()) {
+        alert('密碼錯誤，無法分享！');
+        return;
+      }
+    }
+    
+    // 生成 QR Code 邏輯
+    const compressedContent = LZString.compressToEncodedURIComponent(currentDictation.content);
+    const baseUrl = window.location.href.split('?')[0]; 
+    const params = new URLSearchParams({
+      action: 'import_v2',
+      title: currentDictation.title,
+      lang: currentDictation.lang || 'zh',
+      content: compressedContent
+    });
+    shareUrl = `${baseUrl}?${params.toString()}`;
+
+    document.getElementById('shareModal').classList.add('active');
+    document.getElementById('headerDropdown').classList.remove('active');
+
+    document.getElementById('qrcode').innerHTML = ""; 
+    new QRCode(document.getElementById('qrcode'), {
+      text: shareUrl,
+      width: 260,  
+      height: 260,
+      colorDark : "#000000",
+      colorLight : "#f8f9fa",
+      correctLevel : QRCode.CorrectLevel.L 
+    });
   }
 
   function selectSentenceToPlay(pos) {
@@ -1090,7 +1192,7 @@
       const readPunc = document.getElementById('readPunctuation').checked;
 
       if (!apiKey || apiKey.includes('請在這裡貼上')) {
-        alert('API KEY 未設定，無法播放語音！');
+        alert('API KEY 尚未正確設定！');
         if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         return;
       }
@@ -1115,10 +1217,8 @@
 
         const blob = await response.blob();
         
-        // 釋放舊的 URL
         if(globalAudio.src) URL.revokeObjectURL(globalAudio.src);
         
-        // 賦予新的音訊來源 (iOS 現在會允許，因為 globalAudio 已經在點擊時解鎖過)
         globalAudio.src = URL.createObjectURL(blob);
         
         if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(true);
@@ -1168,8 +1268,6 @@
   }
 
   // --- 句子勾選頁面 (今日練習) ---
-  let tempSelectedIndices = [];
-
   function openSentenceSelection() {
     if(!currentDictation) return;
     const sentences = getSentences(currentDictation.content);
@@ -1233,45 +1331,15 @@
   function cancelSentenceSelection() { showPage('detail-screen'); }
   function clearSelectionAndPlayAll() { selectAllSentences(true); confirmSentenceSelection(); }
 
-  // ===== QR Code 產生與分享功能 =====
-  function openShareModal() {
-    if(!currentDictation) return;
-    
-    const compressedContent = LZString.compressToEncodedURIComponent(currentDictation.content);
-    const baseUrl = window.location.href.split('?')[0]; 
-    const params = new URLSearchParams({
-      action: 'import_v2',
-      title: currentDictation.title,
-      lang: currentDictation.lang || 'zh',
-      content: compressedContent
-    });
-    shareUrl = `${baseUrl}?${params.toString()}`;
-
-    document.getElementById('shareModal').classList.add('active');
-    document.getElementById('headerDropdown').classList.remove('active');
-
-    document.getElementById('qrcode').innerHTML = ""; 
-    new QRCode(document.getElementById('qrcode'), {
-      text: shareUrl,
-      width: 260,
-      height: 260,
-      colorDark : "#000000",
-      colorLight : "#f8f9fa",
-      correctLevel : QRCode.CorrectLevel.L
-    });
+  // ===== 🌟 QR Code 分享功能 =====
+  function closeShareModal() {
+    document.getElementById('shareModal').classList.remove('active');
   }
-
-  function closeShareModal() { document.getElementById('shareModal').classList.remove('active'); }
 
   function copyShareLink() {
     navigator.clipboard.writeText(shareUrl).then(() => {
       alert('📋 已複製一鍵匯入連結！\n可以直接 WhatsApp 貼上給朋友。');
     });
-  }
-
-  function editCurrentDictation() {
-    if(!currentDictation) return;
-    openEditScreen(currentDictation.id);
   }
 
   function deleteCurrentDictation() {
@@ -1404,7 +1472,7 @@
     }
   }
 
-  // ===== 🌟 V13 更新：相機掃描 QR Code 匯入功能 =====
+  // ===== 相機掃描 QR Code 匯入功能 =====
   function openQrScanner() {
     document.getElementById('qrScanModal').classList.add('active');
     html5QrCode = new Html5Qrcode("qr-reader");
@@ -1412,7 +1480,6 @@
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 250, height: 250 } },
       (decodedText) => {
-        // 掃描成功時
         handleQrCodeScanned(decodedText);
       },
       (errorMessage) => {
