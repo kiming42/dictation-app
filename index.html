@@ -5,27 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手 V16</title>
+  <title>默書小助手</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="默書助手">
   <meta name="theme-color" content="#0066ff">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3364/3364024.png">
-  <link rel="manifest" id="pwa-manifest">
-  <script>
-    const manifestJSON = {
-      "name": "默書小助手",
-      "short_name": "默書助手",
-      "start_url": ".",
-      "display": "standalone",
-      "background_color": "#f4f6f9",
-      "theme_color": "#0066ff",
-      "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/3364/3364024.png", "sizes": "512x512", "type": "image/png"}]
-    };
-    document.getElementById('pwa-manifest').setAttribute('href', 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifestJSON)));
-  </script>
-
+  
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -416,13 +403,28 @@
     }
     .qr-instruction-box li::marker { color: #0066ff; font-weight: bold; }
 
-    /* 高清 QR Code 畫布樣式縮放 */
     #qrcode canvas, #qrcode img {
       width: 100% !important;
       max-width: 300px;
       height: auto !important;
       display: block;
       margin: 0 auto;
+    }
+
+    /* 分享連結顯示框 */
+    .share-link-box {
+      margin-top: 15px; 
+      padding: 10px 12px; 
+      background: #e9ecef; 
+      border-radius: 8px; 
+      font-size: 11px; 
+      word-break: break-all; 
+      color: #555; 
+      max-height: 60px; 
+      overflow-y: auto; 
+      text-align: left; 
+      user-select: text; 
+      border: 1px solid #ced4da;
     }
   </style>
 </head>
@@ -588,7 +590,7 @@
     <div class="card" style="margin-top: 15px;">
       <label>更改家長解鎖密碼 (4位數字):</label>
       <input type="password" id="parentPin" placeholder="預設密碼: 1234" value="1234" onchange="saveConfig()">
-      <p style="font-size: 13px; color: #666; margin-top: 5px;">這組密碼將用來保護「設定」、「顯示文字」、「編輯」與「溫習模式」，防止小朋友偷看答案。</p>
+      <p style="font-size: 13px; color: #666; margin-top: 5px;">保護設定與防止小朋友偷看答案。忘記時只需輸入 0000 即可重置。</p>
 
       <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 15px;">
         儲存並返回
@@ -684,36 +686,37 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 分享與 QR Code (V16 雙軌分享) ==================== -->
+  <!-- ==================== MODAL: 分享與 QR Code ==================== -->
   <div id="shareModal" class="modal">
     <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9;">
       <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
-        <h3 style="margin:0; font-size:18px; color: #333;">📤 分享默書</h3>
+        <h3 style="margin:0; font-size:18px; color: #333;">📤 QR Code 分享</h3>
         <button class="header-btn" onclick="closeShareModal()">✕</button>
       </div>
       
       <div style="padding: 20px; text-align: center;">
         <h2 id="shareTitle" style="margin: 0 0 5px 0; font-size: 22px; color: #111;">默書標題</h2>
-        <p id="shareWordCount" style="color: #6c757d; margin: 0 0 20px 0; font-size: 15px;">X 個詞語</p>
+        <p id="shareWordCount" style="color: #6c757d; margin: 0 0 15px 0; font-size: 15px;">X 個詞語</p>
         
-        <div style="background: white; padding: 20px; border-radius: 20px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 15px;">
-          <!-- 放大並強制高清的 QR Code 容器 -->
+        <div style="background: white; padding: 15px; border-radius: 20px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 15px;">
           <div id="qrcode" style="width: 100%; max-width: 300px; margin: 0 auto;"></div>
         </div>
         
         <div class="qr-instruction-box">
-          <h4><span style="font-size: 18px; color: #0066ff;">ⓘ</span> 掃描教學</h4>
+          <h4><span style="font-size: 18px; color: #0066ff;">ⓘ</span> 使用方法</h4>
           <ol>
-            <li>請朋友打開「默書小助手」App</li>
-            <li>在新增默書點擊「📷 掃描 QR Code」</li>
-            <li>對準上方條碼，內容即會自動匯入</li>
+            <li>讓學生打開「默書助手」App</li>
+            <li>點擊新增默書的「📷 掃描 QR Code」</li>
+            <li>對準此 QR Code 掃描</li>
+            <li>默書內容會自動匯入</li>
           </ol>
         </div>
+
+        <!-- 分享連結顯示框 (V16修復) -->
+        <div class="share-link-box" id="shareUrlDisplayBox"></div>
         
-        <p style="font-size:13px; color:#999; margin: 20px 0 10px 0;">或者透過文字連結傳送給朋友：</p>
-        <div class="row">
-          <button class="btn btn-outline" style="flex:1;" onclick="copyShareLink()">🔗 複製連結</button>
-          <button class="btn btn-primary" style="flex:1;" onclick="shareViaWebAPI()">📤 傳送至...</button>
+        <div class="row" style="margin-top: 15px;">
+          <button class="btn btn-outline" style="flex:1;" onclick="copyShareLink()">📋 複製連結</button>
         </div>
       </div>
     </div>
@@ -769,7 +772,7 @@
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
   // ==========================================
-  // ⚙️ 系統核心設定 (請確保填入正確的 Azure Key)
+  // ⚙️ 系統核心設定 (請填入你的 Azure Key)
   // ==========================================
   const AZURE_API_KEY = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS"; 
   const AZURE_REGION = "eastasia";
@@ -815,7 +818,6 @@
   function checkUrlImport() {
     const urlParams = new URLSearchParams(window.location.search);
     
-    // 檢查是否有最新的極限壓縮參數 ?d=
     if (urlParams.has('d')) {
       try {
         const compressed = urlParams.get('d');
@@ -833,7 +835,6 @@
       return;
     }
 
-    // 兼容舊版分享網址
     const action = urlParams.get('action');
     if (action === 'import' || action === 'import_v2') {
       const importTitle = urlParams.get('title');
@@ -860,7 +861,7 @@
 
   function verifyParentPin(actionName) {
     const currentPin = getParentPin();
-    const input = prompt(`🔒 ${actionName}：請輸入家長解鎖密碼\n(預設為 1234。若忘記密碼，請輸入 0000 重置)`);
+    const input = prompt(`🔒 ${actionName}：請輸入家長解鎖密碼`);
     
     if (input === currentPin) {
       return true;
@@ -896,12 +897,25 @@
     openEditScreen(currentDictation.id);
   }
 
+  function deleteCurrentDictation() {
+    if(!currentDictation) return;
+    document.getElementById('headerDropdown').classList.remove('active');
+    
+    setTimeout(() => {
+        if(confirm(`確定要刪除「${currentDictation.title}」嗎？`)) {
+          dictations = dictations.filter(d => d.id !== currentDictation.id);
+          localStorage.setItem('dictations', JSON.stringify(dictations));
+          renderList();
+          showPage('home-screen');
+        }
+    }, 50);
+  }
+
   // ===== V16 極限壓縮分享 & 雙軌按鈕 =====
   function openShareModal() {
     if(!currentDictation) return;
     if(isTextHidden && !verifyParentPin('分享默書')) return;
     
-    // 將所有資料打包成一個精簡的 JSON，再使用 LZString 壓縮，大幅縮短 URL
     const dataObj = { t: currentDictation.title, l: currentDictation.lang || 'zh', c: currentDictation.content };
     const compressedData = LZString.compressToEncodedURIComponent(JSON.stringify(dataObj));
     
@@ -910,11 +924,13 @@
 
     document.getElementById('shareTitle').innerText = currentDictation.title;
     document.getElementById('shareWordCount').innerText = `${getSentences(currentDictation.content).length} 個詞語 / 段落`;
+    
+    // 顯示分享連結文本
+    document.getElementById('shareUrlDisplayBox').innerText = shareUrl;
 
     document.getElementById('shareModal').classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
 
-    // 生成高清 400x400 的 QR Code (CSS 會自動縮小適應螢幕，令格子極度銳利)
     document.getElementById('qrcode').innerHTML = ""; 
     new QRCode(document.getElementById('qrcode'), {
       text: shareUrl,
@@ -934,46 +950,15 @@
     });
   }
 
-  function shareViaWebAPI() {
-    if (navigator.share) {
-      navigator.share({
-        title: currentDictation.title,
-        text: `快來匯入這份默書：「${currentDictation.title}」`,
-        url: shareUrl
-      }).catch(err => console.log('Share canceled'));
-    } else {
-      copyShareLink();
-    }
-  }
-
-  // --- iOS 音訊解鎖 ---
+  // --- iOS 音訊解鎖 (同步觸發) ---
   function unlockAudioEngine() {
     if (!audioUnlocked) {
       globalAudio.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//NXQAAAAAAASW5mbwAAAA8AAAAEAAABIwBRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpv/zV0AAADQAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
-      globalAudio.play().then(() => {
-        globalAudio.pause();
-        audioUnlocked = true;
-      }).catch(err => { console.log('解鎖音訊失敗', err); });
+      let p = globalAudio.play();
+      if(p !== undefined) { p.catch(e => {}); }
+      audioUnlocked = true;
     }
   }
-
-  async function requestWakeLock() {
-    if ('wakeLock' in navigator) {
-      try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
-    }
-  }
-
-  function releaseWakeLock() {
-    if (wakeLock !== null) {
-      wakeLock.release().then(() => { wakeLock = null; }).catch(err => {});
-    }
-  }
-
-  document.addEventListener('visibilitychange', async () => {
-    if (wakeLock !== null && document.visibilityState === 'visible' && isPlayingAuto) {
-      await requestWakeLock();
-    }
-  });
 
   function saveConfig() {
     localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
@@ -985,8 +970,13 @@
     document.getElementById(pageId).classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
     
-    if (isPlayingAuto) togglePlayPause();
-    else { stopAudio(); releaseWakeLock(); }
+    if (isPlayingAuto) {
+        isPlayingAuto = false;
+        stopAudio();
+        updatePlayBtnUI(false);
+    } else { 
+        stopAudio(); 
+    }
     if(document.getElementById('playStatus')) document.getElementById('playStatus').innerText = '';
   }
 
@@ -1085,7 +1075,11 @@
   function prevSentence() {
     unlockAudioEngine();
     if(activeSentenceIndices.length === 0) return;
-    if (isPlayingAuto) { forcePrevInAuto = true; stopAudio(); return; }
+    if (isPlayingAuto) {
+      forcePrevInAuto = true;
+      stopAudio();
+      return;
+    }
     
     if(currentPlayingIndex > 0) currentPlayingIndex--;
     else currentPlayingIndex = activeSentenceIndices.length - 1;
@@ -1097,7 +1091,11 @@
   function nextSentence() {
     unlockAudioEngine();
     if(activeSentenceIndices.length === 0) return;
-    if (isPlayingAuto) { forceNextInAuto = true; stopAudio(); return; }
+    if (isPlayingAuto) {
+      forceNextInAuto = true;
+      stopAudio();
+      return;
+    }
 
     if(currentPlayingIndex < activeSentenceIndices.length - 1) currentPlayingIndex++;
     else currentPlayingIndex = 0;
@@ -1119,7 +1117,10 @@
 
   function stopAudio() {
     globalAudio.pause();
-    if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+    if (currentAudioResolve) {
+      currentAudioResolve();
+      currentAudioResolve = null;
+    }
   }
 
   function togglePlayPause() {
@@ -1130,18 +1131,17 @@
       if (isPlayingAuto) {
         isPlayingAuto = false;
         stopAudio();
-        releaseWakeLock();
         updatePlayBtnUI(false);
         document.getElementById('playStatus').innerText = '⏸ 已暫停自動播放';
       } else {
         if(activeSentenceIndices.length === 0) return;
         isPlayingAuto = true;
-        requestWakeLock();
         updatePlayBtnUI(true);
         runAutoPlayLoop();
       }
     } else {
-      if (!globalAudio.paused) {
+      // 修復手動模式判斷邏輯，避免與解鎖音訊衝突
+      if (!globalAudio.paused && globalAudio.src.startsWith('blob:')) {
         stopAudio();
         updatePlayBtnUI(false);
         document.getElementById('playStatus').innerText = '⏸ 已暫停';
@@ -1170,14 +1170,16 @@
         
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
 
-        if (r < repeats - 1) await sleep(1200); 
+        if (r < repeats - 1) {
+          await sleep(1200); 
+        }
       }
 
       if (!isPlayingAuto) break;
 
       if (forceNextInAuto) {
         if (currentPlayingIndex < activeSentenceIndices.length - 1) { currentPlayingIndex++; } 
-        else { isPlayingAuto = false; releaseWakeLock(); updatePlayBtnUI(false); document.getElementById('playStatus').innerText = '🎉 默書播放完畢！'; break; }
+        else { isPlayingAuto = false; updatePlayBtnUI(false); document.getElementById('playStatus').innerText = '🎉 默書播放完畢！'; break; }
         continue;
       }
       if (forcePrevInAuto) {
@@ -1209,7 +1211,6 @@
         currentPlayingIndex++;
       } else {
         isPlayingAuto = false;
-        releaseWakeLock();
         updatePlayBtnUI(false);
         document.getElementById('playStatus').innerText = '🎉 默書播放完畢！';
         break;
@@ -1218,7 +1219,6 @@
     
     if (!isPlayingAuto && !document.getElementById('playStatus').innerText.includes('完畢')) {
         updatePlayBtnUI(false);
-        releaseWakeLock();
         document.getElementById('playStatus').innerText = '⏸ 已暫停';
     }
   }
@@ -1579,7 +1579,7 @@
     }
   }
 
-  // ===== V16 相機掃描 QR Code 匯入 =====
+  // ===== 相機掃描 QR Code 匯入功能 =====
   function openQrScanner() {
     document.getElementById('qrScanModal').classList.add('active');
     html5QrCode = new Html5Qrcode("qr-reader");
@@ -1603,8 +1603,6 @@
     closeQrScanner();
     try {
       const url = new URL(urlText);
-      
-      // 處理 V16 壓縮格式 ?d=
       if (url.searchParams.has('d')) {
         const compressed = url.searchParams.get('d');
         const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
@@ -1618,7 +1616,6 @@
         return;
       }
 
-      // 相容舊版
       const action = url.searchParams.get('action');
       if (action === 'import' || action === 'import_v2') {
         const importTitle = url.searchParams.get('title');
@@ -1644,6 +1641,7 @@
   function toggleAutoSettingsDisplay() { document.getElementById('autoSettingsBox').style.display = (document.getElementById('playMode').value === 'auto') ? 'flex' : 'none'; }
   function savePlaySettings() { updateDetailUI(); }
 
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
   function escapeXml(unsafe) {
     return unsafe.replace(/[<>&'"]/g, function(c) {
       switch (c) { case '<': return '&lt;'; case '>': return '&gt;'; case '&': return '&amp;'; case "'": return '&apos;'; case '"': return '&quot;'; }
