@@ -5,14 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手 V16</title>
+  <title>默書小助手</title>
 
+  <!-- ================= PWA 漸進式 App 設定 (V17 實體檔案模式) ================= -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="默書助手">
   <meta name="theme-color" content="#0066ff">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3364/3364024.png">
   
+  <!-- 連結到實體的 manifest 檔案 -->
+  <link rel="manifest" href="manifest.json">
+  <!-- ========================================================================= -->
+
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -403,13 +408,27 @@
     }
     .qr-instruction-box li::marker { color: #0066ff; font-weight: bold; }
 
-    /* 高解析度 QR Code 縮放顯示 */
     #qrcode canvas, #qrcode img {
       width: 100% !important;
       max-width: 250px;
       height: auto !important;
       display: block;
       margin: 0 auto;
+    }
+
+    .share-link-box {
+      margin-top: 15px; 
+      padding: 10px 12px; 
+      background: #e9ecef; 
+      border-radius: 8px; 
+      font-size: 11px; 
+      word-break: break-all; 
+      color: #555; 
+      max-height: 60px; 
+      overflow-y: auto; 
+      text-align: left; 
+      user-select: text; 
+      border: 1px solid #ced4da;
     }
   </style>
 </head>
@@ -574,7 +593,7 @@
 
     <div class="card" style="margin-top: 15px;">
       <label>更改家長解鎖密碼 (4位數字):</label>
-      <input type="password" id="parentPin" placeholder="設定新密碼..." value="" onchange="saveConfig()">
+      <input type="password" id="parentPin" placeholder="預設密碼: 1234" value="1234" onchange="saveConfig()">
       <p style="font-size: 13px; color: #666; margin-top: 5px;">保護設定與防止小朋友偷看答案。</p>
 
       <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 15px;">
@@ -671,7 +690,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 分享與 QR Code (圖3完整還原) ==================== -->
+  <!-- ==================== MODAL: 分享與 QR Code ==================== -->
   <div id="shareModal" class="modal">
     <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9; display: flex; flex-direction: column; max-height: 90vh;">
       <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; flex-shrink: 0;">
@@ -698,8 +717,7 @@
         </div>
 
         <p style="font-size:13px; color:#999; margin: 15px 0 5px 0; text-align: left;">或者直接複製連結傳給朋友：</p>
-        <!-- 顯示分享連結的文字框 -->
-        <div id="shareUrlDisplayBox" style="background:#e9ecef; padding:10px; border-radius:8px; font-size:11px; color:#555; word-break:break-all; max-height:60px; overflow-y:auto; text-align:left; border:1px solid #ced4da; margin-bottom:15px; user-select:all;"></div>
+        <div id="shareUrlDisplayBox" class="share-link-box"></div>
         
         <button class="btn btn-primary btn-block" onclick="copyShareLink()">📋 複製一鍵匯入連結</button>
       </div>
@@ -793,6 +811,16 @@
 
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+  // --- PWA 安裝註冊 ---
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      // 嘗試建立空白 Service Worker，讓 Android Chrome 滿足 PWA 條件
+      const swCode = `self.addEventListener('fetch', function(e) {});`;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => console.log('SW Setup Ignored'));
+    });
+  }
+
   window.onload = () => {
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
     checkUrlImport();
@@ -820,7 +848,6 @@
           }
         }
       } catch(e) { console.error('匯入解析失敗', e); }
-      return;
     }
   }
 
@@ -865,6 +892,22 @@
     openEditScreen(currentDictation.id);
   }
 
+  // --- 刪除默書修復 ---
+  function deleteCurrentDictation() {
+    if(!currentDictation) return;
+    document.getElementById('headerDropdown').classList.remove('active');
+    
+    // 加入延遲，防止 Confirm 彈窗與 UI 操作衝突導致卡死
+    setTimeout(() => {
+        if(confirm(`確定要刪除「${currentDictation.title}」嗎？`)) {
+          dictations = dictations.filter(d => d.id !== currentDictation.id);
+          localStorage.setItem('dictations', JSON.stringify(dictations));
+          renderList();
+          showPage('home-screen');
+        }
+    }, 50);
+  }
+
   // ===== V16 極限壓縮分享 & 連結顯示框 =====
   function openShareModal() {
     if(!currentDictation) return;
@@ -884,11 +927,12 @@
     document.getElementById('shareModal').classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
 
+    // 400x400 高解析度生成，CSS 縮放保持清晰銳利
     document.getElementById('qrcode').innerHTML = ""; 
     new QRCode(document.getElementById('qrcode'), {
       text: shareUrl,
-      width: 1024,  
-      height: 1024,
+      width: 400,  
+      height: 400,
       colorDark : "#000000",
       colorLight : "#ffffff",
       correctLevel : QRCode.CorrectLevel.L 
@@ -1070,12 +1114,15 @@
 
   function stopAudio() {
     globalAudio.pause();
-    if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+    if (currentAudioResolve) {
+      currentAudioResolve();
+      currentAudioResolve = null;
+    }
   }
 
   // --- 修復自動播放與手動播放邏輯 ---
   function togglePlayPause() {
-    unlockAudioEngine();
+    unlockAudioEngine(); // 點擊藍色播放鍵時自動解鎖 iOS 音訊
     const playMode = document.getElementById('playMode').value;
     
     if (playMode === 'auto') {
@@ -1326,22 +1373,6 @@
 
   function cancelSentenceSelection() { showPage('detail-screen'); }
   function clearSelectionAndPlayAll() { selectAllSentences(true); confirmSentenceSelection(); }
-
-  // --- 刪除默書修復 ---
-  function deleteCurrentDictation() {
-    if(!currentDictation) return;
-    document.getElementById('headerDropdown').classList.remove('active');
-    
-    // 加入延遲，防止 Confirm 彈窗與 UI 操作衝突
-    setTimeout(() => {
-        if(confirm(`確定要刪除「${currentDictation.title}」嗎？`)) {
-          dictations = dictations.filter(d => d.id !== currentDictation.id);
-          localStorage.setItem('dictations', JSON.stringify(dictations));
-          renderList();
-          showPage('home-screen');
-        }
-    }, 50);
-  }
 
   // --- 新增/編輯頁面 ---
   function openEditScreen(id) {
