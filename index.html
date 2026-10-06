@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手</title>
+  <title>默書小助手 V19</title>
 
-  <!-- ================= PWA 漸進式 App 設定 ================= -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="默書助手">
@@ -565,6 +564,7 @@
     
     <label>快捷清理與分段工具：</label>
     <div class="tools-group">
+      <!-- 🌟 V19 全新升級：強效過濾題號 -->
       <button class="btn btn-secondary btn-sm" onclick="filterNumbers()">🧹 過濾題號</button>
       <button class="btn btn-secondary btn-sm" onclick="filterPinyin()">🧹 過濾拼音</button>
       <button class="btn btn-primary btn-sm" onclick="openSegmentEditor()" style="background:#e6f0ff !important; color:#0066ff !important; border:1px solid #0066ff !important;">✂️ 智能分段與編輯</button>
@@ -620,8 +620,8 @@
         </div>
         <div>
           <select id="voiceGender" onchange="savePlaySettings()">
-            <option value="female">👩 女聲</option>
-            <option value="male">👨 男聲</option>
+            <option value="female">👩 女聲 (最自然)</option>
+            <option value="male">👨 男聲 (沉穩)</option>
           </select>
         </div>
       </div>
@@ -808,10 +808,12 @@
     'en-GB': { female: 'en-GB-LibbyNeural', male: 'en-GB-RyanNeural' }
   };
 
+  // 確保 PDF 引擎安全載入
   if (typeof pdfjsLib !== 'undefined') {
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
 
+  // --- 系統載入與一鍵匯入檢查 ---
   window.onload = () => {
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
     checkUrlImport();
@@ -834,6 +836,7 @@
               dictations.unshift({ id: Date.now(), title: importTitle, lang: importLang, content: importContent });
               localStorage.setItem('dictations', JSON.stringify(dictations));
               alert('✅ 成功匯入默書！');
+              renderList(); // 更新清單畫面
             }
             window.history.replaceState({}, document.title, window.location.pathname);
           }
@@ -843,7 +846,7 @@
     }
   }
 
-  // --- 🔓 完美保護機制 ---
+  // --- 🔓 完美保護機制：隱藏密碼重置提示 ---
   function getParentPin() { return localStorage.getItem('parent_pin') || '1234'; }
 
   function verifyParentPin(actionName) {
@@ -878,19 +881,15 @@
     openSentenceSelection();
   }
 
-  function editCurrentDictation() {
-    if(!currentDictation) return;
-    if(isTextHidden && !verifyParentPin('編輯默書')) return;
-    openEditScreen(currentDictation.id);
-  }
-
+  // --- 修復：刪除默書功能 ---
   function deleteCurrentDictation() {
     if(!currentDictation) return;
     document.getElementById('headerDropdown').classList.remove('active');
     
     setTimeout(() => {
         if(confirm(`確定要刪除「${currentDictation.title}」嗎？`)) {
-          dictations = dictations.filter(d => d.id == currentDictation.id);
+          // 修復 Loose Equality 確保 ID 對比無誤
+          dictations = dictations.filter(d => String(d.id) !== String(currentDictation.id));
           localStorage.setItem('dictations', JSON.stringify(dictations));
           renderList();
           showPage('home-screen');
@@ -898,6 +897,7 @@
     }, 50);
   }
 
+  // ===== V16 極限壓縮分享 & 連結顯示框 =====
   function openShareModal() {
     if(!currentDictation) return;
     if(isTextHidden && !verifyParentPin('分享默書')) return;
@@ -910,7 +910,6 @@
 
     document.getElementById('shareTitle').innerText = currentDictation.title;
     document.getElementById('shareWordCount').innerText = `${getSentences(currentDictation.content).length} 個詞語 / 段落`;
-    
     document.getElementById('shareUrlDisplayBox').innerText = shareUrl;
 
     document.getElementById('shareModal').classList.add('active');
@@ -935,33 +934,6 @@
     });
   }
 
-  function unlockAudioEngine() {
-    if (!audioUnlocked) {
-      globalAudio.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//NXQAAAAAAASW5mbwAAAA8AAAAEAAABIwBRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpv/zV0AAADQAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
-      let p = globalAudio.play();
-      if(p !== undefined) { p.catch(e => {}); }
-      audioUnlocked = true;
-    }
-  }
-
-  async function requestWakeLock() {
-    if ('wakeLock' in navigator) {
-      try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
-    }
-  }
-
-  function releaseWakeLock() {
-    if (wakeLock !== null) {
-      wakeLock.release().then(() => { wakeLock = null; }).catch(err => {});
-    }
-  }
-
-  document.addEventListener('visibilitychange', async () => {
-    if (wakeLock !== null && document.visibilityState === 'visible' && isPlayingAuto) {
-      await requestWakeLock();
-    }
-  });
-
   function saveConfig() {
     localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
     alert('✅ 密碼設定已儲存！');
@@ -979,7 +951,8 @@
     } else { 
         stopAudio(); 
     }
-    if(document.getElementById('playStatus')) document.getElementById('playStatus').innerText = '';
+    const ps = document.getElementById('playStatus');
+    if(ps) ps.innerText = '';
   }
 
   function toggleHeaderMenu() {
@@ -1003,7 +976,7 @@
     dictations.forEach(d => {
       const sentences = getSentences(d.content);
       listDiv.innerHTML += `
-        <div class="dictation-item" onclick="openDetailScreen(${d.id})">
+        <div class="dictation-item" onclick="openDetailScreen('${d.id}')">
           <div>
             <div class="dictation-item-title">${escapeXml(d.title)}</div>
             <div class="dictation-item-sub">共 ${sentences.length} 句 | 語言: ${d.lang === 'en' ? '英文' : '中文'}</div>
@@ -1014,22 +987,26 @@
     });
   }
 
+  // --- 防卡死：安全開啟默書畫面 ---
   function openDetailScreen(id) {
-    currentDictation = dictations.find(d => d.id == id);
-    if(!currentDictation) { alert("找不到此默書紀錄"); return; }
+    currentDictation = dictations.find(d => String(d.id) === String(id));
+    if(!currentDictation) { alert('⚠️ 找不到這份默書紀錄！'); return; }
 
-    document.getElementById('detailTitle').innerText = currentDictation.title;
+    const titleEl = document.getElementById('detailTitle');
+    if(titleEl) titleEl.innerText = currentDictation.title;
+    
     const sentences = getSentences(currentDictation.content);
     activeSentenceIndices = sentences.map((_, i) => i);
     currentPlayingIndex = 0;
 
-    if(currentDictation.lang === 'en') {
-      document.getElementById('voiceAccent').value = 'en-US';
-    } else {
-      document.getElementById('voiceAccent').value = 'zh-HK';
+    const vAccent = document.getElementById('voiceAccent');
+    if(vAccent) {
+      vAccent.value = (currentDictation.lang === 'en') ? 'en-US' : 'zh-HK';
     }
 
-    document.getElementById('playStatus').innerText = '';
+    const ps = document.getElementById('playStatus');
+    if(ps) ps.innerText = '';
+    
     updatePlayBtnUI(false);
     updateDetailUI();
     showPage('detail-screen');
@@ -1039,50 +1016,52 @@
     if(!currentDictation) return;
     const sentences = getSentences(currentDictation.content);
     
-    document.getElementById('selectedCountBadge').innerText = `${activeSentenceIndices.length}/${sentences.length}`;
+    const badge = document.getElementById('selectedCountBadge');
+    if(badge) badge.innerText = `${activeSentenceIndices.length}/${sentences.length}`;
 
     const voiceSelect = document.getElementById('voiceAccent');
     let accentText = "預設";
-    if(voiceSelect && voiceSelect.options && voiceSelect.options.length > 0) {
+    if(voiceSelect && voiceSelect.options && voiceSelect.options.length > 0 && voiceSelect.selectedIndex >= 0) {
         accentText = voiceSelect.options[voiceSelect.selectedIndex].text.split(' ')[0];
     }
-    const speed = document.getElementById('setupSpeed').value;
-    const modeText = document.getElementById('playMode').value === 'auto' ? '自動模式' : '手動模式';
-    document.getElementById('settingsSummaryText').innerText = `${modeText} | ${accentText} | ${speed}x速`;
+    
+    const speedEl = document.getElementById('setupSpeed');
+    const modeEl = document.getElementById('playMode');
+    const speed = speedEl ? speedEl.value : '1.0';
+    const modeText = (modeEl && modeEl.value === 'auto') ? '自動模式' : '手動模式';
+    
+    const summary = document.getElementById('settingsSummaryText');
+    if(summary) summary.innerText = `${modeText} | ${accentText} | ${speed}x速`;
 
     const container = document.getElementById('sentenceCardList');
-    container.innerHTML = '';
+    if(container) {
+        container.innerHTML = '';
+        sentences.forEach((sText, idx) => {
+          const isSelected = activeSentenceIndices.includes(idx);
+          if(!isSelected) return; 
 
-    sentences.forEach((sText, idx) => {
-      const isSelected = activeSentenceIndices.includes(idx);
-      if(!isSelected) return; 
+          const activePos = activeSentenceIndices.indexOf(idx);
+          const isActive = (activePos === currentPlayingIndex);
 
-      const activePos = activeSentenceIndices.indexOf(idx);
-      const isActive = (activePos === currentPlayingIndex);
-
-      container.innerHTML += `
-        <div class="sentence-card ${isActive ? 'active' : ''}" onclick="selectSentenceToPlay(${activePos})">
-          <div class="sentence-num">${idx + 1}.</div>
-          <div class="sentence-text ${isTextHidden ? 'blur-text' : ''}">${escapeXml(sText)}</div>
-          <div class="sentence-audio-btn">🔊</div>
-        </div>
-      `;
-    });
+          container.innerHTML += `
+            <div class="sentence-card ${isActive ? 'active' : ''}" onclick="selectSentenceToPlay(${activePos})">
+              <div class="sentence-num">${idx + 1}.</div>
+              <div class="sentence-text ${isTextHidden ? 'blur-text' : ''}">${escapeXml(sText)}</div>
+              <div class="sentence-audio-btn">🔊</div>
+            </div>
+          `;
+        });
+    }
   }
 
   function selectSentenceToPlay(pos) {
-    unlockAudioEngine();
-    if (isPlayingAuto) {
-        isPlayingAuto = false;
-        updatePlayBtnUI(false);
-    }
+    if (isPlayingAuto) togglePlayPause(); 
     currentPlayingIndex = pos;
     updateDetailUI();
     playCurrentSentence();
   }
 
   function prevSentence() {
-    unlockAudioEngine();
     if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) {
       forcePrevInAuto = true;
@@ -1098,7 +1077,6 @@
   }
 
   function nextSentence() {
-    unlockAudioEngine();
     if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) {
       forceNextInAuto = true;
@@ -1115,6 +1093,7 @@
 
   function updatePlayBtnUI(isPlaying) {
     const btn = document.getElementById('mainPlayBtn');
+    if(!btn) return;
     if (isPlaying) {
       btn.innerHTML = '⏸';
       btn.classList.add('playing');
@@ -1125,23 +1104,25 @@
   }
 
   function stopAudio() {
-    globalAudio.pause();
+    if(globalAudio) globalAudio.pause();
     if (currentAudioResolve) {
       currentAudioResolve();
       currentAudioResolve = null;
     }
   }
 
+  // --- 修復自動與手動播放啟動邏輯 ---
   function togglePlayPause() {
     unlockAudioEngine(); 
     const playMode = document.getElementById('playMode').value;
+    const ps = document.getElementById('playStatus');
     
     if (playMode === 'auto') {
       if (isPlayingAuto) {
         isPlayingAuto = false;
         stopAudio();
         updatePlayBtnUI(false);
-        document.getElementById('playStatus').innerText = '⏸ 已暫停自動播放';
+        if(ps) ps.innerText = '⏸ 已暫停自動播放';
       } else {
         if(activeSentenceIndices.length === 0) return;
         isPlayingAuto = true;
@@ -1149,15 +1130,10 @@
         runAutoPlayLoop();
       }
     } else {
-      if (!globalAudio.paused && globalAudio.src.startsWith('blob:')) {
-        stopAudio();
-        updatePlayBtnUI(false);
-        document.getElementById('playStatus').innerText = '⏸ 已暫停';
-      } else {
-        if(activeSentenceIndices.length === 0) return;
-        document.getElementById('playStatus').innerText = '🔊 手動播放中';
-        playCurrentSentence();
-      }
+      // 手動模式直接呼叫播放，不需要判斷暫停狀態，以防 iOS Safari 把狀態鎖死
+      if(activeSentenceIndices.length === 0) return;
+      if(ps) ps.innerText = '🔊 手動播放中';
+      playCurrentSentence();
     }
   }
 
@@ -1173,21 +1149,26 @@
       for (let r = 0; r < repeats; r++) {
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
         
-        document.getElementById('playStatus').innerText = `🔊 正在朗讀 (第 ${r + 1}/${repeats} 次)`;
+        const ps = document.getElementById('playStatus');
+        if(ps) ps.innerText = `🔊 正在朗讀 (第 ${r + 1}/${repeats} 次)`;
+        
         await playCurrentSentence();
         
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
-
-        if (r < repeats - 1) {
-          await sleep(1200); 
-        }
+        if (r < repeats - 1) await sleep(1200); 
       }
 
       if (!isPlayingAuto) break;
 
       if (forceNextInAuto) {
         if (currentPlayingIndex < activeSentenceIndices.length - 1) { currentPlayingIndex++; } 
-        else { isPlayingAuto = false; updatePlayBtnUI(false); document.getElementById('playStatus').innerText = '🎉 默書播放完畢！'; break; }
+        else { 
+            isPlayingAuto = false; 
+            updatePlayBtnUI(false); 
+            const ps = document.getElementById('playStatus');
+            if(ps) ps.innerText = '🎉 默書播放完畢！'; 
+            break; 
+        }
         continue;
       }
       if (forcePrevInAuto) {
@@ -1202,13 +1183,13 @@
         
         while (waited < totalWaitMs && isPlayingAuto && !forceNextInAuto && !forcePrevInAuto) {
             let remaining = ((totalWaitMs - waited) / 1000).toFixed(1);
-            document.getElementById('playStatus').innerText = `✍️ 請書寫... 停頓倒數 ${remaining} 秒`;
+            const ps = document.getElementById('playStatus');
+            if(ps) ps.innerText = `✍️ 請書寫... 停頓倒數 ${remaining} 秒`;
             await sleep(100);
             waited += 100;
         }
         
         if (!isPlayingAuto) break;
-        
         if (forceNextInAuto) { currentPlayingIndex++; continue; }
         if (forcePrevInAuto) { 
             if(currentPlayingIndex > 0) currentPlayingIndex--; 
@@ -1220,14 +1201,16 @@
       } else {
         isPlayingAuto = false;
         updatePlayBtnUI(false);
-        document.getElementById('playStatus').innerText = '🎉 默書播放完畢！';
+        const ps = document.getElementById('playStatus');
+        if(ps) ps.innerText = '🎉 默書播放完畢！';
         break;
       }
     }
     
-    if (!isPlayingAuto && !document.getElementById('playStatus').innerText.includes('完畢')) {
+    const finalPs = document.getElementById('playStatus');
+    if (!isPlayingAuto && finalPs && !finalPs.innerText.includes('完畢')) {
         updatePlayBtnUI(false);
-        document.getElementById('playStatus').innerText = '⏸ 已暫停';
+        finalPs.innerText = '⏸ 已暫停';
     }
   }
 
@@ -1290,7 +1273,8 @@
         globalAudio.onended = () => {
           if (document.getElementById('playMode').value === 'manual') {
               updatePlayBtnUI(false);
-              document.getElementById('playStatus').innerText = '準備就緒';
+              const ps = document.getElementById('playStatus');
+              if(ps) ps.innerText = '準備就緒';
           }
           if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         };
@@ -1300,7 +1284,7 @@
         };
         
         globalAudio.play().catch(e => {
-            console.error("iOS Audio Playback Prevented: ", e);
+            console.error("iOS Playback Error:", e);
             if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         });
 
@@ -1321,6 +1305,7 @@
     }
   }
 
+  // --- 句子勾選頁面 (今日練習) ---
   function openSentenceSelection() {
     const sentences = getSentences(currentDictation.content);
     tempSelectedIndices = [...activeSentenceIndices];
@@ -1383,10 +1368,11 @@
   function cancelSentenceSelection() { showPage('detail-screen'); }
   function clearSelectionAndPlayAll() { selectAllSentences(true); confirmSentenceSelection(); }
 
+  // --- 新增/編輯頁面 ---
   function openEditScreen(id) {
     if(id) {
-      const dic = dictations.find(d => d.id == id);
-      if(!dic) { alert("找不到資料"); return; }
+      const dic = dictations.find(d => String(d.id) === String(id));
+      if(!dic) return;
       document.getElementById('editScreenTitle').innerText = '✏️ 編輯默書';
       document.getElementById('editId').value = dic.id;
       document.getElementById('editTitle').value = dic.title;
@@ -1412,7 +1398,7 @@
     if(!title || !content) { alert('請輸入標題與默書內容！'); return; }
 
     if(id) {
-      const index = dictations.findIndex(d => d.id == parseInt(id));
+      const index = dictations.findIndex(d => String(d.id) === String(id));
       if(index !== -1) dictations[index] = { id: parseInt(id), title, lang, content };
     } else {
       dictations.unshift({ id: Date.now(), title, lang, content });
@@ -1423,9 +1409,22 @@
     openDetailScreen(id ? parseInt(id) : dictations[0].id);
   }
 
+  // ===== 🌟 終極黑科技：專屬「過濾題號」自動拆行邏輯 =====
   function filterNumbers() {
     let text = document.getElementById('editContent').value;
+    
+    // 1. 解決緊連的英文/中文字與數字：例如 "protect8." 拆成 "protect \n 8."
+    text = text.replace(/([a-zA-Z\u4e00-\u9fa5])\s*(\d+[\.\)])/g, '$1\n$2');
+    
+    // 2. 將同行中，由空白隔開的題號 (例如 " 12. ") 前方強制換行
+    text = text.replace(/\s+(\d+[\.\)])/g, '\n$1');
+    
+    // 3. 清除行首數字、題號、括號等
     text = text.replace(/^[\s]*([0-9一二三四五六七八九十]+[\.\)、、\s]+|\([0-9]+\)[\s]*)/gm, '');
+    
+    // 4. 清理多餘空白行與每行前後空白
+    text = text.split('\n').map(s => s.trim()).filter(s => s.length > 0).join('\n');
+    
     document.getElementById('editContent').value = text;
   }
 
@@ -1466,7 +1465,7 @@
           <div class="segment-idx">${idx + 1}</div>
           <div class="segment-text">${escapeXml(seg)}</div>
           <div class="segment-actions">
-            <button class="btn-action" onclick="openSplitModal(${idx})">✂️️ 拆分</button>
+            <button class="btn-action" onclick="openSplitModal(${idx})">✂ 拆分</button>
             ${idx < tempSegments.length - 1 ? `<button class="btn-action" onclick="mergeSegmentDown(${idx})">🔗 合併</button>` : ''}
           </div>
         </div>
@@ -1532,20 +1531,21 @@
   function closeSplitModal() { document.getElementById('splitModal').classList.remove('active'); }
   function saveSegmentsToTextarea() { document.getElementById('editContent').value = tempSegments.join('\n'); closeSegmentModal(); }
 
+  // --- OCR / Crop ---
   async function handleFileUpload(e) {
     const file = e.target.files[0];
     if(!file) return;
 
     if(file.type === 'application/pdf') {
       document.getElementById('ocrStatus').innerText = "⏳ 正在載入 PDF...";
-      if(typeof pdfjsLib === 'undefined') {
-        alert("PDF 處理引擎尚未載入，請確保網路連線正常。");
+      if(typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) {
+        alert("PDF 處理引擎尚未載入完成，請稍候再試或檢查網路連線。");
         return;
       }
       const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
       const page = await pdf.getPage(1);
       
-      // 放大倍率提升至 3.0，讓微小的英文單字更清晰
+      // 放大倍率提升至 3.0x，讓微小的英文單字極度銳利
       const viewport = page.getViewport({ scale: 3.0 }); 
       
       const canvas = document.createElement('canvas');
@@ -1578,7 +1578,7 @@
     closeCropModal();
     
     const statusText = document.getElementById('ocrStatus');
-    statusText.innerText = "⏳ 正在辨識文字 (Tesseract OCR)...";
+    statusText.innerText = "⏳ 正在辨識文字 (這可能需要幾秒鐘)...";
     
     try {
       const langMode = document.getElementById('editLang').value;
@@ -1586,12 +1586,11 @@
       
       const result = await Tesseract.recognize(croppedCanvas, tesseractLang);
       
-      // 過濾 | 符號與多餘雜訊
-      let text = result.data.text.replace(/\|/g, '\n').replace(/\n\s*\n/g, '\n').trim();
+      // 處理英文雙欄 PDF 特有的 | 分隔符號並修復常見錯字
+      let text = result.data.text.replace(/\|/g, '\n').replace(/bio'ogy/gi, 'biology').replace(/\n\s*\n/g, '\n').trim();
       document.getElementById('editContent').value = text;
       
-      smartSegment(); 
-      statusText.innerText = "✅ OCR 辨識成功，已按你選擇的語言過濾排版！";
+      statusText.innerText = "✅ 辨識成功！請點擊上方的「🧹 過濾題號」自動拆解排版！";
     } catch(err) {
       console.error(err);
       statusText.innerText = "❌ 辨識失敗，請重新嘗試。";
