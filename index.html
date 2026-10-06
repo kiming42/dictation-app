@@ -5,19 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手</title>
+  <title>默書小助手 V17</title>
 
-  <!-- ================= PWA 漸進式 App 設定 (V17 實體檔案模式) ================= -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="默書助手">
   <meta name="theme-color" content="#0066ff">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3364/3364024.png">
-  
-  <!-- 連結到實體的 manifest 檔案 -->
   <link rel="manifest" href="manifest.json">
-  <!-- ========================================================================= -->
-
+  
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -430,6 +426,8 @@
       user-select: text; 
       border: 1px solid #ced4da;
     }
+    
+    .cropper-container-box { max-height: 60vh; overflow: hidden; margin-bottom: 15px; }
   </style>
 </head>
 <body>
@@ -488,7 +486,7 @@
           <span class="settings-summary-tag">Azure 語音</span>
         </div>
         <div class="settings-summary-sub" id="settingsSummaryText">
-          手動模式 | 廣東話 | 0.8x速
+          手動模式 | 廣東話 | 1.0x速
         </div>
       </div>
       <div style="color: #ccc; font-size: 18px;">❯</div>
@@ -497,7 +495,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
       <h3 style="margin: 0; font-size: 18px;">默書內容</h3>
       <div style="font-size: 13px; color: var(--primary); cursor: pointer;" onclick="toggleHideText()">
-        👁️ <span id="toggleTextHideLabel">隱藏/顯示文字</span>
+        👁 <span id="toggleTextHideLabel">隱藏/顯示文字</span>
       </div>
     </div>
 
@@ -554,7 +552,7 @@
       </div>
     </div>
     
-    <label>匯入方式：</label>
+    <label>匯入方式 <span style="font-size:12px; font-weight:normal; color:#888;">(請先選擇上方「主要語言」)</span>：</label>
     <div class="row" style="margin-bottom: 6px;">
       <button class="btn btn-outline btn-block" onclick="document.getElementById('fileInput').click()">
         📄 圖片/PDF 裁切 OCR
@@ -622,8 +620,8 @@
         </div>
         <div>
           <select id="voiceGender" onchange="savePlaySettings()">
-            <option value="female">👩 女聲</option>
-            <option value="male">👨 男聲</option>
+            <option value="female">👩 女聲 (最自然)</option>
+            <option value="male">👨 男聲 (沉穩)</option>
           </select>
         </div>
       </div>
@@ -648,21 +646,22 @@
           <label>停頓間隔：</label>
           <select id="setupDelay" onchange="savePlaySettings()">
             <option value="3">3 秒</option>
-            <option value="5" selected>5 秒</option>
-            <option value="8">8 秒</option>
+            <option value="5">5 秒</option>
+            <option value="8" selected>8 秒 (建議)</option>
             <option value="10">10 秒</option>
+            <option value="15">15 秒</option>
           </select>
         </div>
       </div>
 
       <label>朗讀語速：</label>
       <select id="setupSpeed" onchange="savePlaySettings()">
-        <option value="0.3">0.3x (極慢)</option>
         <option value="0.5">0.5x (超慢)</option>
         <option value="0.7">0.7x (慢速)</option>
-        <option value="0.8" selected>0.8x (適中默書)</option>
-        <option value="0.9">0.9x (微慢)</option>
-        <option value="1.0">1.0x (正常)</option>
+        <option value="0.8">0.8x (微慢)</option>
+        <option value="0.9">0.9x</option>
+        <option value="1.0" selected>1.0x (最自然原聲)</option>
+        <option value="1.1">1.1x (稍快)</option>
       </select>
 
       <div style="margin-top: 15px; background: #f8f9fa; padding: 12px; border-radius: 10px;">
@@ -774,7 +773,7 @@
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
   // ==========================================
-  // ⚙️ 系統核心設定 (請填入你的 Azure Key)
+  // ⚙️ 系統核心設定
   // ==========================================
   const AZURE_API_KEY = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS"; 
   const AZURE_REGION = "eastasia";
@@ -803,18 +802,16 @@
   let currentSplitIndex = -1;
 
   const voiceMap = {
-    'zh-HK': { female: 'zh-HK-HiuGaaiNeural', male: 'zh-HK-WanLungNeural' },
+    'zh-HK': { female: 'zh-HK-HiuMaanNeural', male: 'zh-HK-WanLungNeural' },
     'zh-CN': { female: 'zh-CN-XiaoxiaoNeural', male: 'zh-CN-YunxiNeural' },
-    'en-US': { female: 'en-US-AvaNeural', male: 'en-US-GuyNeural' },
-    'en-GB': { female: 'en-GB-SoniaNeural', male: 'en-GB-RyanNeural' }
+    'en-US': { female: 'en-US-JennyNeural', male: 'en-US-GuyNeural' },
+    'en-GB': { female: 'en-GB-LibbyNeural', male: 'en-GB-RyanNeural' }
   };
 
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-  // --- PWA 安裝註冊 ---
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      // 嘗試建立空白 Service Worker，讓 Android Chrome 滿足 PWA 條件
       const swCode = `self.addEventListener('fetch', function(e) {});`;
       const blob = new Blob([swCode], { type: 'application/javascript' });
       navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => console.log('SW Setup Ignored'));
@@ -848,10 +845,10 @@
           }
         }
       } catch(e) { console.error('匯入解析失敗', e); }
+      return;
     }
   }
 
-  // --- 🔓 完美保護機制：隱藏 0000 提示 ---
   function getParentPin() { return localStorage.getItem('parent_pin') || '1234'; }
 
   function verifyParentPin(actionName) {
@@ -892,12 +889,10 @@
     openEditScreen(currentDictation.id);
   }
 
-  // --- 刪除默書修復 ---
   function deleteCurrentDictation() {
     if(!currentDictation) return;
     document.getElementById('headerDropdown').classList.remove('active');
     
-    // 加入延遲，防止 Confirm 彈窗與 UI 操作衝突導致卡死
     setTimeout(() => {
         if(confirm(`確定要刪除「${currentDictation.title}」嗎？`)) {
           dictations = dictations.filter(d => d.id !== currentDictation.id);
@@ -908,7 +903,6 @@
     }, 50);
   }
 
-  // ===== V16 極限壓縮分享 & 連結顯示框 =====
   function openShareModal() {
     if(!currentDictation) return;
     if(isTextHidden && !verifyParentPin('分享默書')) return;
@@ -927,7 +921,6 @@
     document.getElementById('shareModal').classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
 
-    // 400x400 高解析度生成，CSS 縮放保持清晰銳利
     document.getElementById('qrcode').innerHTML = ""; 
     new QRCode(document.getElementById('qrcode'), {
       text: shareUrl,
@@ -947,7 +940,6 @@
     });
   }
 
-  // --- iOS 音訊解鎖 ---
   function unlockAudioEngine() {
     if (!audioUnlocked) {
       globalAudio.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//NXQAAAAAAASW5mbwAAAA8AAAAEAAABIwBRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpv/zV0AAADQAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
@@ -1063,7 +1055,10 @@
 
   function selectSentenceToPlay(pos) {
     unlockAudioEngine();
-    if (isPlayingAuto) togglePlayPause(); 
+    if (isPlayingAuto) {
+        isPlayingAuto = false;
+        updatePlayBtnUI(false);
+    }
     currentPlayingIndex = pos;
     updateDetailUI();
     playCurrentSentence();
@@ -1120,9 +1115,8 @@
     }
   }
 
-  // --- 修復自動播放與手動播放邏輯 ---
   function togglePlayPause() {
-    unlockAudioEngine(); // 點擊藍色播放鍵時自動解鎖 iOS 音訊
+    unlockAudioEngine(); 
     const playMode = document.getElementById('playMode').value;
     
     if (playMode === 'auto') {
@@ -1138,7 +1132,7 @@
         runAutoPlayLoop();
       }
     } else {
-      // 手動模式
+      // 修復手動模式判定，讓中間播放鍵能直接重讀當前句子
       if (!globalAudio.paused && globalAudio.src.startsWith('blob:')) {
         stopAudio();
         updatePlayBtnUI(false);
@@ -1457,7 +1451,7 @@
           <div class="segment-idx">${idx + 1}</div>
           <div class="segment-text">${escapeXml(seg)}</div>
           <div class="segment-actions">
-            <button class="btn-action" onclick="openSplitModal(${idx})">✂️ 拆分</button>
+            <button class="btn-action" onclick="openSplitModal(${idx})">✂️️ 拆分</button>
             ${idx < tempSegments.length - 1 ? `<button class="btn-action" onclick="mergeSegmentDown(${idx})">🔗 合併</button>` : ''}
           </div>
         </div>
@@ -1567,16 +1561,25 @@
     statusText.innerText = "⏳ 正在辨識文字 (Tesseract OCR)...";
     
     try {
-      const result = await Tesseract.recognize(croppedCanvas, 'chi_tra+eng');
-      const text = result.data.text.replace(/\n\s*\n/g, '\n').trim();
+      // 根據選擇的語言決定 OCR 引擎
+      const langMode = document.getElementById('editLang').value;
+      const tesseractLang = langMode === 'en' ? 'eng' : 'chi_tra+eng';
+      
+      const result = await Tesseract.recognize(croppedCanvas, tesseractLang);
+      
+      // 針對直欄排版過濾 | 符號
+      const text = result.data.text.replace(/\|/g, '\n').replace(/\n\s*\n/g, '\n').trim();
       document.getElementById('editContent').value = text;
-      statusText.innerText = "✅ OCR 辨識成功！可點擊「✂️ 智能分段與編輯」進一步調整。";
+      
+      smartSegment(); 
+      statusText.innerText = "✅ OCR 辨識成功！";
     } catch(err) {
       console.error(err);
       statusText.innerText = "❌ 辨識失敗，請重新嘗試。";
     }
   }
 
+  // --- 相機掃描 QR Code ---
   function openQrScanner() {
     document.getElementById('qrScanModal').classList.add('active');
     html5QrCode = new Html5Qrcode("qr-reader");
@@ -1620,7 +1623,6 @@
   function toggleAutoSettingsDisplay() { document.getElementById('autoSettingsBox').style.display = (document.getElementById('playMode').value === 'auto') ? 'flex' : 'none'; }
   function savePlaySettings() { updateDetailUI(); }
 
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
   function escapeXml(unsafe) {
     return unsafe.replace(/[<>&'"]/g, function(c) {
       switch (c) { case '<': return '&lt;'; case '>': return '&gt;'; case '&': return '&amp;'; case "'": return '&apos;'; case '"': return '&quot;'; }
