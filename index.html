@@ -7,12 +7,12 @@
   
   <title>默書小助手</title>
 
+  <!-- ================= PWA 漸進式 App 設定 ================= -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="默書助手">
   <meta name="theme-color" content="#0066ff">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3364/3364024.png">
-  <link rel="manifest" href="manifest.json">
   
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
@@ -567,7 +567,6 @@
     <div class="tools-group">
       <button class="btn btn-secondary btn-sm" onclick="filterNumbers()">🧹 過濾題號</button>
       <button class="btn btn-secondary btn-sm" onclick="filterPinyin()">🧹 過濾拼音</button>
-      <button class="btn btn-secondary btn-sm" onclick="fixLayout()">🪄 修復排版</button>
       <button class="btn btn-primary btn-sm" onclick="openSegmentEditor()" style="background:#e6f0ff !important; color:#0066ff !important; border:1px solid #0066ff !important;">✂️ 智能分段與編輯</button>
     </div>
 
@@ -621,8 +620,8 @@
         </div>
         <div>
           <select id="voiceGender" onchange="savePlaySettings()">
-            <option value="female">👩 女聲 (最自然)</option>
-            <option value="male">👨 男聲 (沉穩)</option>
+            <option value="female">👩 女聲</option>
+            <option value="male">👨 男聲</option>
           </select>
         </div>
       </div>
@@ -774,7 +773,7 @@
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
   // ==========================================
-  // ⚙️ 系統核心設定
+  // ⚙️ 系統核心設定 (請填入你的 Azure Key)
   // ==========================================
   const AZURE_API_KEY = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS"; 
   const AZURE_REGION = "eastasia";
@@ -809,14 +808,8 @@
     'en-GB': { female: 'en-GB-LibbyNeural', male: 'en-GB-RyanNeural' }
   };
 
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      const swCode = `self.addEventListener('fetch', function(e) {});`;
-      const blob = new Blob([swCode], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => console.log('SW Setup Ignored'));
-    });
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
 
   window.onload = () => {
@@ -850,11 +843,11 @@
     }
   }
 
+  // --- 🔓 完美保護機制 ---
   function getParentPin() { return localStorage.getItem('parent_pin') || '1234'; }
 
   function verifyParentPin(actionName) {
     const currentPin = getParentPin();
-    // 移除了 0000 的提示文字，保護隱私，但功能依然保留
     const input = prompt(`🔒 ${actionName}：請輸入家長解鎖密碼`);
     
     if (input === currentPin) {
@@ -897,7 +890,7 @@
     
     setTimeout(() => {
         if(confirm(`確定要刪除「${currentDictation.title}」嗎？`)) {
-          dictations = dictations.filter(d => d.id !== currentDictation.id);
+          dictations = dictations.filter(d => d.id == currentDictation.id);
           localStorage.setItem('dictations', JSON.stringify(dictations));
           renderList();
           showPage('home-screen');
@@ -1022,8 +1015,8 @@
   }
 
   function openDetailScreen(id) {
-    currentDictation = dictations.find(d => d.id === id);
-    if(!currentDictation) return;
+    currentDictation = dictations.find(d => d.id == id);
+    if(!currentDictation) { alert("找不到此默書紀錄"); return; }
 
     document.getElementById('detailTitle').innerText = currentDictation.title;
     const sentences = getSentences(currentDictation.content);
@@ -1048,7 +1041,11 @@
     
     document.getElementById('selectedCountBadge').innerText = `${activeSentenceIndices.length}/${sentences.length}`;
 
-    const accentText = document.getElementById('voiceAccent').selectedOptions[0].text.split(' ')[0];
+    const voiceSelect = document.getElementById('voiceAccent');
+    let accentText = "預設";
+    if(voiceSelect && voiceSelect.options && voiceSelect.options.length > 0) {
+        accentText = voiceSelect.options[voiceSelect.selectedIndex].text.split(' ')[0];
+    }
     const speed = document.getElementById('setupSpeed').value;
     const modeText = document.getElementById('playMode').value === 'auto' ? '自動模式' : '手動模式';
     document.getElementById('settingsSummaryText').innerText = `${modeText} | ${accentText} | ${speed}x速`;
@@ -1324,7 +1321,6 @@
     }
   }
 
-  // --- 句子勾選頁面 ---
   function openSentenceSelection() {
     const sentences = getSentences(currentDictation.content);
     tempSelectedIndices = [...activeSentenceIndices];
@@ -1387,8 +1383,272 @@
   function cancelSentenceSelection() { showPage('detail-screen'); }
   function clearSelectionAndPlayAll() { selectAllSentences(true); confirmSentenceSelection(); }
 
-  // --- 新增/編輯頁面 ---
   function openEditScreen(id) {
     if(id) {
-      const dic = dictations.find(d => d.id === id);
-      document.getElementById('editScreenTitle').innerText = '✏️ 編輯默
+      const dic = dictations.find(d => d.id == id);
+      if(!dic) { alert("找不到資料"); return; }
+      document.getElementById('editScreenTitle').innerText = '✏️ 編輯默書';
+      document.getElementById('editId').value = dic.id;
+      document.getElementById('editTitle').value = dic.title;
+      document.getElementById('editLang').value = dic.lang || 'zh';
+      document.getElementById('editContent').value = dic.content;
+    } else {
+      document.getElementById('editScreenTitle').innerText = '➕ 新增默書';
+      document.getElementById('editId').value = '';
+      document.getElementById('editTitle').value = '默書 ' + new Date().toISOString().slice(0,10);
+      document.getElementById('editLang').value = 'zh';
+      document.getElementById('editContent').value = '';
+    }
+    document.getElementById('ocrStatus').innerText = '';
+    showPage('edit-screen');
+  }
+
+  function saveDictation() {
+    const id = document.getElementById('editId').value;
+    const title = document.getElementById('editTitle').value.trim();
+    const lang = document.getElementById('editLang').value;
+    let content = document.getElementById('editContent').value.trim();
+
+    if(!title || !content) { alert('請輸入標題與默書內容！'); return; }
+
+    if(id) {
+      const index = dictations.findIndex(d => d.id == parseInt(id));
+      if(index !== -1) dictations[index] = { id: parseInt(id), title, lang, content };
+    } else {
+      dictations.unshift({ id: Date.now(), title, lang, content });
+    }
+
+    localStorage.setItem('dictations', JSON.stringify(dictations));
+    renderList();
+    openDetailScreen(id ? parseInt(id) : dictations[0].id);
+  }
+
+  function filterNumbers() {
+    let text = document.getElementById('editContent').value;
+    text = text.replace(/^[\s]*([0-9一二三四五六七八九十]+[\.\)、、\s]+|\([0-9]+\)[\s]*)/gm, '');
+    document.getElementById('editContent').value = text;
+  }
+
+  function filterPinyin() {
+    let text = document.getElementById('editContent').value;
+    text = text.replace(/\([a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+\)/g, '');
+    text = text.replace(/（[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+）/g, '');
+    text = text.replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/g, '');
+    document.getElementById('editContent').value = text;
+  }
+
+  function openSegmentEditor() {
+    const text = document.getElementById('editContent').value.trim();
+    if(!text) { alert('請先輸入默書內容！'); return; }
+    
+    tempSegments = getSentences(text);
+    document.getElementById('segmentModal').classList.add('active');
+    renderSegmentList();
+  }
+
+  function closeSegmentModal() { document.getElementById('segmentModal').classList.remove('active'); }
+
+  function autoSmartSegment() {
+    let text = tempSegments.join('\n');
+    text = text.replace(/([.。！？!?]+)\s*/g, "$1\n");
+    tempSegments = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    renderSegmentList();
+  }
+
+  function renderSegmentList() {
+    const container = document.getElementById('segmentListContainer');
+    document.getElementById('segmentCountLabel').innerText = `分段結果 (${tempSegments.length} 個詞/句)`;
+    container.innerHTML = '';
+    
+    tempSegments.forEach((seg, idx) => {
+      container.innerHTML += `
+        <div class="segment-item">
+          <div class="segment-idx">${idx + 1}</div>
+          <div class="segment-text">${escapeXml(seg)}</div>
+          <div class="segment-actions">
+            <button class="btn-action" onclick="openSplitModal(${idx})">✂️️ 拆分</button>
+            ${idx < tempSegments.length - 1 ? `<button class="btn-action" onclick="mergeSegmentDown(${idx})">🔗 合併</button>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function mergeSegmentDown(idx) {
+    if (idx < tempSegments.length - 1) {
+      tempSegments[idx] = tempSegments[idx] + ' ' + tempSegments[idx+1];
+      tempSegments.splice(idx + 1, 1);
+      renderSegmentList();
+    }
+  }
+
+  function openSplitModal(idx) {
+    currentSplitIndex = idx;
+    const text = tempSegments[idx];
+    
+    const regex = /([a-zA-Z0-9_']+)|([^a-zA-Z0-9_'\s]+)/g;
+    let tokens = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      if(match[0].trim()) tokens.push(match[0]);
+    }
+    if (tokens.length === 0) tokens = Array.from(text);
+
+    const splitContainer = document.getElementById('splitContent');
+    splitContainer.innerHTML = '';
+
+    tokens.forEach((token, tIdx) => {
+      const span = document.createElement('span');
+      span.className = 'split-token';
+      span.innerText = token;
+      splitContainer.appendChild(span);
+
+      if (tIdx < tokens.length - 1) {
+        const divider = document.createElement('span');
+        divider.className = 'split-divider';
+        divider.innerText = '|';
+        divider.onclick = () => executeSplit(tIdx, tokens);
+        splitContainer.appendChild(divider);
+      }
+    });
+
+    document.getElementById('splitModal').classList.add('active');
+  }
+
+  function executeSplit(tokenIdx, tokens) {
+    const leftPart = tokens.slice(0, tokenIdx + 1).join(' ')
+      .replace(/\s+([.,!?])/g, '$1') 
+      .replace(/([\u4e00-\u9fa5])\s+(?=[\u4e00-\u9fa5，。！？])/g, '$1'); 
+    
+    const rightPart = tokens.slice(tokenIdx + 1).join(' ')
+      .replace(/\s+([.,!?])/g, '$1')
+      .replace(/([\u4e00-\u9fa5])\s+(?=[\u4e00-\u9fa5，。！？])/g, '$1');
+
+    tempSegments.splice(currentSplitIndex, 1, leftPart.trim(), rightPart.trim());
+    closeSplitModal();
+    renderSegmentList();
+  }
+
+  function closeSplitModal() { document.getElementById('splitModal').classList.remove('active'); }
+  function saveSegmentsToTextarea() { document.getElementById('editContent').value = tempSegments.join('\n'); closeSegmentModal(); }
+
+  async function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    if(file.type === 'application/pdf') {
+      document.getElementById('ocrStatus').innerText = "⏳ 正在載入 PDF...";
+      if(typeof pdfjsLib === 'undefined') {
+        alert("PDF 處理引擎尚未載入，請確保網路連線正常。");
+        return;
+      }
+      const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
+      const page = await pdf.getPage(1);
+      
+      // 放大倍率提升至 3.0，讓微小的英文單字更清晰
+      const viewport = page.getViewport({ scale: 3.0 }); 
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      openCropModal(canvas.toDataURL('image/png'));
+    } else {
+      const reader = new FileReader();
+      reader.onload = (evt) => openCropModal(evt.target.result);
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function openCropModal(imageSrc) {
+    const img = document.getElementById('cropImage');
+    img.src = imageSrc;
+    document.getElementById('cropModal').classList.add('active');
+    if(cropper) cropper.destroy();
+    cropper = new Cropper(img, { viewMode: 1, autoCropArea: 0.85, responsive: true });
+  }
+
+  function closeCropModal() { document.getElementById('cropModal').classList.remove('active'); if(cropper) cropper.destroy(); }
+
+  async function confirmCropAndOCR() {
+    if(!cropper) return;
+    const croppedCanvas = cropper.getCroppedCanvas();
+    closeCropModal();
+    
+    const statusText = document.getElementById('ocrStatus');
+    statusText.innerText = "⏳ 正在辨識文字 (Tesseract OCR)...";
+    
+    try {
+      const langMode = document.getElementById('editLang').value;
+      const tesseractLang = langMode === 'en' ? 'eng' : 'chi_tra+eng';
+      
+      const result = await Tesseract.recognize(croppedCanvas, tesseractLang);
+      
+      // 過濾 | 符號與多餘雜訊
+      let text = result.data.text.replace(/\|/g, '\n').replace(/\n\s*\n/g, '\n').trim();
+      document.getElementById('editContent').value = text;
+      
+      smartSegment(); 
+      statusText.innerText = "✅ OCR 辨識成功，已按你選擇的語言過濾排版！";
+    } catch(err) {
+      console.error(err);
+      statusText.innerText = "❌ 辨識失敗，請重新嘗試。";
+    }
+  }
+
+  function openQrScanner() {
+    document.getElementById('qrScanModal').classList.add('active');
+    html5QrCode = new Html5Qrcode("qr-reader");
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => { handleQrCodeScanned(decodedText); },
+      (errorMessage) => {}
+    ).catch(err => {
+      alert("無法啟動相機權限：" + err);
+      closeQrScanner();
+    });
+  }
+
+  function closeQrScanner() {
+    if (html5QrCode) { html5QrCode.stop().then(() => { html5QrCode.clear(); }).catch(e => {}); }
+    document.getElementById('qrScanModal').classList.remove('active');
+  }
+
+  function handleQrCodeScanned(urlText) {
+    closeQrScanner();
+    try {
+      const url = new URL(urlText);
+      if (url.searchParams.has('v3')) {
+        const compressed = url.searchParams.get('v3');
+        const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
+        const parts = jsonStr.split('|||');
+        if (parts.length >= 3) {
+          document.getElementById('editTitle').value = parts[0];
+          document.getElementById('editLang').value = parts[1];
+          document.getElementById('editContent').value = parts.slice(2).join('|||');
+          alert('✅ 已成功掃描並讀取默書內容，請確認後按「儲存默書」！');
+        } else { alert('❌ QR Code 內容不完整。'); }
+        return;
+      }
+    } catch(e) { alert('❌ 無法解析此 QR Code。'); }
+  }
+
+  function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); toggleAutoSettingsDisplay(); }
+  function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('active'); updateDetailUI(); }
+  function toggleAutoSettingsDisplay() { document.getElementById('autoSettingsBox').style.display = (document.getElementById('playMode').value === 'auto') ? 'flex' : 'none'; }
+  function savePlaySettings() { updateDetailUI(); }
+
+  function escapeXml(unsafe) {
+    if (!unsafe) return "";
+    return String(unsafe).replace(/[<>&'"]/g, function(c) {
+      switch (c) { case '<': return '&lt;'; case '>': return '&gt;'; case '&': return '&amp;'; case "'": return '&apos;'; case '"': return '&quot;'; }
+      return c;
+    });
+  }
+</script>
+
+</body>
+</html>
