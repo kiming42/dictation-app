@@ -1,907 +1,1663 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>知識方塊 RPG</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="color-scheme" content="light">
+  
+  <title>默書小助手 V20</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="默書助手">
+  <meta name="theme-color" content="#0066ff">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3364/3364024.png">
+  
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    :root {
+      --primary: #0066ff;
+      --primary-light: #e6f0ff;
+      --success: #28a745;
+      --danger: #dc3545;
+      --secondary: #6c757d;
+      --bg: #f4f6f9;
+      --card-bg: #ffffff;
+      --text: #212529;
+      --text-muted: #6c757d;
+      --border: #e9ecef;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      margin: 0;
+      padding: 0;
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none; 
+    }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .app-header h1, .app-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+      text-align: center;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 6px 10px;
+      color: #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-btn:active { background: #eee; }
+
+    .page { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+    .page.active { display: block; }
+    .card {
+      background: var(--card-bg);
+      padding: 18px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+    }
+
+    button.btn {
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.2s;
+    }
+    button.btn:active { opacity: 0.8; }
+    .btn-primary { background: var(--primary) !important; color: white !important; }
+    .btn-success { background: var(--success) !important; color: white !important; }
+    .btn-danger { background: var(--danger) !important; color: white !important; }
+    .btn-secondary { background: #e9ecef !important; color: #495057 !important; border: 1px solid #ced4da !important; }
+    .btn-outline { background: transparent !important; border: 1.5px solid var(--primary) !important; color: var(--primary) !important; }
+    .btn-outline-success { background: transparent !important; border: 1.5px solid var(--success) !important; color: var(--success) !important; }
+    .btn-block { width: 100%; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
+
+    label { font-weight: 600; font-size: 14px; margin-top: 10px; display: block; color: #495057; }
     
-    <!-- 📱 PWA Web App 支援設定 -->
-    <meta name="theme-color" content="#5b8731">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="知識方塊">
+    input[type="text"], input[type="password"], select, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      margin-bottom: 12px;
+      border: 1.5px solid #ced4da !important;
+      border-radius: 10px !important;
+      font-size: 16px !important;
+      color: #000000 !important;
+      background-color: #ffffff !important;
+      box-sizing: border-box;
+      user-select: text; 
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary) !important;
+      outline: none;
+    }
+    textarea::placeholder, input::placeholder {
+      color: #888888 !important;
+      opacity: 1 !important;
+    }
     
-    <!-- 連結外部 Manifest 與設定 App 圖示 -->
-    <link rel="manifest" href="./manifest.json">
-    <link rel="icon" href="data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%235b8731'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='white'%3E%F0%9F%8C%8D%3C/text%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%235b8731'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='white'%3E%F0%9F%8C%8D%3C/text%3E%3C/svg%3E">
+    textarea#editContent {
+      height: 200px;
+      min-height: 180px;
+      resize: vertical;
+      line-height: 1.6;
+    }
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+    .tools-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 
-        /* 基礎設定 */
-        body { font-family: "PingFang HK", "Microsoft YaHei", sans-serif; background-color: #5b8731; text-align: center; padding: 10px; margin: 0; color: #333; user-select: none; touch-action: manipulation; }
-        .page { display: none; background: #e0e0e0; max-width: 900px; margin: 0 auto; padding: 20px; border: 6px solid #3c3c3c; box-shadow: 10px 10px 0px rgba(0,0,0,0.5); box-sizing: border-box; }
-        #main-dashboard { display: block; } 
-        
-        .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 10px;}
-        .title-area { text-align: left; }
-        h1 { color: #2e7d32; font-size: 30px; margin: 0 0 5px 0; font-family: 'DotGothic16', sans-serif; text-shadow: 1px 1px 0px #fff; }
-        .subtitle { color: #555; margin: 0; font-size: 16px; font-weight: bold; }
-        
-        .header-btns-group { display: flex; flex-direction: column; gap: 8px; }
-        .db-btn { background: #fff; border: 3px solid #ccc; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; color: #555; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 0 #ccc; }
-        .db-btn:active { transform: translateY(2px); box-shadow: none; }
-        
-        .install-btn { background: #ff9800; color: white; border: 3px solid #e65100; box-shadow: 0 2px 0 #e65100; }
-        .install-btn:active { transform: translateY(2px); box-shadow: none; }
+    .dictation-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: #fff;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      border: 1px solid var(--border);
+    }
+    .dictation-item-title { font-size: 17px; font-weight: 700; color: #111; cursor: pointer; flex: 1; }
+    .dictation-item-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
-        /* 🎯 課題與玩家選擇區 */
-        .filter-section { background: #fdfdfd; border: 3px solid #aed581; border-radius: 12px; padding: 20px; margin-bottom: 25px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .filter-header h3 { color: #1a4231; margin: 0 0 5px 0; font-size: 20px; }
-        .filter-header p { color: #666; margin: 0 0 15px 0; font-size: 14px; font-weight: bold;}
-        .filter-controls { display: flex; gap: 15px; flex-wrap: wrap; }
-        .filter-group { display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
-        .filter-group label { font-size: 14px; font-weight: bold; color: #555; }
-        .filter-group select { padding: 10px 15px; font-size: 16px; border: 2px solid #ccc; border-radius: 8px; font-family: "PingFang HK", sans-serif; cursor: pointer; outline: none; font-weight: bold; color: #333; background: #fff; width: 100%; box-sizing: border-box; }
-        .filter-group select:focus { border-color: #8bc34a; box-shadow: 0 0 5px rgba(139, 195, 74, 0.5); }
-        .scope-info-text { margin: 15px 0 0 0; font-size: 14px; color: #777; font-weight: bold; border-top: 1px dashed #ddd; padding-top: 15px; }
+    .play-controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin: 15px 0 20px 0;
+    }
+    .btn-circle {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: none;
+      background: #e9ecef;
+      color: #333;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-circle-main {
+      width: 68px;
+      height: 68px;
+      background: var(--primary);
+      color: white;
+      font-size: 26px;
+      box-shadow: 0 4px 12px rgba(0, 102, 255, 0.35);
+    }
+    .btn-circle-main.playing {
+      background: #ffaa00; 
+      box-shadow: 0 4px 12px rgba(255, 170, 0, 0.35);
+    }
 
-        .section-title { text-align: left; color: #2e7d32; font-size: 18px; margin-bottom: 10px; border-bottom: 3px dashed #999; padding-bottom: 5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .emerald-display { background: #fff; color: #333; padding: 4px 12px; border: 3px inset #ccc; font-size: 16px; font-weight: bold; border-radius: 8px; display: flex; gap: 8px;}
-        
-        .modes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 25px; }
-        .mode-card { background: #f5f5f5; border: 3px solid #ccc; padding: 15px; cursor: pointer; text-align: left; border-radius: 10px; transition: 0.1s; }
-        .mode-card:active { transform: scale(0.95); background: #e0e0e0; }
-        .mode-icon { background: #fff; border: 2px solid #ccc; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; border-radius: 8px; margin-bottom: 10px; }
-        .mode-card h3 { margin: 0 0 5px 0; font-size: 16px; color: #333; }
-        .mode-card p { margin: 0; font-size: 12px; color: #666; font-weight: bold; line-height: 1.4; }
+    .mode-pill-btn {
+      background: #28a745;
+      color: white;
+      border-radius: 30px;
+      padding: 10px 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(40,167,69,0.25);
+    }
+    .mode-pill-badge {
+      background: rgba(255,255,255,0.25);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
 
-        /* 🎮 RPG 遊戲介面 */
-        .rpg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
-        .header-btn { background: #fff; border: 2px solid #ccc; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; color: #333; display: flex; align-items: center; gap: 5px; }
-        .mission-panel { background: #fff; border: 4px solid #8bc34a; padding: 12px; margin-bottom: 15px; border-radius: 10px; text-align: left; box-shadow: 0 4px 0 #689f38; }
-        .mission-panel h3 { margin: 0 0 5px 0; font-size: 16px; color: #555; }
-        .mission-panel p { margin: 0; font-size: 18px; font-weight: bold; color: #1a4231; line-height: 1.4;}
-        
-        .mc-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; font-size: 15px; font-weight: bold; color: #222; background: #f0f0f0; padding: 10px; border-radius: 8px; border: 2px solid #ccc; }
-        .mc-choices div { padding: 5px; }
-        
-        .map-wrapper { overflow-x: auto; padding: 10px 0; text-align: center; white-space: nowrap; width: 100%; border-radius: 8px; background: #bdbdbd; box-shadow: inset 0 0 10px rgba(0,0,0,0.3);}
-        .island-container { display: inline-block; position: relative; background-color: #689f38; background-image: linear-gradient(#558b2f 2px, transparent 2px), linear-gradient(90deg, #558b2f 2px, transparent 2px); background-size: 40px 40px; border: 6px solid #3c3c3c; box-shadow: 5px 5px 0px rgba(0,0,0,0.3); cursor: crosshair; box-sizing: content-box; vertical-align: top; }
+    .settings-summary-card {
+      background: #f8f9fa;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      border: 1px solid #ebedf0;
+      margin-bottom: 20px;
+    }
+    .settings-summary-title { font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+    .settings-summary-tag { background: #ffe8cc; color: #d97706; font-size: 11px; padding: 2px 6px; border-radius: 6px; font-weight: normal; }
+    .settings-summary-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
 
-        #player { position: absolute; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; transition: top 0.15s linear, left 0.15s linear; z-index: 10; }
-        #player::after { content: ""; display: block; width: 24px; height: 24px; background-color: #ffcc80; border: 3px solid #8d6e63; border-radius: 2px; box-shadow: 2px 2px 0 rgba(0,0,0,0.3); }
-        .quest-block { position: absolute; width: 36px; height: 36px; margin: 2px; background-color: #e0e0e0; border: 4px outset #fff; box-sizing: border-box; display: flex; justify-content: center; align-items: center; text-align: center; font-size: 22px; font-weight: bold; color: #333; z-index: 5; transition: 0.2s; }
-        .quest-block.broken { transform: scale(0); opacity: 0; }
-        .quest-block.wrong { border-color: #424242; background-color: #212121; color: #757575; }
-        .decoration-item { position: absolute; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 30px; z-index: 2; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.4)); }
+    .sentence-card-list { display: flex; flex-direction: column; gap: 10px; }
+    .sentence-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sentence-num {
+      color: #8c98a4;
+      font-size: 16px;
+      font-weight: bold;
+      min-width: 24px;
+      margin-top: 2px;
+    }
+    .sentence-text {
+      flex: 1;
+      font-size: 17px;
+      line-height: 1.5;
+      font-weight: 500;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .sentence-audio-btn {
+      color: #8c98a4;
+      font-size: 18px;
+      margin-top: 2px;
+    }
+    
+    .sentence-card.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0,102,255,0.25);
+    }
+    .sentence-card.active .sentence-num,
+    .sentence-card.active .sentence-text,
+    .sentence-card.active .sentence-audio-btn {
+      color: #ffffff;
+    }
 
-        .hotbar { display: flex; justify-content: flex-start; gap: 6px; margin-top: 15px; background: rgba(0,0,0,0.6); padding: 8px; border: 4px solid #333; border-radius: 5px; overflow-x: auto; min-height: 56px; }
-        .hotbar-slot { width: 44px; height: 44px; background: #8b8b8b; border: 3px inset #ffffff; display: flex; justify-content: center; align-items: center; font-size: 26px; cursor: pointer; position: relative; flex-shrink: 0;}
-        .hotbar-slot.active { border: 3px solid #ffeb3b; background: #a6a6a6; }
-        .hotbar-qty { position: absolute; bottom: -2px; right: 2px; font-size: 13px; color: white; font-weight: bold; text-shadow: 1px 1px 0 #000; }
+    .selection-header-tools {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 14px;
+      margin: 10px 0 16px 0;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .selection-header-tools span { cursor: pointer; }
+    
+    .select-item-card {
+      background: #ffffff;
+      border-bottom: 1px solid #f0f0f0;
+      padding: 14px 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+    }
+    .select-num-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .select-item-card input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      margin-top: 3px;
+    }
 
-        .d-pad-container { display: flex; justify-content: center; margin-top: 15px; }
-        .d-pad { display: grid; grid-template-columns: 55px 55px 55px; grid-template-rows: 55px 55px; gap: 8px; }
-        .d-btn { background: #fff; border: 3px solid #ccc; border-bottom: 5px solid #aaa; border-radius: 8px; font-size: 22px; font-weight: bold; color: #333; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-        .d-btn:active { transform: translateY(3px); border-bottom-width: 2px; background: #e0e0e0; }
-        #btn-up { grid-column: 2; grid-row: 1; }
-        #btn-left { grid-column: 1; grid-row: 2; }
-        #btn-down { grid-column: 2; grid-row: 2; }
-        #btn-right { grid-column: 3; grid-row: 2; }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.active { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
 
-        .next-btn { display: none; margin: 15px auto 0; padding: 12px 30px; background-color: #ff9800; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 0 #e65100; font-family: 'DotGothic16', sans-serif;}
+    .dropdown-menu {
+      position: absolute;
+      right: 16px;
+      top: 50px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      border: 1px solid var(--border);
+      display: none;
+      flex-direction: column;
+      z-index: 200;
+      overflow: hidden;
+      min-width: 140px;
+    }
+    .dropdown-menu.active { display: flex; }
+    .dropdown-item {
+      padding: 12px 16px;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      color: #333;
+      text-decoration: none;
+    }
+    .dropdown-item:hover, .dropdown-item:active { background: #f8f9fa; }
 
-        /* 🔨 題庫管理 Modal */
-        .db-modal, .craft-modal { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 50; justify-content: center; align-items: center; padding: 10px; }
-        .db-wrapper, .craft-wrapper { background: #fff; width: 100%; max-width: 700px; max-height: 90vh; border-radius: 12px; padding: 20px; text-align: left; box-sizing: border-box; display: flex; flex-direction: column; overflow-y: auto;}
-        
-        /* 題庫管理特別樣式 */
-        .settings-block { background: #f0f0f0; border: 2px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-        .settings-block label { font-weight: bold; font-size: 14px; color: #333; display: block; margin-bottom: 5px; }
-        .settings-block input { width: 100%; padding: 8px; font-size: 14px; border: 1px solid #aaa; border-radius: 4px; box-sizing: border-box; }
-        .settings-block .hint { font-size: 12px; color: #666; margin-top: 5px; }
+    .blur-text {
+      filter: blur(10px);
+      opacity: 0.7;
+      user-select: none;
+      pointer-events: none; 
+    }
 
-        .db-actions { display: flex; justify-content: space-between; margin-top: 15px; gap: 8px; flex-wrap: wrap; }
-        .db-actions button { padding: 10px 15px; font-size: 15px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; }
-        .db-actions-right { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn-cancel { background: #e0e0e0; color: #333; }
-        .btn-clear { background: #ff9800; color: white; }
-        .btn-reset { background: #f44336; color: white; }
-        .btn-save { background: #4CAF50; color: white; }
+    .segment-item {
+      background: #ffffff; border-radius: 12px; padding: 12px 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid #eee; display: flex; align-items: center; gap: 12px;
+    }
+    .segment-idx {
+      width: 26px; height: 26px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 13px; font-weight: bold; flex-shrink: 0;
+    }
+    .segment-text { flex: 1; font-size: 16px; line-height: 1.5; color: #333; }
+    .segment-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .btn-action { padding: 5px 10px; font-size: 12px; border: 1px solid #ced4da; background: #f8f9fa; border-radius: 6px; cursor: pointer; color: #495057; font-weight: 600; }
+    .btn-action:hover { background: #e2e6ea; }
 
-        .craft-wrapper { background: #d7ccc8; border: 6px solid #5d4037; }
-        .craft-close { position: absolute; top: 15px; right: 15px; font-size: 20px; font-weight: bold; color: #fff; cursor: pointer; background: #d32f2f; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; border-radius: 8px; border: 2px solid #b71c1c;}
-        .craft-title { font-size: 26px; color: #3e2723; margin: 0 0 15px 0; font-weight: bold; border-bottom: 2px dashed #8d6e63; padding-bottom: 10px;}
-        
-        .material-stats { background: #efebe9; border: 3px inset #bcaaa4; border-radius: 8px; padding: 10px; font-weight: bold; color: #4e342e; display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; font-size: 15px; }
-        .material-stats span { background: #fff; padding: 4px 8px; border-radius: 6px; border: 2px solid #d7ccc8;}
-        
-        .craft-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .craft-card { background: #fafafa; border: 3px solid #a1887f; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
-        .craft-item-top { display: flex; gap: 12px; align-items: center; }
-        .craft-item-icon { background: #e0e0e0; width: 55px; height: 55px; border-radius: 8px; border: 2px inset #fff; display: flex; justify-content: center; align-items: center; font-size: 35px; }
-        .craft-item-info h4 { margin: 0 0 4px 0; font-size: 16px; color: #333; }
-        .craft-item-info p { margin: 0; font-size: 12px; color: #666; }
-        .craft-cost { font-size: 13px; color: #d84315; font-weight: bold; margin-top: 5px; }
-        .craft-buy-btn { background: #4CAF50; border: 2px solid #388E3C; border-radius: 6px; padding: 10px; font-weight: bold; color: white; cursor: pointer; text-align: center; font-size: 15px; }
-        .craft-buy-btn:active { transform: translateY(2px); }
-        .craft-buy-btn:disabled { background: #9e9e9e; border-color: #757575; color: #e0e0e0; cursor: not-allowed; }
+    .split-token { display: inline-block; }
+    .split-divider {
+      display: inline-block; width: 14px; color: #ccc; cursor: pointer; font-weight: bold; margin: 0 2px; user-select: none; transition: all 0.2s;
+    }
+    .split-divider:hover { color: var(--danger); transform: scale(1.6); }
 
-        @media (max-width: 600px) { .craft-grid { grid-template-columns: 1fr; } .mc-choices { grid-template-columns: 1fr; } .page { padding: 10px; border-width: 4px; } }
+    .qr-instruction-box {
+      background: #e6f0ff; border-radius: 12px; padding: 15px 20px; text-align: left; margin-top: 15px;
+    }
+    .qr-instruction-box h4 {
+      margin: 0 0 10px 0; color: #0056b3; display: flex; align-items: center; gap: 8px; font-size: 16px;
+    }
+    .qr-instruction-box ol {
+      margin: 0; padding-left: 20px; color: #333; font-size: 14px; line-height: 1.8;
+    }
+    .qr-instruction-box li::marker { color: #0066ff; font-weight: bold; }
 
-        /* 標準模式 UI */
-        #question-area-std { background: #e0e0e0; border: 4px inset #fff; padding: 20px; margin-bottom: 20px; text-align: left; position: relative;}
-        #question-text-std { font-size: 22px; color: #111; line-height: 1.6; font-weight: bold; font-family: "PingFang HK", "Microsoft YaHei", sans-serif; margin-top: 10px;}
-        .std-option-btn { display: block; width: 100%; margin: 8px 0; padding: 15px; font-size: 18px; background-color: #d6d6d6; border: 4px outset #ffffff; color: #111; cursor: pointer; text-align: center; font-weight: bold; box-sizing: border-box; }
-        .std-char-block { display: inline-block; background: #d6d6d6; border: 4px outset #ffffff; color: #111; font-size: 32px; padding: 15px 25px; margin: 8px; cursor: pointer; font-weight: bold; }
-        
-        /* 🔊 語音按鈕 */
-        .tts-btn { display: inline-flex; align-items: center; gap: 6px; background: #2196F3; color: white; border: 2px solid #0d47a1; border-radius: 8px; padding: 6px 12px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 5px; box-shadow: 0 3px 0 #0d47a1; transition: 0.1s;}
-        .tts-btn:active { transform: translateY(3px); box-shadow: none; }
-        .tts-btn.playing { background: #4CAF50; border-color: #1b5e20; box-shadow: 0 3px 0 #1b5e20; }
-    </style>
+    #qrcode canvas, #qrcode img {
+      width: 100% !important;
+      max-width: 250px;
+      height: auto !important;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .share-link-box {
+      margin-top: 15px; 
+      padding: 10px 12px; 
+      background: #e9ecef; 
+      border-radius: 8px; 
+      font-size: 11px; 
+      word-break: break-all; 
+      color: #555; 
+      max-height: 60px; 
+      overflow-y: auto; 
+      text-align: left; 
+      user-select: text; 
+      border: 1px solid #ced4da;
+    }
+    
+    .cropper-container-box { max-height: 60vh; overflow: hidden; margin-bottom: 15px; }
+  </style>
 </head>
 <body>
 
-    <!-- 🌟 首頁大本營 -->
-    <div id="main-dashboard" class="page">
-        <div class="header-container">
-            <div class="title-area">
-                <h1>⛏️ 知識方塊 RPG</h1>
-                <p class="subtitle">化身方塊人，邊聽邊玩邊建設！</p>
-            </div>
-            <div class="header-btns-group">
-                <button class="db-btn" onclick="checkParentPassword()">⚙️ 設定與題庫</button>
-                <button class="db-btn install-btn" onclick="installApp()" id="install-button">📱 安裝成 App</button>
-            </div>
+  <audio id="globalAudio" playsinline style="display:none;"></audio>
+
+  <!-- ==================== 1. 首頁 ==================== -->
+  <div id="home-screen" class="page active">
+    <div class="app-header" style="margin: -16px -16px 16px -16px;">
+      <h1>📚 我的默書清單</h1>
+      <button class="header-btn" onclick="checkAndShowSettings()" title="系統設定">⚙️</button>
+    </div>
+
+    <div id="dictation-list"></div>
+
+    <button class="btn btn-primary btn-block" onclick="openEditScreen(null)" style="margin-top: 15px;">
+      ➕ 新增默書
+    </button>
+  </div>
+
+  <!-- ==================== 2. 默書詳情與播放頁面 ==================== -->
+  <div id="detail-screen" class="page">
+    <div class="app-header" style="margin: -16px -16px 16px -16px;">
+      <button class="header-btn" onclick="showPage('home-screen')">❮</button>
+      <h2 id="detailTitle">默書詳情</h2>
+      <button class="header-btn" onclick="toggleHeaderMenu()">⋮</button>
+
+      <div id="headerDropdown" class="dropdown-menu">
+        <div class="dropdown-item" onclick="editCurrentDictation()">✏️ 編輯默書</div>
+        <div class="dropdown-item" onclick="openShareModal()">📤 分享默書 (QR Code)</div>
+        <div class="dropdown-item" style="color: var(--danger);" onclick="deleteCurrentDictation()">🗑️ 刪除默書</div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 10px;">
+      <div class="play-controls-bar">
+        <button class="btn-circle" onclick="prevSentence()" title="上一句">⏮</button>
+        <button class="btn-circle btn-circle-main" id="mainPlayBtn" onclick="togglePlayPause()" title="播放/暫停">▶</button>
+        <button class="btn-circle" onclick="nextSentence()" title="下一句">⏭</button>
+      </div>
+      
+      <div id="playStatus" style="font-size: 15px; color: var(--primary); font-weight: bold; min-height: 22px; margin-bottom: 5px;"></div>
+
+      <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+        <div class="mode-pill-btn" onclick="checkAndOpenSentenceSelection()">
+          🎮 溫習模式 <span class="mode-pill-badge" id="selectedCountBadge">0/0</span>
+        </div>
+        <!-- V20 升級：新增 🐌 逐字慢讀按鈕 -->
+        <button class="btn-circle" style="width:42px; height:42px; font-size:16px;" onclick="playCurrentSentence(false)" title="正常試聽">🎙️</button>
+        <button class="btn-circle" style="width:42px; height:42px; font-size:16px; background:#fff3cd; color:#856404; border: 1px solid #ffeeba;" onclick="playCurrentSentence(true)" title="🐌 逐字慢讀 (聽清 a / the)">🐌</button>
+      </div>
+    </div>
+
+    <div class="settings-summary-card" onclick="openSettingsModal()" style="margin-top: 20px;">
+      <div>
+        <div class="settings-summary-title">
+          <span>🎛️ 播放設定</span>
+          <span class="settings-summary-tag">Azure 語音</span>
+        </div>
+        <div class="settings-summary-sub" id="settingsSummaryText">
+          手動模式 | 廣東話 | 1.0x速
+        </div>
+      </div>
+      <div style="color: #ccc; font-size: 18px;">❯</div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <h3 style="margin: 0; font-size: 18px;">默書內容</h3>
+      <div style="font-size: 13px; color: var(--primary); cursor: pointer;" onclick="toggleHideText()">
+        👁 <span id="toggleTextHideLabel">隱藏/顯示文字</span>
+      </div>
+    </div>
+
+    <div class="sentence-card-list" id="sentenceCardList"></div>
+  </div>
+
+  <!-- ==================== 3. 句子勾選頁面 ==================== -->
+  <div id="select-screen" class="page">
+    <div class="app-header" style="margin: -16px -16px 16px -16px;">
+      <button class="header-btn" onclick="cancelSentenceSelection()">✕</button>
+      <div>
+        <h2 style="font-size: 17px; margin: 0;">今日練習</h2>
+        <div style="font-size: 12px; color: var(--text-muted); text-align: center;" id="selectionSubTitle">已選 0/0 項</div>
+      </div>
+      <button class="header-btn" style="color: var(--primary); font-weight: bold; font-size: 16px;" onclick="confirmSentenceSelection()">完成</button>
+    </div>
+
+    <div class="selection-header-tools">
+      <span onclick="selectAllSentences(true)">全選</span>
+      <span onclick="selectAllSentences(false)">取消全選</span>
+      <span onclick="selectRandomSentences(3)">🔀 隨機選3項</span>
+    </div>
+
+    <div id="selectListContainer"></div>
+
+    <div style="margin-top: 25px; margin-bottom: 30px; text-align: center;">
+      <button class="btn btn-primary btn-block" id="startPracticeBtn" onclick="confirmSentenceSelection()" style="padding: 15px; font-size: 17px;">
+        開始練習 (0 項)
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== 4. 新增 / 編輯默書頁面 ==================== -->
+  <div id="edit-screen" class="page">
+    <div class="app-header" style="margin: -16px -16px 16px -16px;">
+      <button class="header-btn" onclick="showPage('home-screen')">❮</button>
+      <h2 id="editScreenTitle">✏️ 新增/編輯默書</h2>
+      <div style="width: 30px;"></div>
+    </div>
+
+    <input type="hidden" id="editId">
+    
+    <div class="row">
+      <div>
+        <label>默書標題：</label>
+        <input type="text" id="editTitle" placeholder="例如：中文第十課">
+      </div>
+      <div>
+        <label>主要語言：</label>
+        <select id="editLang">
+          <option value="zh">中文 (廣東話/普通話)</option>
+          <option value="en">英文 (English)</option>
+        </select>
+      </div>
+    </div>
+    
+    <label>匯入方式 <span style="font-size:12px; font-weight:normal; color:#888;">(請先選擇上方「主要語言」)</span>：</label>
+    <div class="row" style="margin-bottom: 6px;">
+      <button class="btn btn-outline btn-block" onclick="document.getElementById('fileInput').click()">
+        📄 圖片/PDF 裁切 OCR
+      </button>
+      <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(event)">
+      <button class="btn btn-outline-success btn-block" onclick="openQrScanner()">
+        📷 掃描 QR Code
+      </button>
+    </div>
+    
+    <label>快捷清理與分段工具：</label>
+    <div class="tools-group">
+      <button class="btn btn-secondary btn-sm" onclick="filterNumbers()">🧹 過濾題號</button>
+      <button class="btn btn-secondary btn-sm" onclick="filterPinyin()">🧹 過濾拼音</button>
+      <button class="btn btn-primary btn-sm" onclick="openSegmentEditor()" style="background:#e6f0ff !important; color:#0066ff !important; border:1px solid #0066ff !important;">✂️ 智能分段與編輯</button>
+    </div>
+
+    <label>默書內容 (每行代表一段或一個詞語)：</label>
+    <textarea id="editContent" placeholder="請在此輸入或貼上默書內容..."></textarea>
+    
+    <p id="ocrStatus" style="color: #666; font-size: 13px; margin: 0 0 12px 0;"></p>
+
+    <div class="row">
+      <button class="btn btn-primary" onclick="saveDictation()">💾 儲存默書</button>
+      <button class="btn btn-secondary" onclick="showPage('home-screen')">取消</button>
+    </div>
+  </div>
+
+  <!-- ==================== 5. 全局系統設定頁面 ==================== -->
+  <div id="settings-screen" class="page">
+    <div class="app-header" style="margin: -16px -16px 16px -16px;">
+      <button class="header-btn" onclick="showPage('home-screen')">❮</button>
+      <h2>⚙️ 系統設定</h2>
+      <div style="width: 30px;"></div>
+    </div>
+
+    <div class="card" style="margin-top: 15px;">
+      <label>更改家長解鎖密碼 (4位數字):</label>
+      <input type="password" id="parentPin" placeholder="預設密碼: 1234" value="1234" onchange="saveConfig()">
+      <p style="font-size: 13px; color: #666; margin-top: 5px;">保護設定與防止小朋友偷看答案。</p>
+
+      <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 15px;">
+        儲存並返回
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: 播放設定彈窗 ==================== -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="margin:0;">🎛️ 播放語音設定</h3>
+        <button class="header-btn" onclick="closeSettingsModal()">✕</button>
+      </div>
+
+      <label>語音模式與聲線：</label>
+      <div class="row">
+        <div>
+          <select id="voiceAccent" onchange="savePlaySettings()">
+            <option value="zh-HK">廣東話 (香港)</option>
+            <option value="zh-CN">普通話 (中國)</option>
+            <option value="en-US">英文 (美式 US)</option>
+            <option value="en-GB">英文 (英式 UK)</option>
+          </select>
+        </div>
+        <div>
+          <select id="voiceGender" onchange="savePlaySettings()">
+            <option value="female">👩 女聲 (最自然)</option>
+            <option value="male">👨 男聲 (沉穩)</option>
+          </select>
+        </div>
+      </div>
+
+      <label>播放模式：</label>
+      <select id="playMode" onchange="toggleAutoSettingsDisplay(); savePlaySettings();">
+        <option value="manual">手動模式 (按鍵跳下一句)</option>
+        <option value="auto">自動默書 (定時朗讀)</option>
+      </select>
+
+      <div id="autoSettingsBox" class="row" style="display: none;">
+        <div>
+          <label>重複次數：</label>
+          <select id="setupRepeat" onchange="savePlaySettings()">
+            <option value="1">讀 1 次</option>
+            <option value="2" selected>讀 2 次</option>
+            <option value="3">讀 3 次</option>
+            <option value="4">讀 4 次</option>
+          </select>
+        </div>
+        <div>
+          <label>停頓間隔：</label>
+          <select id="setupDelay" onchange="savePlaySettings()">
+            <option value="3">3 秒</option>
+            <option value="5">5 秒</option>
+            <option value="8" selected>8 秒 (建議)</option>
+            <option value="10">10 秒</option>
+            <option value="15">15 秒</option>
+          </select>
+        </div>
+      </div>
+
+      <label>朗讀語速：</label>
+      <select id="setupSpeed" onchange="savePlaySettings()">
+        <option value="0.3">0.3x (極慢)</option>
+        <option value="0.5">0.5x (超慢)</option>
+        <option value="0.7">0.7x (慢速)</option>
+        <option value="0.8" selected>0.8x (適中默書)</option>
+        <option value="0.9">0.9x (微慢)</option>
+        <option value="1.0">1.0x (正常)</option>
+      </select>
+
+      <div style="margin-top: 15px; background: #f8f9fa; padding: 12px; border-radius: 10px;">
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <input type="checkbox" id="readPunctuation" style="width: auto; margin-right: 8px; transform: scale(1.2);" onchange="savePlaySettings()">
+          <label for="readPunctuation" style="margin: 0; cursor: pointer;">🗣️ 讀出標點符號 (英文: full stop)</label>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" onclick="closeSettingsModal()" style="margin-top: 20px;">確認儲存</button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: 圖片裁切 ==================== -->
+  <div id="cropModal" class="modal">
+    <div class="modal-box" style="max-width: 95%;">
+      <h3 style="margin-top:0;">✂️ 裁切默書範圍</h3>
+      <div class="cropper-container-box">
+        <img id="cropImage" src="" alt="Crop target" style="max-width: 100%;">
+      </div>
+      <div class="row">
+        <button class="btn btn-success" onclick="confirmCropAndOCR()">✅ 確認裁切並識別</button>
+        <button class="btn btn-danger" onclick="closeCropModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: 分享與 QR Code ==================== -->
+  <div id="shareModal" class="modal">
+    <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9; display: flex; flex-direction: column; max-height: 90vh;">
+      <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; flex-shrink: 0;">
+        <h3 style="margin:0; font-size:18px; color: #333;">📤 QR Code 分享</h3>
+        <button class="header-btn" onclick="closeShareModal()">✕</button>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; overflow-y: auto; flex: 1;">
+        <h2 id="shareTitle" style="margin: 0 0 5px 0; font-size: 22px; color: #111;">默書標題</h2>
+        <p id="shareWordCount" style="color: #6c757d; margin: 0 0 15px 0; font-size: 15px;">X 個詞語 / 段落</p>
+        
+        <div style="background: white; padding: 15px; border-radius: 20px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 15px;">
+          <div id="qrcode" style="width: 100%; max-width: 250px; margin: 0 auto;"></div>
         </div>
         
-        <div class="filter-section">
-            <div class="filter-header">
-                <h3>歡迎來到知識世界，你是誰？</h3>
-                <p>請先選擇玩家，系統會為你準備專屬的溫習範圍。</p>
-            </div>
-            <div class="filter-controls">
-                <div class="filter-group">
-                    <label>👤 玩家選擇</label>
-                    <select id="student-select" onchange="updateUnitDropdown()">
-                        <option value="Justin" selected>Justin</option>
-                        <option value="峰">峰</option>
-                        <option value="Marcus">Marcus</option>
-                        <option value="all">所有題目大挑戰</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>📚 單元選擇</label>
-                    <select id="unit-select" onchange="updateScopeInfo()"></select>
-                </div>
-            </div>
-            <p id="scope-info" class="scope-info-text">載入中...</p>
+        <div class="qr-instruction-box">
+          <h4><span style="font-size: 18px; color: #0066ff;">ⓘ</span> 使用方法</h4>
+          <ol>
+            <li>讓學生打開「默書助手」App</li>
+            <li>點擊新增默書的「📷 掃描 QR Code」</li>
+            <li>對準此 QR Code 掃描</li>
+            <li>默書內容會自動匯入</li>
+          </ol>
         </div>
 
-        <div class="section-title">
-            <span>▶ 傳統溫習區 (賺取寶石)</span>
-            <span class="emerald-display">❇️ <span id="em-menu">0</span></span>
-        </div>
-        <div class="modes-grid">
-            <div class="mode-card" onclick="startStandardGame('word-to-meaning')">
-                <div class="mode-icon">詞</div><h3>詞語選意思</h3><p>找正確解釋</p>
-            </div>
-            <div class="mode-card" onclick="startStandardGame('meaning-to-word')">
-                <div class="mode-icon">意</div><h3>意思找詞語</h3><p>讀解釋選詞語</p>
-            </div>
-            <div class="mode-card" onclick="startStandardGame('fill-blank')">
-                <div class="mode-icon">填</div><h3>詞語填空</h3><p>補回缺少的一字</p>
-            </div>
-            <div class="mode-card" onclick="startStandardGame('sentence')">
-                <div class="mode-icon">用</div><h3>情境用法</h3><p>把詞語放進句子</p>
-            </div>
-        </div>
-
-        <div class="section-title">▶ 創世冒險與建設 (採集素材)</div>
-        <div class="modes-grid" style="grid-template-columns: 1fr;">
-            <div class="mode-card" onclick="startRPGGame()" style="background: #e8f5e9; border-color: #8bc34a;">
-                <div class="mode-icon" style="background: #2e7d32; color: white;">🌍</div>
-                <h3 style="color: #2e7d32; font-size: 18px;">進入方塊採集世界</h3>
-                <p>在地圖上尋寶答題，收集各種建築素材，打造你的專屬天地！</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- 📚 設定與題庫管理 Modal (密碼保護) -->
-    <div class="db-modal" id="db-modal">
-        <div class="db-wrapper">
-            <h2>⚙️ 家長專區：設定與自訂題庫</h2>
-            
-            <div class="settings-block">
-                <label>🔑 Azure 語音 API 金鑰 (選填)</label>
-                <input type="text" id="azure-key-input" placeholder="輸入金鑰 (例如 7rqTKv...)">
-                <p class="hint">如果不輸入，系統會自動使用內建的語音通道發聲。</p>
-            </div>
-
-            <p style="font-size: 14px; font-weight: bold; color: #333;">📚 題庫資料 (JSON格式)：</p>
-            <textarea id="db-textarea" style="flex-grow: 1; min-height: 200px; font-family: monospace; padding: 10px;"></textarea>
-            
-            <div class="db-actions">
-                <button class="btn-cancel" onclick="closeDBManager()">取消</button>
-                <div class="db-actions-right">
-                    <button class="btn-clear" onclick="clearDBTextarea()">🗑️ 清除全部</button>
-                    <button class="btn-reset" onclick="resetToDefaultDB()">還原</button>
-                    <button class="btn-save" onclick="saveCustomDB()">💾 儲存</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 📚 標準答題區 -->
-    <div id="standard-game" class="page">
-        <div class="rpg-header">
-            <button class="header-btn" onclick="goToMenu()">⬅️ 返回大本營</button>
-            <span class="emerald-display">❇️ <span id="em-std">0</span></span>
-        </div>
-        <div id="question-area-std">
-            <button class="tts-btn" id="tts-btn-std" onclick="readQuestionTTS()">🔊 朗讀題目</button>
-            <h3 id="std-title" style="margin-top:5px; color:#555; border-bottom: 2px solid #999; padding-bottom: 10px;">題型載入中</h3>
-            <div id="question-text-std">載入題目中...</div>
-        </div>
-        <div id="options-container"></div>
-        <div id="feedback-std" style="font-size: 18px; font-weight: bold; margin-top: 15px; min-height: 25px;"></div>
-        <button class="next-btn" id="std-next-btn" onclick="loadStandardQuestion()">繼續挑戰 ➡️</button>
-    </div>
-
-    <!-- ⛏️ Minecraft RPG 世界 -->
-    <div id="rpg-game" class="page">
-        <div class="rpg-header">
-            <button class="header-btn" onclick="goToMenu()">⬅️ 返回</button>
-            <button class="header-btn" onclick="openCrafting()" style="background: #5d4037; color: white; border-color: #3e2723;">🔨 工作台</button>
-            <button class="header-btn" onclick="restartGame()" style="background: #ffeb3b; border-color: #fbc02d;">🔄 重置</button>
-        </div>
+        <p style="font-size:13px; color:#999; margin: 15px 0 5px 0; text-align: left;">或者直接複製連結傳給朋友：</p>
+        <div id="shareUrlDisplayBox" class="share-link-box"></div>
         
-        <div class="mission-panel">
-            <button class="tts-btn" id="tts-btn-rpg" onclick="readQuestionTTS()" style="float: right;">🔊 朗讀</button>
-            <h3 id="rpg-mission-title">📜 任務：載入中...</h3>
-            <p id="rpg-question-text" style="clear: both; margin-top: 5px;">載入中...</p>
-            <div id="mc-choices" class="mc-choices"></div>
-            <div id="feedback-rpg" style="font-size: 15px; color: #d32f2f; margin-top: 10px; font-weight: bold;">用方向鍵或點擊地圖移動！答對獲得素材！</div>
-        </div>
-
-        <div class="map-wrapper">
-            <div class="island-container" id="island" onclick="handleGridClick(event)">
-                <div id="decorations-layer"></div>
-                <div id="player"></div>
-            </div>
-        </div>
-
-        <div class="hotbar" id="hotbar"></div>
-        <button class="next-btn" id="rpg-next-btn" onclick="loadRPGQuest()">接取下一個任務 ➡️</button>
-
-        <div class="d-pad-container" id="rpg-controls">
-            <div class="d-pad">
-                <button class="d-btn" id="btn-up" onclick="movePlayer(0, -1)">▲</button>
-                <button class="d-btn" id="btn-left" onclick="movePlayer(-1, 0)">◀</button>
-                <button class="d-btn" id="btn-down" onclick="movePlayer(0, 1)">▼</button>
-                <button class="d-btn" id="btn-right" onclick="movePlayer(1, 0)">▶</button>
-            </div>
-        </div>
-
-        <!-- 🔨 合成台 Modal -->
-        <div class="craft-modal" id="craft-modal">
-            <div class="craft-wrapper">
-                <div class="craft-close" onclick="closeCrafting()">✖</div>
-                <div class="craft-title">🔨 創世工作台 Crafting Table</div>
-                <div class="material-stats">
-                    <span>🪵 <span id="mat-log">0</span></span>
-                    <span>🪨 <span id="mat-stone">0</span></span>
-                    <span>🌾 <span id="mat-fiber">0</span></span>
-                    <span>🏜️ <span id="mat-sand">0</span></span>
-                    <span>🧱 <span id="mat-clay">0</span></span>
-                    <span>🪙 <span id="mat-iron">0</span></span>
-                    <span>🌟 <span id="mat-gold">0</span></span>
-                    <span>❇️ <span id="mat-em">0</span></span>
-                </div>
-                <div class="craft-grid" id="craft-items-container"></div>
-            </div>
-        </div>
+        <button class="btn btn-primary btn-block" onclick="copyShareLink()">📋 複製一鍵匯入連結</button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // =====================================
-        // 🔐 家長密碼系統
-        // =====================================
-        function checkParentPassword() {
-            let pin = prompt("🔒 這是家長專區：\n請輸入 4 位數密碼以進入設定與題庫 (預設密碼：1234)");
-            if (pin === "1234") {
-                openDBManager();
-            } else if (pin !== null) {
-                alert("❌ 密碼錯誤！請由家長輸入。");
+  <!-- ==================== MODAL: 相機掃描 QR Code ==================== -->
+  <div id="qrScanModal" class="modal">
+    <div class="modal-box" style="text-align: center; padding: 15px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="margin:0;">📷 掃描 QR Code</h3>
+        <button class="header-btn" onclick="closeQrScanner()">✕</button>
+      </div>
+      <div id="qr-reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000;"></div>
+      <p style="font-size: 13px; color: #666; margin-top: 15px;">請將朋友分享的 QR Code 放入畫面中</p>
+      <button class="btn btn-danger btn-block" style="margin-top: 10px;" onclick="closeQrScanner()">取消掃描</button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: 智能分段與編輯器 ==================== -->
+  <div id="segmentModal" class="modal">
+    <div class="modal-box" style="width: 95%; max-width: 600px; height: 85vh; display: flex; flex-direction: column; padding: 0;">
+      <div style="padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white;">
+        <h3 style="margin:0;">✂️ 分段預覽與編輯</h3>
+        <button class="header-btn" onclick="closeSegmentModal()">✕</button>
+      </div>
+      <div style="padding: 12px 20px; background: #f8f9fa; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+        <span id="segmentCountLabel" style="font-size:14px; font-weight:bold; color:var(--primary);">分段結果 (0 個詞)</span>
+        <button class="btn btn-outline btn-sm" onclick="autoSmartSegment()">✨ 自動按標點分段</button>
+      </div>
+      <div id="segmentListContainer" style="flex: 1; overflow-y: auto; padding: 15px; background: #f4f6f9;">
+         <!-- 分段內容將生成於此 -->
+      </div>
+      <div style="padding: 15px 20px; border-top: 1px solid #eee; background: white;">
+        <button class="btn btn-primary btn-block" onclick="saveSegmentsToTextarea()">套用分段結果</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: 拆分位置選擇器 ==================== -->
+  <div id="splitModal" class="modal" style="z-index: 1001;">
+    <div class="modal-box" style="text-align: center;">
+      <h3 style="margin-top:0;">選擇拆分位置</h3>
+      <p style="font-size:14px; color:#666; margin-bottom: 20px;">點擊「 <span style="color:var(--danger); font-weight:bold;">|</span> 」選擇在哪裡拆分成兩段</p>
+      
+      <div id="splitContent" style="margin: 20px 0; font-size: 20px; line-height: 2.2; word-break: break-all; background: #f8f9fa; padding: 15px; border-radius: 12px;">
+         <!-- 單詞與拆分符號生成於此 -->
+      </div>
+      
+      <button class="btn btn-secondary btn-block" onclick="closeSplitModal()">取消</button>
+    </div>
+  </div>
+
+<!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
+<script>
+  // ==========================================
+  // ⚙️ 系統核心設定 (請填入你的 Azure Key)
+  // ==========================================
+  const AZURE_API_KEY = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS"; 
+  const AZURE_REGION = "eastasia";
+  // ==========================================
+
+  let dictations = JSON.parse(localStorage.getItem('dictations')) || [];
+  let currentDictation = null;   
+  let activeSentenceIndices = []; 
+  let currentPlayingIndex = 0;   
+  
+  let isPlayingAuto = false;
+  let currentAudioResolve = null;
+
+  const globalAudio = document.getElementById('globalAudio');
+  let audioUnlocked = false;
+
+  let forceNextInAuto = false;
+  let forcePrevInAuto = false;
+  let cropper = null;
+  let isTextHidden = false;
+  let shareUrl = "";
+  let html5QrCode = null;
+  let wakeLock = null;
+
+  let tempSegments = [];
+  let currentSplitIndex = -1;
+
+  const voiceMap = {
+    'zh-HK': { female: 'zh-HK-HiuMaanNeural', male: 'zh-HK-WanLungNeural' },
+    'zh-CN': { female: 'zh-CN-XiaoxiaoNeural', male: 'zh-CN-YunxiNeural' },
+    'en-US': { female: 'en-US-JennyNeural', male: 'en-US-GuyNeural' },
+    'en-GB': { female: 'en-GB-LibbyNeural', male: 'en-GB-RyanNeural' }
+  };
+
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      const swCode = `self.addEventListener('fetch', function(e) {});`;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => console.log('SW Setup Ignored'));
+    });
+  }
+
+  window.onload = () => {
+    document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
+    checkUrlImport();
+    renderList();
+  };
+
+  function checkUrlImport() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('v3')) {
+      try {
+        const compressed = urlParams.get('v3');
+        const decompressed = LZString.decompressFromEncodedURIComponent(compressed);
+        if (decompressed) {
+          const parts = decompressed.split('|||');
+          if (parts.length >= 3) {
+            const importTitle = parts[0];
+            const importLang = parts[1];
+            const importContent = parts.slice(2).join('|||');
+            if (confirm(`📬 收到一份新的默書：\n「${importTitle}」\n\n請問是否要匯入到你的清單中？`)) {
+              dictations.unshift({ id: Date.now(), title: importTitle, lang: importLang, content: importContent });
+              localStorage.setItem('dictations', JSON.stringify(dictations));
+              alert('✅ 成功匯入默書！');
+              renderList(); 
             }
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
         }
+      } catch(e) { console.error('匯入解析失敗', e); }
+      return;
+    }
+  }
 
-        // =====================================
-        // 📱 PWA 安裝成 App 邏輯
-        // =====================================
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
+  function getParentPin() { return localStorage.getItem('parent_pin') || '1234'; }
+
+  function verifyParentPin(actionName) {
+    const currentPin = getParentPin();
+    const input = prompt(`🔒 ${actionName}：請輸入家長解鎖密碼`);
+    
+    if (input === currentPin) {
+      return true;
+    } else if (input === '0000') {
+      localStorage.setItem('parent_pin', '1234');
+      document.getElementById('parentPin').value = '1234';
+      alert('✅ 密碼已成功重置為預設的 1234！');
+      return true;
+    } else if (input !== null) {
+      alert('❌ 密碼錯誤，拒絕存取！');
+    }
+    return false;
+  }
+
+  function checkAndShowSettings() {
+    if (verifyParentPin('系統設定')) showPage('settings-screen');
+  }
+
+  function toggleHideText() {
+    if(!isTextHidden) { isTextHidden = true; } 
+    else { if(verifyParentPin('顯示文字')) isTextHidden = false; else return; }
+    updateDetailUI();
+  }
+
+  function checkAndOpenSentenceSelection() {
+    if(isTextHidden && !verifyParentPin('進入溫習模式')) return;
+    openSentenceSelection();
+  }
+
+  function editCurrentDictation() {
+    if(!currentDictation) return;
+    if(isTextHidden && !verifyParentPin('編輯默書')) return;
+    openEditScreen(currentDictation.id);
+  }
+
+  function deleteCurrentDictation() {
+    if(!currentDictation) return;
+    document.getElementById('headerDropdown').classList.remove('active');
+    
+    setTimeout(() => {
+        if(confirm(`確定要刪除「${currentDictation.title}」嗎？`)) {
+          dictations = dictations.filter(d => String(d.id) !== String(currentDictation.id));
+          localStorage.setItem('dictations', JSON.stringify(dictations));
+          renderList();
+          showPage('home-screen');
+        }
+    }, 50);
+  }
+
+  function openShareModal() {
+    if(!currentDictation) return;
+    if(isTextHidden && !verifyParentPin('分享默書')) return;
+    
+    const rawData = currentDictation.title + "|||" + (currentDictation.lang||'zh') + "|||" + currentDictation.content;
+    const compressedData = LZString.compressToEncodedURIComponent(rawData);
+    
+    const baseUrl = window.location.href.split('?')[0]; 
+    shareUrl = `${baseUrl}?v3=${compressedData}`;
+
+    document.getElementById('shareTitle').innerText = currentDictation.title;
+    document.getElementById('shareWordCount').innerText = `${getSentences(currentDictation.content).length} 個詞語 / 段落`;
+    document.getElementById('shareUrlDisplayBox').innerText = shareUrl;
+
+    document.getElementById('shareModal').classList.add('active');
+    document.getElementById('headerDropdown').classList.remove('active');
+
+    document.getElementById('qrcode').innerHTML = ""; 
+    new QRCode(document.getElementById('qrcode'), {
+      text: shareUrl,
+      width: 400,  
+      height: 400,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.L 
+    });
+  }
+
+  function closeShareModal() { document.getElementById('shareModal').classList.remove('active'); }
+
+  function copyShareLink() {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      alert('📋 已複製專屬分享連結！可以直接貼上給朋友。');
+    });
+  }
+
+  function saveConfig() {
+    localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
+    alert('✅ 密碼設定已儲存！');
+  }
+
+  function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    document.getElementById('headerDropdown').classList.remove('active');
+    
+    if (isPlayingAuto) {
+        isPlayingAuto = false;
+        stopAudio();
+        updatePlayBtnUI(false);
+    } else { 
+        stopAudio(); 
+    }
+    const ps = document.getElementById('playStatus');
+    if(ps) ps.innerText = '';
+  }
+
+  function toggleHeaderMenu() { document.getElementById('headerDropdown').classList.toggle('active'); }
+
+  function getSentences(content) {
+    if(!content) return [];
+    return content.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+  }
+
+  function renderList() {
+    const listDiv = document.getElementById('dictation-list');
+    listDiv.innerHTML = '';
+    
+    if(dictations.length === 0) {
+      listDiv.innerHTML = '<p style="color:#888; text-align:center; padding: 40px 0;">目前沒有默書紀錄<br>請點擊下方按鈕新增！</p>';
+      return;
+    }
+
+    dictations.forEach(d => {
+      const sentences = getSentences(d.content);
+      listDiv.innerHTML += `
+        <div class="dictation-item" onclick="openDetailScreen('${d.id}')">
+          <div>
+            <div class="dictation-item-title">${escapeXml(d.title)}</div>
+            <div class="dictation-item-sub">共 ${sentences.length} 句 | 語言: ${d.lang === 'en' ? '英文' : '中文'}</div>
+          </div>
+          <div style="font-size: 20px; color: var(--primary);">❯</div>
+        </div>
+      `;
+    });
+  }
+
+  function openDetailScreen(id) {
+    currentDictation = dictations.find(d => String(d.id) === String(id));
+    if(!currentDictation) { alert('⚠️ 找不到這份默書紀錄！'); return; }
+
+    const titleEl = document.getElementById('detailTitle');
+    if(titleEl) titleEl.innerText = currentDictation.title;
+    
+    const sentences = getSentences(currentDictation.content);
+    activeSentenceIndices = sentences.map((_, i) => i);
+    currentPlayingIndex = 0;
+
+    const vAccent = document.getElementById('voiceAccent');
+    if(vAccent) vAccent.value = (currentDictation.lang === 'en') ? 'en-US' : 'zh-HK';
+
+    const ps = document.getElementById('playStatus');
+    if(ps) ps.innerText = '';
+    
+    updatePlayBtnUI(false);
+    updateDetailUI();
+    showPage('detail-screen');
+  }
+
+  function updateDetailUI() {
+    if(!currentDictation) return;
+    const sentences = getSentences(currentDictation.content);
+    
+    const badge = document.getElementById('selectedCountBadge');
+    if(badge) badge.innerText = `${activeSentenceIndices.length}/${sentences.length}`;
+
+    const voiceSelect = document.getElementById('voiceAccent');
+    let accentText = "預設";
+    if(voiceSelect && voiceSelect.options && voiceSelect.options.length > 0 && voiceSelect.selectedIndex >= 0) {
+        accentText = voiceSelect.options[voiceSelect.selectedIndex].text.split(' ')[0];
+    }
+    
+    const speedEl = document.getElementById('setupSpeed');
+    const modeEl = document.getElementById('playMode');
+    const speed = speedEl ? speedEl.value : '1.0';
+    const modeText = (modeEl && modeEl.value === 'auto') ? '自動模式' : '手動模式';
+    
+    const summary = document.getElementById('settingsSummaryText');
+    if(summary) summary.innerText = `${modeText} | ${accentText} | ${speed}x速`;
+
+    const container = document.getElementById('sentenceCardList');
+    if(container) {
+        container.innerHTML = '';
+        sentences.forEach((sText, idx) => {
+          const isSelected = activeSentenceIndices.includes(idx);
+          if(!isSelected) return; 
+
+          const activePos = activeSentenceIndices.indexOf(idx);
+          const isActive = (activePos === currentPlayingIndex);
+
+          container.innerHTML += `
+            <div class="sentence-card ${isActive ? 'active' : ''}" onclick="selectSentenceToPlay(${activePos})">
+              <div class="sentence-num">${idx + 1}.</div>
+              <div class="sentence-text ${isTextHidden ? 'blur-text' : ''}">${escapeXml(sText)}</div>
+              <!-- V20 升級：卡片內增加蝸牛逐字慢讀按鈕 -->
+              <div style="display:flex; gap:10px;">
+                  <div class="sentence-audio-btn" style="font-size:20px;" onclick="event.stopPropagation(); selectSentenceToPlaySlowly(${activePos})" title="🐌 逐字慢讀">🐌</div>
+                  <div class="sentence-audio-btn" onclick="event.stopPropagation(); selectSentenceToPlay(${activePos})" title="正常發聲">🔊</div>
+              </div>
+            </div>
+          `;
+        });
+    }
+  }
+
+  function unlockAudioEngine() {
+    if (!audioUnlocked) {
+      globalAudio.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//NXQAAAAAAASW5mbwAAAA8AAAAEAAABIwBRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpv/zV0AAADQAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
+      let p = globalAudio.play();
+      if(p !== undefined) { p.catch(e => {}); }
+      audioUnlocked = true;
+    }
+  }
+
+  async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+      try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+    }
+  }
+
+  function releaseWakeLock() {
+    if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }).catch(err => {}); }
+  }
+
+  document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible' && isPlayingAuto) await requestWakeLock();
+  });
+
+  function selectSentenceToPlay(pos) {
+    if (isPlayingAuto) togglePlayPause(); 
+    currentPlayingIndex = pos;
+    updateDetailUI();
+    playCurrentSentence(false);
+  }
+
+  function selectSentenceToPlaySlowly(pos) {
+    if (isPlayingAuto) togglePlayPause(); 
+    currentPlayingIndex = pos;
+    updateDetailUI();
+    playCurrentSentence(true);
+  }
+
+  function prevSentence() {
+    if(activeSentenceIndices.length === 0) return;
+    if (isPlayingAuto) { forcePrevInAuto = true; stopAudio(); return; }
+    if(currentPlayingIndex > 0) currentPlayingIndex--; else currentPlayingIndex = activeSentenceIndices.length - 1;
+    updateDetailUI();
+    playCurrentSentence(false);
+  }
+
+  function nextSentence() {
+    if(activeSentenceIndices.length === 0) return;
+    if (isPlayingAuto) { forceNextInAuto = true; stopAudio(); return; }
+    if(currentPlayingIndex < activeSentenceIndices.length - 1) currentPlayingIndex++; else currentPlayingIndex = 0;
+    updateDetailUI();
+    playCurrentSentence(false);
+  }
+
+  function updatePlayBtnUI(isPlaying) {
+    const btn = document.getElementById('mainPlayBtn');
+    if(!btn) return;
+    if (isPlaying) { btn.innerHTML = '⏸'; btn.classList.add('playing'); } 
+    else { btn.innerHTML = '▶'; btn.classList.remove('playing'); }
+  }
+
+  function stopAudio() {
+    if(globalAudio) globalAudio.pause();
+    if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+  }
+
+  function togglePlayPause() {
+    unlockAudioEngine(); 
+    const playMode = document.getElementById('playMode').value;
+    const ps = document.getElementById('playStatus');
+    
+    if (playMode === 'auto') {
+      if (isPlayingAuto) {
+        isPlayingAuto = false;
+        stopAudio();
+        updatePlayBtnUI(false);
+        if(ps) ps.innerText = '⏸ 已暫停自動播放';
+      } else {
+        if(activeSentenceIndices.length === 0) return;
+        isPlayingAuto = true;
+        updatePlayBtnUI(true);
+        runAutoPlayLoop();
+      }
+    } else {
+      if(activeSentenceIndices.length === 0) return;
+      if(ps) ps.innerText = '🔊 手動播放中';
+      playCurrentSentence(false);
+    }
+  }
+
+  async function runAutoPlayLoop() {
+    const repeats = parseInt(document.getElementById('setupRepeat').value) || 2;
+    const delay = parseInt(document.getElementById('setupDelay').value) || 5;
+
+    while (isPlayingAuto && currentPlayingIndex < activeSentenceIndices.length) {
+      forceNextInAuto = false;
+      forcePrevInAuto = false;
+      updateDetailUI();
+
+      for (let r = 0; r < repeats; r++) {
+        if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
+        
+        const ps = document.getElementById('playStatus');
+        if(ps) ps.innerText = `🔊 正在朗讀 (第 ${r + 1}/${repeats} 次)`;
+        
+        await playCurrentSentence(false);
+        
+        if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
+        if (r < repeats - 1) await sleep(1200); 
+      }
+
+      if (!isPlayingAuto) break;
+
+      if (forceNextInAuto) {
+        if (currentPlayingIndex < activeSentenceIndices.length - 1) { currentPlayingIndex++; } 
+        else { 
+            isPlayingAuto = false; updatePlayBtnUI(false); 
+            const ps = document.getElementById('playStatus'); if(ps) ps.innerText = '🎉 默書播放完畢！'; break; 
+        }
+        continue;
+      }
+      if (forcePrevInAuto) {
+        if (currentPlayingIndex > 0) { currentPlayingIndex--; } else { currentPlayingIndex = activeSentenceIndices.length - 1; }
+        continue;
+      }
+
+      if (currentPlayingIndex < activeSentenceIndices.length - 1) {
+        let waited = 0;
+        let totalWaitMs = delay * 1000;
+        
+        while (waited < totalWaitMs && isPlayingAuto && !forceNextInAuto && !forcePrevInAuto) {
+            let remaining = ((totalWaitMs - waited) / 1000).toFixed(1);
+            const ps = document.getElementById('playStatus');
+            if(ps) ps.innerText = `✍️ 請書寫... 停頓倒數 ${remaining} 秒`;
+            await sleep(100); waited += 100;
+        }
+        
+        if (!isPlayingAuto) break;
+        if (forceNextInAuto) { currentPlayingIndex++; continue; }
+        if (forcePrevInAuto) { if(currentPlayingIndex > 0) currentPlayingIndex--; else currentPlayingIndex = activeSentenceIndices.length - 1; continue; }
+        currentPlayingIndex++;
+      } else {
+        isPlayingAuto = false; updatePlayBtnUI(false);
+        const ps = document.getElementById('playStatus'); if(ps) ps.innerText = '🎉 默書播放完畢！'; break;
+      }
+    }
+    
+    const finalPs = document.getElementById('playStatus');
+    if (!isPlayingAuto && finalPs && !finalPs.innerText.includes('完畢')) { updatePlayBtnUI(false); finalPs.innerText = '⏸ 已暫停'; }
+  }
+
+  // ===== 🌟 V20 核心升級：逐字慢讀與強音發聲 =====
+  function playCurrentSentence(isWordByWord = false) {
+    unlockAudioEngine();
+    return new Promise(async (resolve) => {
+      stopAudio(); 
+      currentAudioResolve = resolve;
+
+      if (!currentDictation || activeSentenceIndices.length === 0) {
+        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+        return;
+      }
+
+      const rawSentences = getSentences(currentDictation.content);
+      const realIndex = activeSentenceIndices[currentPlayingIndex];
+      let sentenceText = rawSentences[realIndex];
+
+      if (!sentenceText) {
+        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+        return;
+      }
+
+      const apiKey = AZURE_API_KEY;
+      const region = AZURE_REGION;
+      const baseSpeed = document.getElementById('setupSpeed').value;
+      const accent = document.getElementById('voiceAccent').value;
+      const gender = document.getElementById('voiceGender').value;
+      const readPunc = document.getElementById('readPunctuation').checked;
+
+      if (!apiKey || apiKey.includes('請在這裡貼上')) {
+        alert('API KEY 尚未正確設定！請開發者檢查。');
+        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+        return;
+      }
+
+      const voice = voiceMap[accent][gender];
+      const isEnglish = accent.startsWith('en');
+      let finalSpeed = baseSpeed;
+      let ssmlText = escapeXml(sentenceText);
+
+      // 如果啟動「蝸牛逐字讀」模式
+      if (isWordByWord) {
+          finalSpeed = "0.7"; // 稍微調慢語速配合停頓
+          if (isEnglish) {
+              // 將句子按空白拆成單字
+              let words = sentenceText.split(/\s+/);
+              ssmlText = words.map(w => {
+                  let cleanW = w.trim();
+                  // 【強音發聲 Hacks】: 強制將隱藏的 a, an, the 轉為大階，強制 AI 發重音 /eɪ/ 同 /ðiː/
+                  if (cleanW.toLowerCase() === 'a') cleanW = 'A';
+                  if (cleanW.toLowerCase() === 'an') cleanW = 'An';
+                  if (cleanW.toLowerCase() === 'the') cleanW = 'The';
+                  return escapeXml(cleanW);
+              }).join('<break time="400ms"/>'); // 每個字之間插入 0.4 秒物理停頓
+          } else {
+              // 中文逐字讀：每個中文字之間插入 0.3 秒停頓
+              ssmlText = sentenceText.split('').map(c => escapeXml(c)).join('<break time="300ms"/>');
+          }
+      } else {
+          // 正常模式：處理標點符號朗讀
+          if (readPunctuation) ssmlText = escapeXml(transformPunctuation(sentenceText, accent));
+      }
+
+      const ssml = `<speak version='1.0' xml:lang='${accent}'><voice name='${voice}'><prosody rate='${finalSpeed}'>${ssmlText}</prosody></voice></speak>`;
+
+      try {
+        const response = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+          method: 'POST',
+          headers: {
+            'Ocp-Apim-Subscription-Key': apiKey,
+            'Content-Type': 'application/ssml+xml',
+            'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
+          },
+          body: ssml
         });
 
-        function installApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    deferredPrompt = null;
-                });
-            } else {
-                alert("💡 安裝至手機教學：\n\n【Android / Chrome 用戶】\n請點擊瀏覽器右上角的「⋮」選單，然後選擇「加至主畫面 (Add to Home screen)」。\n\n【iPhone / Safari 用戶】\n請點擊瀏覽器底部的「分享」圖示 (方塊加上箭頭)，然後選擇「加入主畫面」。\n\n如果已經安裝過，就不會再彈出提示了喔！");
-            }
-        }
+        if (!response.ok) throw new Error('TTS Fetch Error');
 
-        // =====================================
-        // 🎵 原生音效引擎 (Web Audio API)
-        // =====================================
-        let audioCtx;
-        function initAudio() {
-            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-        }
+        const blob = await response.blob();
+        if(globalAudio.src) URL.revokeObjectURL(globalAudio.src);
+        
+        globalAudio.src = URL.createObjectURL(blob);
+        if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(true);
 
-        function playTone(freq, type, duration, vol=0.1) {
-            if(!audioCtx) return;
-            let osc = audioCtx.createOscillator();
-            let gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + duration);
-        }
-
-        const sfx = {
-            correct: () => { playTone(523.25, 'sine', 0.1); setTimeout(() => playTone(659.25, 'sine', 0.1), 100); setTimeout(() => playTone(783.99, 'sine', 0.2), 200); },
-            wrong: () => { playTone(150, 'sawtooth', 0.3, 0.15); },
-            move: () => { playTone(300, 'sine', 0.05, 0.03); },
-            mine: () => { playTone(200, 'square', 0.1, 0.05); },
-            craft: () => { playTone(400, 'triangle', 0.1); setTimeout(() => playTone(800, 'triangle', 0.2), 100); }
+        globalAudio.onended = () => {
+          if (document.getElementById('playMode').value === 'manual') {
+              updatePlayBtnUI(false);
+              const ps = document.getElementById('playStatus');
+              if(ps) ps.innerText = '準備就緒';
+          }
+          if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         };
-
-        // =====================================
-        // 🎙️ Azure 內建語音系統 (智能防攔截技術)
-        // =====================================
-        let isPlayingAudio = false;
-
-        const AZURE_KEY_PART1 = "7rqTKvFwVlRmh84vQ8bQDNgPZ";
-        const AZURE_KEY_PART2 = "jitlh44KMkom9ZMOAFYMWASiW";
-        const AZURE_KEY_PART3 = "ngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS";
+        globalAudio.onerror = () => {
+          if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(false);
+          if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+        };
         
-        async function playAzureTTS(textToRead) {
-            let btnStd = document.getElementById('tts-btn-std');
-            let btnRpg = document.getElementById('tts-btn-rpg');
-            
-            if(isPlayingAudio) return; 
-            isPlayingAudio = true;
-            if(btnStd) { btnStd.classList.add('playing'); btnStd.innerText = "🔊 播放中..."; }
-            if(btnRpg) { btnRpg.classList.add('playing'); btnRpg.innerText = "🔊 播放中..."; }
-
-            let userKey = localStorage.getItem('azureKey') || "";
-            let finalKey = userKey.trim() !== "" ? userKey.trim() : (AZURE_KEY_PART1 + AZURE_KEY_PART2 + AZURE_KEY_PART3);
-
-            const url = `https://eastasia.tts.speech.microsoft.com/cognitiveservices/v1`;
-            const headers = {
-                "Ocp-Apim-Subscription-Key": finalKey,
-                "Content-Type": "application/ssml+xml",
-                "X-Microsoft-OutputFormat": "audio-16khz-128kbitrate-mono-mp3"
-            };
-            const ssml = `<speak version='1.0' xml:lang='zh-HK'><voice xml:lang='zh-HK' xml:gender='Female' name='zh-HK-HiuMaanNeural'>${textToRead}</voice></speak>`;
-            
-            try {
-                const response = await fetch(url, { method: 'POST', headers: headers, body: ssml });
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const audioUrl = URL.createObjectURL(blob);
-                    const audio = new Audio(audioUrl);
-                    audio.onended = resetTTSBtn;
-                    audio.play();
-                } else {
-                    console.warn("Azure TTS 連線失敗，切換至瀏覽器內建語音。");
-                    fallbackTTS(textToRead);
-                }
-            } catch(e) {
-                console.warn("Azure TTS 發生錯誤，切換至瀏覽器內建語音。");
-                fallbackTTS(textToRead);
-            }
-        }
-
-        function fallbackTTS(text) {
-            let u = new SpeechSynthesisUtterance(text);
-            u.lang = 'zh-HK';
-            u.onend = resetTTSBtn;
-            speechSynthesis.speak(u);
-        }
-
-        function resetTTSBtn() {
-            isPlayingAudio = false;
-            let btnStd = document.getElementById('tts-btn-std');
-            let btnRpg = document.getElementById('tts-btn-rpg');
-            if(btnStd) { btnStd.classList.remove('playing'); btnStd.innerText = "🔊 朗讀題目"; }
-            if(btnRpg) { btnRpg.classList.remove('playing'); btnRpg.innerText = "🔊 朗讀"; }
-        }
-
-        function readQuestionTTS() {
-            if(!currentTargetData) return;
-            initAudio(); 
-            let textToRead = "";
-            let mode = document.getElementById('standard-game').style.display === 'block' ? currentStdMode : rpgQuestType;
-
-            if (mode === 'meaning-to-word') textToRead = currentTargetData.meaning;
-            else if (mode === 'word-to-meaning') textToRead = currentTargetData.word;
-            else if (mode === 'sentence') textToRead = (currentTargetData.sentence || "").replace(/[＿【】_]+/g, "什麼");
-            else if (mode === 'fill-blank') textToRead = currentTargetData.missingFormat.replace(/[＿_]+/g, "什麼");
-            
-            if(textToRead) playAzureTTS(textToRead);
-        }
-
-        // =====================================
-        // 💾 題庫系統與 Local Storage
-        // =====================================
-        const defaultDatabaseRaw = [
-            // Justin 單元一
-            { student: "Justin", unit: "單元一", word: "人聲鼎沸", meaning: "比喻人聲嘈雜，就像煮沸了水一樣。", missingFormat: "人＿鼎沸", missingTarget: "聲", fillOptions: ["聲", "星", "生", "升"], sentence: "節日期間的年宵市場＿＿＿＿，熱鬧的景象令人難忘。" },
-            { student: "Justin", unit: "單元一", word: "水泄不通", meaning: "連一滴水也流不出去，形容包圍緊密，也形容環境極度擁擠。", missingFormat: "水＿不通", missingTarget: "泄", fillOptions: ["泄", "洩", "瀉", "世"], sentence: "發生嚴重的交通事故後，這條主要幹道被車輛擠得＿＿＿＿。" },
-            { student: "Justin", unit: "單元一", word: "日積月累", meaning: "指每天、每月地不斷積累。", missingFormat: "日＿月累", missingTarget: "積", fillOptions: ["積", "績", "擊", "激"], sentence: "學習語文必須依靠＿＿＿＿的閱讀和寫作，不能一蹴而就。" },
-            { student: "Justin", unit: "單元一", word: "目不暇給", meaning: "形容眼前有太多美好的事物，或景物變化太快，眼睛來不及觀看。", missingFormat: "目不暇＿", missingTarget: "給", fillOptions: ["給", "及", "急", "級"], sentence: "博物館內展出的歷代珍貴文物種類繁多，實在令人＿＿＿＿。" },
-            { student: "Justin", unit: "單元一", word: "世外桃源", meaning: "與世隔絕、開滿桃花的樂土。比喻風景優美的地方。", missingFormat: "世外桃＿", missingTarget: "源", fillOptions: ["源", "園", "原", "圓"], sentence: "經過長途跋涉，我們終於來到這條隱蔽於群山之間的村落，彷彿置身於＿＿＿＿。" },
-            { student: "Justin", unit: "單元一", word: "杳無人煙", meaning: "形容地方偏僻荒涼，無人居住。", missingFormat: "＿無人煙", missingTarget: "杳", fillOptions: ["杳", "查", "香", "杏"], sentence: "探險隊深入那片＿＿＿＿的原始森林進行考察。" },
-            { student: "Justin", unit: "單元一", word: "風和日麗", meaning: "形容天氣晴朗和暖，十分宜人。", missingFormat: "風＿日麗", missingTarget: "和", fillOptions: ["和", "禾", "合", "何"], sentence: "在這個＿＿＿＿的週末，我們一家人決定前往西貢郊野公園遠足。" },
-            { student: "Justin", unit: "單元一", word: "星羅棋布", meaning: "如羅列在天上的羣星，分佈在棋盤上的棋子。形容事物眾多而分散排列。", missingFormat: "星＿棋布", missingTarget: "羅", fillOptions: ["羅", "蘿", "鑼", "邏"], sentence: "登上太平山頂俯瞰維港兩岸，只見高樓大廈宛如＿＿＿＿般林立。" },
-            { student: "Justin", unit: "單元一", word: "破瓦頹垣", meaning: "指屋瓦破損，牆垣倒塌。形容破敗荒涼的景象。", missingFormat: "破瓦頹＿", missingTarget: "垣", fillOptions: ["垣", "恆", "桓", "原"], sentence: "經過那場摧毀性的大地震後，原本繁榮的城鎮瞬間化為一片＿＿＿＿。" },
-            { student: "Justin", unit: "單元一", word: "氣象萬千", meaning: "形容景象千變萬化，極為壯觀。", missingFormat: "氣象萬＿", missingTarget: "千", fillOptions: ["千", "天", "乾", "牽"], sentence: "站在黃山之巔觀賞雲海，只見雲霧在山峰間翻騰變幻，＿＿＿＿。" },
-            { student: "Justin", unit: "單元一", word: "琳琅滿目", meaning: "形容滿眼所見都是美好而珍貴的東西。", missingFormat: "琳＿滿目", missingTarget: "琅", fillOptions: ["琅", "朗", "狼", "浪"], sentence: "展覽廳內陳列着＿＿＿＿的高科技產品，讓人大開眼界。" },
-            { student: "Justin", unit: "單元一", word: "煥然一新", meaning: "形容散發光彩，呈現出新的面貌。", missingFormat: "＿然一新", missingTarget: "煥", fillOptions: ["煥", "換", "喚", "幻"], sentence: "經過社區活化工程後，這條原本殘舊破落的老街頓時＿＿＿＿。" },
-            { student: "Justin", unit: "單元一", word: "萬籟俱寂", meaning: "形容萬物無聲，一片寂靜。", missingFormat: "萬＿俱寂", missingTarget: "籟", fillOptions: ["籟", "賴", "懶", "瀨"], sentence: "在＿＿＿＿的深夜裏，整座城市都陷入了沉睡，唯獨他還在挑燈夜戰。" },
-            { student: "Justin", unit: "單元一", word: "歷歷在目", meaning: "清楚明白地呈現在眼前。歷歷，清楚分明。", missingFormat: "歷歷在＿", missingTarget: "目", fillOptions: ["目", "木", "沐", "牧"], sentence: "雖然畢業已經十年，但當年與同學們在操場上共同奮鬥的情景，至今依然＿＿＿＿。" },
-            { student: "Justin", unit: "單元一", word: "鑼鼓喧天", meaning: "本指鑼鼓聲音大得震天。現形容氣氛非常熱鬧。", missingFormat: "鑼鼓＿天", missingTarget: "喧", fillOptions: ["喧", "宣", "圈", "旋"], sentence: "為了慶祝國慶，主辦單位安排了盛大的舞龍表演，現場＿＿＿＿，氣氛高漲。" },
-            // Justin 單元二
-            { student: "Justin", unit: "單元二", word: "大快朵頤", meaning: "飽食、愉快的樣子。朵，動。頤，下巴。", missingFormat: "大快朵＿", missingTarget: "頤", fillOptions: ["頤", "題", "頁", "順"], sentence: "母親在廚房準備了豐富的晚餐，一家人圍坐在餐桌前＿＿＿＿。" },
-            { student: "Justin", unit: "單元二", word: "口若懸河", meaning: "說起話來像河水傾瀉一樣，說個不停。形容能言善辯。", missingFormat: "口若懸＿", missingTarget: "河", fillOptions: ["河", "何", "荷", "可"], sentence: "他在辯論比賽中表現出色，面對評判的提問＿＿＿＿，贏得了熱烈掌聲。" },
-            { student: "Justin", unit: "單元二", word: "口蜜腹劍", meaning: "形容人把話說得動聽，事實上內心險惡，處處想陷害別人。", missingFormat: "口蜜腹＿", missingTarget: "劍", fillOptions: ["劍", "見", "健", "箭"], sentence: "我們平時結交朋友要擦亮雙眼，切忌親近那些＿＿＿＿的小人。" },
-            { student: "Justin", unit: "單元二", word: "三緘其口", meaning: "形容說話小心謹慎或不說話。緘，封住、緊閉。", missingFormat: "三緘其＿", missingTarget: "口", fillOptions: ["口", "日", "中", "曰"], sentence: "對於公司的機密商業計劃，所有員工都嚴守祕密，面對記者時＿＿＿＿。" },
-            { student: "Justin", unit: "單元二", word: "不亢不卑", meaning: "表示對別人的態度合宜，既不傲慢自大，也不低聲下氣。", missingFormat: "不亢不＿", missingTarget: "卑", fillOptions: ["卑", "牌", "牌", "碑"], sentence: "他在面對外國訪客時表現得落落大方、＿＿＿＿，充分展現了良好的外交禮儀。" },
-            { student: "Justin", unit: "單元二", word: "自吹自擂", meaning: "自己吹喇叭，自己打鼓。比喻自我吹噓。", missingFormat: "自吹自＿", missingTarget: "擂", fillOptions: ["擂", "雷", "蕾", "壘"], sentence: "真正的實力是用來證明的，而不是靠在公眾面前＿＿＿＿來獲得認同。" },
-            { student: "Justin", unit: "單元二", word: "呆若木雞", meaning: "形容愚笨或受驚嚇而發呆的樣子。", missingFormat: "呆若木＿", missingTarget: "雞", fillOptions: ["雞", "基", "饑", "積"], sentence: "聽到這宗突如其來的噩耗，他整個人愣在原地，＿＿＿＿地一句話也說不出來。" },
-            { student: "Justin", unit: "單元二", word: "虎視眈眈", meaning: "比喻人心裏存着不良的意圖，貪狠地注視着，等待機會搶奪。", missingFormat: "虎視眈＿", missingTarget: "眈", fillOptions: ["眈", "擔", "耽", "淡"], sentence: "市場上的競爭對手對這份利潤豐厚的合同＿＿＿＿，我們必須加倍小心應對。" },
-            { student: "Justin", unit: "單元二", word: "拐彎抹角", meaning: "比喻說話或做事繞圈子，不直接。", missingFormat: "拐彎抹＿", missingTarget: "角", fillOptions: ["角", "腳", "覺", "決"], sentence: "有話直說就好了，何必這樣＿＿＿＿，浪費大家的寶貴時間呢？" },
-            { student: "Justin", unit: "單元二", word: "神魂顛倒", meaning: "形容對某人或某事物非常着迷，以致心神不定，失去常態。", missingFormat: "神魂顛＿", missingTarget: "倒", fillOptions: ["倒", "到", "島", "導"], sentence: "自從迷上那套科幻小說後，他每天都看得如痴如醉，快要被弄得＿＿＿＿了。" },
-            { student: "Justin", unit: "單元二", word: "規行矩步", meaning: "指嚴格地按照規矩辦事，毫不敷衍。比喻做事刻板，不知變通。", missingFormat: "規行矩＿", missingTarget: "步", fillOptions: ["步", "布", "部", "怖"], sentence: "雖然做事應該依循原則，但如果過於＿＿＿＿，往往會錯失良機。" },
-            { student: "Justin", unit: "單元二", word: "理直氣壯", meaning: "表示因理據充分，說話充滿氣勢，無所畏懼。", missingFormat: "理直氣＿", missingTarget: "壯", fillOptions: ["壯", "狀", "撞", "裝"], sentence: "這件事情本來就是對方理虧在先，我們當然可以＿＿＿＿地向他們討回公道。" },
-            { student: "Justin", unit: "單元二", word: "戰戰兢兢", meaning: "因害怕而發抖。形容十分害怕或小心謹慎的樣子。", missingFormat: "戰戰＿兢", missingTarget: "兢", fillOptions: ["兢", "竟", "境", "經"], sentence: "第一次踏上舞台作公開演講時，他心裏＿＿＿＿的，深怕自己會突然忘詞。" },
-            { student: "Justin", unit: "單元二", word: "信口雌黃", meaning: "比喻不顧事實，隨口亂說或隨意批評。", missingFormat: "信口雌＿", missingTarget: "黃", fillOptions: ["黃", "王", "皇", "謊"], sentence: "在未搞清楚真相之前，請不要在社交平台上＿＿＿＿，以免傷害無辜者。" },
-            { student: "Justin", unit: "單元二", word: "顧影自憐", meaning: "形容人孤獨失意，亦可形容自我欣賞的樣子。", missingFormat: "顧影自＿", missingTarget: "憐", fillOptions: ["憐", "鄰", "玲", "靈"], sentence: "夜深人靜時，他獨自坐在窗前看著自己的影子，心中湧起一股＿＿＿＿的落寞感。" },
-            // Justin 單元三
-            { student: "Justin", unit: "單元三", word: "火冒三丈", meaning: "頭上冒出三丈高的火。形容極度生氣。", missingFormat: "火冒三＿", missingTarget: "丈", fillOptions: ["丈", "杖", "仗", "帳"], sentence: "看到弟弟又把房間弄得一團糟而且不肯承認錯誤，媽媽頓時氣得＿＿＿＿。" },
-            { student: "Justin", unit: "單元三", word: "扣人心弦", meaning: "形容事物深深地牽動人心，令人心情激動或覺得感動。", missingFormat: "扣人心＿", missingTarget: "弦", fillOptions: ["弦", "懸", "旋", "咸"], sentence: "這部偵探電影的劇情發展峰迴路轉、＿＿＿＿，直到最後一刻才揭曉真兇。" },
-            { student: "Justin", unit: "單元三", word: "心悅誠服", meaning: "誠心誠意地歸服或佩服。", missingFormat: "心悅誠＿", missingTarget: "服", fillOptions: ["服", "福", "幅", "富"], sentence: "老師憑藉着淵博的學識和耐心細緻的教導，讓班上所有調皮的學生都＿＿＿＿。" },
-            { student: "Justin", unit: "單元三", word: "如釋重負", meaning: "像放下重擔那樣輕鬆。比喻因完成責任或渡過難關而感到身心輕快。", missingFormat: "如釋重＿", missingTarget: "負", fillOptions: ["負", "婦", "復", "附"], sentence: "當宣佈所有期末考試順利結束的那一刻，全班同學都長舒了一口氣，感到＿＿＿＿。" },
-            { student: "Justin", unit: "單元三", word: "自慚形穢", meaning: "比喻因能力不足或不如別人而感到慚愧。", missingFormat: "自慚形＿", missingTarget: "穢", fillOptions: ["穢", "慧", "歲", "惠"], sentence: "站在才華洋溢的冠軍選手旁邊，他第一次感到有些＿＿＿＿。" },
-            { student: "Justin", unit: "單元三", word: "刻骨銘心", meaning: "刻在骨頭，刻在心上。形容感受深刻，永遠不會忘記。", missingFormat: "刻骨銘＿", missingTarget: "心", fillOptions: ["心", "新", "欣", "星"], sentence: "那次在荒島上互相扶持、共同度過生死難關的經歷，成為了他們一生中＿＿＿＿的回憶。" },
-            { student: "Justin", unit: "單元三", word: "欣喜若狂", meaning: "形容高興到了極點，像失去控制一樣。", missingFormat: "欣喜若＿", missingTarget: "狂", fillOptions: ["狂", "旺", "網", "往"], sentence: "當得知香港運動員在國際賽事中勇奪金牌的那一刻，全城市民都＿＿＿＿歡呼起來。" },
-            { student: "Justin", unit: "單元三", word: "風聲鶴唳", meaning: "用來形容非常驚慌、疑懼。", missingFormat: "風聲鶴＿", missingTarget: "唳", fillOptions: ["唳", "淚", "利", "莉"], sentence: "在經歷了一連串的突發危機後，大家變得神經緊張、＿＿＿＿，稍有風吹草動就恐慌不已。" },
-            { student: "Justin", unit: "單元三", word: "晴天霹靂", meaning: "比喻突發的意外或令人吃驚的事情。", missingFormat: "晴天霹＿", missingTarget: "靂", fillOptions: ["靂", "歷", "力", "利"], sentence: "公司突然宣佈倒閉的消息對他來說簡直是＿＿＿＿，令他完全不知所措。" },
-            { student: "Justin", unit: "單元三", word: "無地自容", meaning: "指沒有地方可以藏身，形容羞愧至極。", missingFormat: "無地自＿", missingTarget: "容", fillOptions: ["容", "溶", "融", "絨"], sentence: "因一時貪念而盜竊的行為被揭發後，他在眾人嚴厲的目光下羞愧得＿＿＿＿。" },
-            { student: "Justin", unit: "單元三", word: "無動於衷", meaning: "表示對應該關心的事卻表現得很冷漠。", missingFormat: "無動於＿", missingTarget: "衷", fillOptions: ["衷", "中", "忠", "鐘"], sentence: "面對災區同胞遭受的苦難，我們絕不能冷眼旁觀、＿＿＿＿，必須伸出援手。" },
-            { student: "Justin", unit: "單元三", word: "感恩圖報", meaning: "指感激別人的恩德而想辦法報答。", missingFormat: "感恩圖＿", missingTarget: "報", fillOptions: ["報", "抱", "飽", "寶"], sentence: "他是一個懂得＿＿＿＿的人，當年受過別人的恩惠，如今發達了便立刻回饋社會。" },
-            { student: "Justin", unit: "單元三", word: "憂心忡忡", meaning: "形容人心事重重，非常擔憂。", missingFormat: "憂心忡＿", missingTarget: "忡", fillOptions: ["忡", "沖", "忠", "鐘"], sentence: "由於經濟前景不明朗加上生意連年虧損，老闆最近整天＿＿＿＿，眉頭深鎖。" },
-            { student: "Justin", unit: "單元三", word: "驚心動魄", meaning: "指人內心感受極深，震撼很大。", missingFormat: "驚心動＿", missingTarget: "魄", fillOptions: ["魄", "魂", "拍", "百"], sentence: "這部動作電影裏的飛車追逐和爆炸場面實在太＿＿＿＿了，看得觀眾手心直冒汗。" },
-            { student: "Justin", unit: "單元三", word: "樂極生悲", meaning: "歡樂到極點後，轉而發生令人悲傷的事情。", missingFormat: "樂極生＿", missingTarget: "悲", fillOptions: ["悲", "杯", "碑", "卑"], sentence: "大家在派對上玩得太興奮而忽略了安全，結果導致有人摔傷，真是＿＿＿＿。" },
-
-            // 峰 的示範題庫
-            { student: "峰", unit: "測驗範圍", word: "井底之蛙", meaning: "比喻見識淺薄的人。", missingFormat: "井底之＿", missingTarget: "蛙", fillOptions: ["蛙", "娃", "鞋", "龜"], sentence: "多去世界各地旅行，才不會讓自己成為＿＿＿＿。" },
-            { student: "峰", unit: "測驗範圍", word: "守株待兔", meaning: "比喻拘泥守成，不知變通或妄想不勞而獲。", missingFormat: "守＿待兔", missingTarget: "株", fillOptions: ["株", "珠", "樹", "豬"], sentence: "如果不努力學習，只想＿＿＿＿等好成績，是不可能的。" },
-            
-            // Marcus 的示範題庫
-            { student: "Marcus", unit: "比賽字詞", word: "畫蛇添足", meaning: "比喻多此一舉，不但無益，反而有害。", missingFormat: "畫蛇添＿", missingTarget: "足", fillOptions: ["足", "腳", "捉", "走"], sentence: "這篇文章已經寫得很完整了，你再加這段話簡直是＿＿＿＿。" },
-            { student: "Marcus", unit: "比賽字詞", word: "半途而廢", meaning: "指事情做到一半就停止，沒有堅持到底完成。", missingFormat: "半＿而廢", missingTarget: "途", fillOptions: ["途", "圖", "步", "道"], sentence: "我們做事要有始有終，絕對不能＿＿＿＿。" }
-        ];
-
-        let database = [];
-        let currentDatabase = [];
-
-        function initDatabase() {
-            let savedDB = localStorage.getItem('customVocabDB');
-            if (savedDB) {
-                try { database = JSON.parse(savedDB); } 
-                catch(e) { database = JSON.parse(JSON.stringify(defaultDatabaseRaw)); }
-            } else {
-                database = JSON.parse(JSON.stringify(defaultDatabaseRaw));
-            }
-            database = database.map(item => { if(item.idiom) { item.word = item.idiom; delete item.idiom; } return item; });
-            updateUnitDropdown();
-        }
-
-        function updateUnitDropdown() {
-            let student = document.getElementById('student-select').value;
-            let select = document.getElementById('unit-select');
-            select.innerHTML = '<option value="all">所有範圍 (綜合挑戰)</option>';
-            
-            let studentDB = (student === 'all') ? database : database.filter(item => item.student === student);
-            let units = [...new Set(studentDB.map(item => item.unit || "未分類"))];
-            units.forEach(u => {
-                let opt = document.createElement('option'); opt.value = u; opt.innerText = u; select.appendChild(opt);
-            });
-            updateScopeInfo();
-        }
-
-        function updateScopeInfo() {
-            let student = document.getElementById('student-select').value;
-            let unit = document.getElementById('unit-select').value;
-            let filteredDB = (student === 'all') ? database : database.filter(item => item.student === student);
-            currentDatabase = (unit === 'all') ? filteredDB : filteredDB.filter(item => item.unit === unit);
-            document.getElementById('scope-info').innerText = `這個範圍共有 ${currentDatabase.length} 個字詞。`;
-        }
-
-        function openDBManager() { 
-            document.getElementById('db-textarea').value = JSON.stringify(database, null, 4); 
-            document.getElementById('azure-key-input').value = localStorage.getItem('azureKey') || "";
-            document.getElementById('db-modal').style.display = 'flex'; 
-        }
-        function closeDBManager() { document.getElementById('db-modal').style.display = 'none'; }
-        
-        // 🧹 清除全部功能
-        function clearDBTextarea() {
-            let textarea = document.getElementById('db-textarea');
-            textarea.value = "";
-            textarea.focus();
-        }
-
-        function saveCustomDB() {
-            try {
-                let key = document.getElementById('azure-key-input').value.trim();
-                localStorage.setItem('azureKey', key);
-
-                let newDB = JSON.parse(document.getElementById('db-textarea').value);
-                if (!Array.isArray(newDB) || newDB.length === 0) throw new Error("必須是包含資料的陣列格式");
-                database = newDB.map(item => { if(item.idiom) { item.word = item.idiom; delete item.idiom; } return item; });
-                localStorage.setItem('customVocabDB', JSON.stringify(database));
-                updateUnitDropdown(); closeDBManager(); alert("設定與題庫已成功更新並儲存於瀏覽器！");
-            } catch(e) { alert("儲存失敗！JSON 格式有誤。\n錯誤訊息: " + e.message); }
-        }
-
-        function resetToDefaultDB() {
-            if(confirm("確定要還原成預設題庫嗎？這將覆蓋你目前的所有自訂題庫。")) {
-                database = JSON.parse(JSON.stringify(defaultDatabaseRaw));
-                database = database.map(item => { if(item.idiom) { item.word = item.idiom; delete item.idiom; } return item; });
-                localStorage.setItem('customVocabDB', JSON.stringify(database));
-                document.getElementById('db-textarea').value = JSON.stringify(database, null, 4);
-                updateUnitDropdown(); alert("已還原為完整的預設題庫！");
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', initDatabase);
-
-        // =====================================
-        // ⛏️ 全新 7 大採集與 13 種合成系統
-        // =====================================
-        let emeralds = 0; 
-        let materials = { log: 0, stone: 0, fiber: 0, sand: 0, clay: 0, iron: 0, gold: 0 }; 
-        let inventory = {}; let placedDecorations = []; let selectedHotbarItem = null; 
-
-        const craftRecipes = [
-            { id: 'wood_plank', name: '木板', icon: '🧱', cost: {log: 1}, desc: '建造地基 (🪵x1)' },
-            { id: 'stone_brick', name: '石磚', icon: '🪨', cost: {stone: 1}, desc: '堅固外牆 (🪨x1)' },
-            { id: 'brick', name: '紅磚', icon: '🧱', cost: {clay: 2}, desc: '經典建材 (🧱x2)' },
-            { id: 'glass', name: '玻璃窗', icon: '🪟', cost: {sand: 2}, desc: '透光明亮 (🏜️x2)' },
-            { id: 'door', name: '木門', icon: '🚪', cost: {log: 2}, desc: '房屋入口 (🪵x2)' },
-            { id: 'bed', name: '床舖', icon: '🛏️', cost: {log: 2, fiber: 2}, desc: '溫馨家具 (🪵x2 🌾x2)' },
-            { id: 'torch', name: '火把', icon: '🏮', cost: {log: 1, stone: 1}, desc: '照明工具 (🪵x1 🪨x1)' },
-            { id: 'plant', name: '小盆栽', icon: '🌷', cost: {clay: 1, fiber: 1}, desc: '綠化環境 (🧱x1 🌾x1)' },
-            { id: 'iron_block', name: '鐵塊', icon: '🛡️', cost: {iron: 2}, desc: '堅不可摧 (🪙x2)' },
-            { id: 'gold_block', name: '黃金磚', icon: '👑', cost: {gold: 2}, desc: '閃閃發光 (🌟x2)' },
-            { id: 'chest', name: '寶箱', icon: '🧰', cost: {log: 2, iron: 1}, desc: '收藏寶物 (🪵x2 🪙x1)' },
-            { id: 'water', name: '水源', icon: '💧', cost: {emerald: 5}, desc: '建造池塘 (❇️x5)' },
-            { id: 'expand', name: '擴大領土', icon: '🗺️', cost: {emerald: 30}, desc: '增加邊界 (❇️x30)', type: 'upgrade' }
-        ];
-
-        const TILE_SIZE = 40; let gridSize = 8; let pX = 3, pY = 3; 
-        let questBlocks = []; let rpgQuestType = ""; let rpgCorrectAnswer = ""; 
-        let isQuestionActive = false; let currentTargetData = null;
-
-        function updateMaterialUI() {
-            document.getElementById('em-menu').innerText = emeralds; document.getElementById('em-std').innerText = emeralds; document.getElementById('mat-em').innerText = emeralds;
-            document.getElementById('mat-log').innerText = materials.log; document.getElementById('mat-stone').innerText = materials.stone; document.getElementById('mat-fiber').innerText = materials.fiber;
-            document.getElementById('mat-sand').innerText = materials.sand; document.getElementById('mat-clay').innerText = materials.clay; document.getElementById('mat-iron').innerText = materials.iron; document.getElementById('mat-gold').innerText = materials.gold;
-        }
-
-        function goToMenu() { document.querySelectorAll('.page').forEach(p => p.style.display = 'none'); document.getElementById('main-dashboard').style.display = 'block'; resetTTSBtn();}
-        
-        function restartGame() {
-            if(confirm("確定要重新開始嗎？所有的素材、進度與島嶼方塊都會被清空！")) {
-                emeralds = 0; materials = { log: 0, stone: 0, fiber: 0, sand: 0, clay: 0, iron: 0, gold: 0 };
-                inventory = {}; placedDecorations = []; selectedHotbarItem = null;
-                gridSize = 8; updateGridSize(); renderDecorations(); renderHotbar(); updateMaterialUI(); loadRPGQuest();
-            }
-        }
-
-        // =====================================
-        // 📚 標準模式邏輯
-        // =====================================
-        let currentStdMode = "";
-        function startStandardGame(mode) {
-            initAudio(); 
-            if(currentDatabase.length === 0) return alert("目前範圍沒有題目！");
-            currentStdMode = mode;
-            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-            document.getElementById('standard-game').style.display = 'block';
-            const titles = { 'meaning-to-word': "📖 意思找詞語", 'word-to-meaning': "📖 詞語選意思", 'fill-blank': "📖 詞語填空", 'sentence': "📖 情境用法" };
-            document.getElementById('std-title').innerText = titles[mode];
-            loadStandardQuestion();
-        }
-
-        function loadStandardQuestion() {
-            document.getElementById('std-next-btn').style.display = 'none'; document.getElementById('feedback-std').innerText = "";
-            let optionsContainer = document.getElementById('options-container'); optionsContainer.innerHTML = "";
-            currentTargetData = currentDatabase[Math.floor(Math.random() * currentDatabase.length)];
-            let options = [];
-
-            if (currentStdMode === 'meaning-to-word') {
-                document.getElementById('question-text-std').innerText = currentTargetData.meaning;
-                options = generateOptions(currentTargetData.word, 'word');
-            } else if (currentStdMode === 'word-to-meaning') {
-                document.getElementById('question-text-std').innerText = currentTargetData.word;
-                options = generateOptions(currentTargetData.meaning, 'meaning');
-            } else if (currentStdMode === 'sentence') {
-                document.getElementById('question-text-std').innerText = (currentTargetData.sentence || "沒有例句").replace("＿＿＿＿", "【 ＿＿ 】");
-                options = generateOptions(currentTargetData.word, 'word');
-            } else if (currentStdMode === 'fill-blank') {
-                document.getElementById('question-text-std').innerText = currentTargetData.missingFormat;
-                options = [...currentTargetData.fillOptions].sort(() => 0.5 - Math.random());
-            }
-            renderStdButtons(options, "std-option-btn");
-            resetTTSBtn();
-        }
-
-        function renderStdButtons(optionsArray, className) {
-            let container = document.getElementById('options-container');
-            optionsArray.forEach(opt => {
-                let btn = document.createElement(className === "std-char-block" ? "div" : "button");
-                btn.className = className; btn.innerText = opt;
-                btn.onclick = function() { checkStandardAnswer(this.innerText, this); }; container.appendChild(btn);
-            });
-        }
-
-        function checkStandardAnswer(selectedText, clickedElement) {
-            let feedback = document.getElementById('feedback-std');
-            let correctAnswer = (currentStdMode === 'word-to-meaning') ? currentTargetData.meaning : (currentStdMode === 'fill-blank' ? currentTargetData.missingTarget : currentTargetData.word);
-            Array.from(document.getElementById('options-container').children).forEach(btn => { btn.style.pointerEvents = 'none'; if(btn.className !== "std-char-block") btn.style.filter = 'brightness(0.8)'; });
-
-            if(selectedText === correctAnswer) {
-                sfx.correct(); 
-                feedback.innerText = "✅ 答對了！獲得 5 綠寶石！"; feedback.style.color = "#2e7d32";
-                if(clickedElement.className !== "std-char-block") clickedElement.style.backgroundColor = "#c5e1a5";
-                emeralds += 5; updateMaterialUI();
-                if (currentStdMode === 'fill-blank') document.getElementById('question-text-std').innerText = currentTargetData.missingFormat.replace("＿", `【${correctAnswer}】`);
-            } else {
-                sfx.wrong(); 
-                feedback.innerText = "❌ 答錯了，答案是：\n" + correctAnswer; feedback.style.color = "#d32f2f";
-                if(clickedElement.className !== "std-char-block") clickedElement.style.backgroundColor = "#ffcdd2";
-            }
-            document.getElementById('std-next-btn').style.display = 'block';
-        }
-
-        // =====================================
-        // ⛏️ RPG 模式邏輯
-        // =====================================
-        function updateGridSize() {
-            let island = document.getElementById('island'); let sizePx = (gridSize * TILE_SIZE) + 'px';
-            island.style.width = sizePx; island.style.height = sizePx; island.style.minWidth = sizePx; island.style.minHeight = sizePx;
-        }
-
-        function startRPGGame() {
-            initAudio(); 
-            if(currentDatabase.length === 0) return alert("目前範圍沒有題目！");
-            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-            document.getElementById('rpg-game').style.display = 'block';
-            updateGridSize(); renderDecorations(); renderHotbar(); loadRPGQuest();
-        }
-
-        function loadRPGQuest() {
-            isQuestionActive = true; resetTTSBtn();
-            document.getElementById('rpg-next-btn').style.display = 'none'; document.getElementById('rpg-controls').style.display = 'flex';
-            document.getElementById('feedback-rpg').innerText = "用方向鍵或點擊地圖移動！答對獲得素材！"; document.getElementById('feedback-rpg').style.color = "#d32f2f";
-            
-            currentTargetData = currentDatabase[Math.floor(Math.random() * currentDatabase.length)];
-            const types = ['meaning-to-word', 'word-to-meaning', 'fill-blank', 'sentence'];
-            rpgQuestType = types[Math.floor(Math.random() * types.length)];
-            
-            let title = "", question = "", rawOptions = [], actualCorrectAnswer = "";
-            if (rpgQuestType === 'meaning-to-word') { title = "📜 任務：尋找匹配字詞"; question = currentTargetData.meaning; actualCorrectAnswer = currentTargetData.word; rawOptions = generateOptions(currentTargetData.word, 'word');
-            } else if (rpgQuestType === 'word-to-meaning') { title = "📜 任務：解讀告示牌"; question = currentTargetData.word; actualCorrectAnswer = currentTargetData.meaning; rawOptions = generateOptions(currentTargetData.meaning, 'meaning');
-            } else if (rpgQuestType === 'fill-blank') { title = "📜 任務：修補殘缺字詞"; question = currentTargetData.missingFormat; actualCorrectAnswer = currentTargetData.missingTarget; rawOptions = [...currentTargetData.fillOptions].sort(() => 0.5 - Math.random());
-            } else if (rpgQuestType === 'sentence') { title = "📜 任務：填補情境對白"; question = (currentTargetData.sentence || "無例句").replace("＿＿＿＿", "【 ＿＿ 】"); actualCorrectAnswer = currentTargetData.word; rawOptions = generateOptions(currentTargetData.word, 'word'); }
-
-            document.getElementById('rpg-mission-title').innerText = title; document.getElementById('rpg-question-text').innerText = question;
-            
-            const letters = ["A", "B", "C", "D"]; let choicesHTML = "";
-            rawOptions.forEach((opt, idx) => { choicesHTML += `<div>[${letters[idx]}] ${opt}</div>`; if (opt === actualCorrectAnswer) rpgCorrectAnswer = letters[idx]; });
-            document.getElementById('mc-choices').innerHTML = choicesHTML;
-            
-            pX = Math.floor(gridSize / 2); pY = Math.floor(gridSize / 2); updatePlayerDOM();
-            
-            document.querySelectorAll('.quest-block').forEach(el => el.remove()); questBlocks = [];
-            letters.forEach(label => {
-                let el = document.createElement('div'); el.className = 'quest-block'; el.innerText = label;
-                let randX, randY;
-                do { randX = Math.floor(Math.random() * gridSize); randY = Math.floor(Math.random() * gridSize); } while ((randX === pX && randY === pY) || questBlocks.some(b => b.x === randX && b.y === randY));
-                el.style.left = (randX * TILE_SIZE) + 'px'; el.style.top = (randY * TILE_SIZE) + 'px';
-                document.getElementById('island').appendChild(el); questBlocks.push({ element: el, label: label, x: randX, y: randY, broken: false });
-            });
-        }
-
-        function generateOptions(correctAnswer, keyType) {
-            let options = [correctAnswer];
-            let shuffledDb = [...currentDatabase].sort(() => 0.5 - Math.random());
-            for(let i = 0; i < shuffledDb.length; i++) { if(shuffledDb[i][keyType] !== correctAnswer && options.length < 4) options.push(shuffledDb[i][keyType]); }
-            return options.sort(() => 0.5 - Math.random()); 
-        }
-
-        function updatePlayerDOM() { let p = document.getElementById('player'); p.style.left = (pX * TILE_SIZE) + 'px'; p.style.top = (pY * TILE_SIZE) + 'px'; }
-
-        function movePlayer(dx, dy) {
-            if(!isQuestionActive) return; 
-            let nextX = pX + dx; let nextY = pY + dy;
-            if (nextX < 0 || nextX >= gridSize || nextY < 0 || nextY >= gridSize) return;
-            let block = questBlocks.find(b => b.x === nextX && b.y === nextY && !b.broken);
-            
-            sfx.move(); 
-            
-            if (block) mineBlock(block); else { pX = nextX; pY = nextY; updatePlayerDOM(); }
-        }
-
-        function mineBlock(block) {
-            let feedback = document.getElementById('feedback-rpg');
-            if (block.label === rpgCorrectAnswer) {
-                sfx.mine(); setTimeout(sfx.correct, 150); 
-                block.broken = true; block.element.classList.add('broken'); isQuestionActive = false; 
-                
-                let dropCounts = {log:0, stone:0, fiber:0, sand:0, clay:0, iron:0, gold:0};
-                let dropPool = ['log','log','stone','stone','fiber','fiber','sand','sand','clay','clay','iron','gold'];
-                let numDrops = Math.floor(Math.random() * 2) + 1; 
-                for(let i=0; i<numDrops; i++) { let t = dropPool[Math.floor(Math.random() * dropPool.length)]; dropCounts[t]++; materials[t]++; }
-                emeralds += 2; updateMaterialUI();
-                
-                let icons = {log:'🪵', stone:'🪨', fiber:'🌾', sand:'🏜️', clay:'🧱', iron:'🪙', gold:'🌟'};
-                let dropMsg = []; for(let key in dropCounts) { if(dropCounts[key] > 0) dropMsg.push(`${icons[key]}x${dropCounts[key]}`); }
-                feedback.innerHTML = `<span style="color:#2e7d32">✨ 採集成功！獲得: ${dropMsg.join(' ')} 及 ❇️x2</span>`;
-                
-                let realAnsText = Array.from(document.getElementById('mc-choices').children).find(div => div.innerText.startsWith(`[${rpgCorrectAnswer}]`)).innerText.substring(4); 
-                if(rpgQuestType === 'fill-blank') document.getElementById('rpg-question-text').innerText = currentTargetData.missingFormat.replace("＿", `【${realAnsText}】`);
-                else if(rpgQuestType === 'sentence') document.getElementById('rpg-question-text').innerText = currentTargetData.sentence.replace("＿＿＿＿", `【${realAnsText}】`);
-                document.getElementById('rpg-controls').style.display = 'none'; document.getElementById('rpg-next-btn').style.display = 'block';
-            } else {
-                sfx.wrong(); 
-                block.element.classList.add('wrong'); feedback.innerText = "💥 鏗！這是錯誤的方塊..."; feedback.style.color = "#d32f2f";
-            }
-        }
-
-        function handleGridClick(e) {
-            const rect = document.getElementById('island').getBoundingClientRect();
-            const targetX = Math.floor((e.clientX - rect.left) / TILE_SIZE);
-            const targetY = Math.floor((e.clientY - rect.top) / TILE_SIZE);
-
-            if (selectedHotbarItem && inventory[selectedHotbarItem] > 0) {
-                if (questBlocks.some(b => b.x === targetX && b.y === targetY && !b.broken)) return;
-                
-                sfx.mine(); 
-                inventory[selectedHotbarItem]--;
-                let catItem = craftRecipes.find(c => c.id === selectedHotbarItem);
-                placedDecorations.push({ icon: catItem.icon, x: targetX, y: targetY });
-                if(inventory[selectedHotbarItem] === 0) selectedHotbarItem = null;
-                renderDecorations(); renderHotbar(); return;
-            }
-
-            if (!isQuestionActive) return;
-            const diffX = targetX - pX; const diffY = targetY - pY;
-            if (Math.abs(diffX) > Math.abs(diffY)) movePlayer(diffX > 0 ? 1 : -1, 0);
-            else if (Math.abs(diffY) > 0) movePlayer(0, diffY > 0 ? 1 : -1);
-        }
-
-        // =====================================
-        // 🔨 建築與合成面板
-        // =====================================
-        function renderHotbar() {
-            let hb = document.getElementById('hotbar'); hb.innerHTML = ""; let itemKeys = Object.keys(inventory);
-            for(let i=0; i<Math.max(5, itemKeys.length); i++) {
-                let slot = document.createElement('div'); slot.className = "hotbar-slot";
-                if(i < itemKeys.length) {
-                    let itemId = itemKeys[i]; let qty = inventory[itemId];
-                    if(qty > 0) {
-                        let catItem = craftRecipes.find(c => c.id === itemId);
-                        slot.innerText = catItem.icon; slot.innerHTML += `<div class="hotbar-qty">${qty}</div>`;
-                        if(selectedHotbarItem === itemId) slot.classList.add('active');
-                        slot.onclick = () => { selectedHotbarItem = (selectedHotbarItem === itemId) ? null : itemId; renderHotbar(); };
-                    }
-                }
-                hb.appendChild(slot);
-            }
-        }
-
-        function renderDecorations() {
-            let layer = document.getElementById('decorations-layer'); layer.innerHTML = "";
-            placedDecorations.forEach(dec => {
-                let el = document.createElement('div'); el.className = "decoration-item"; el.innerText = dec.icon;
-                el.style.left = (dec.x * TILE_SIZE) + 'px'; el.style.top = (dec.y * TILE_SIZE) + 'px'; layer.appendChild(el);
-            });
-        }
-
-        function openCrafting() { document.getElementById('craft-modal').style.display = 'flex'; updateMaterialUI(); renderCraftItems(); }
-        function closeCrafting() { document.getElementById('craft-modal').style.display = 'none'; }
-        
-        function canAffordCraft(cost) {
-            if(cost.log && materials.log < cost.log) return false;
-            if(cost.stone && materials.stone < cost.stone) return false;
-            if(cost.fiber && materials.fiber < cost.fiber) return false;
-            if(cost.sand && materials.sand < cost.sand) return false;
-            if(cost.clay && materials.clay < cost.clay) return false;
-            if(cost.iron && materials.iron < cost.iron) return false;
-            if(cost.gold && materials.gold < cost.gold) return false;
-            if(cost.emerald && emeralds < cost.emerald) return false;
-            return true;
-        }
-
-        function renderCraftItems() {
-            let container = document.getElementById('craft-items-container'); container.innerHTML = "";
-            craftRecipes.forEach(item => {
-                let card = document.createElement('div'); card.className = "craft-card"; let canAfford = canAffordCraft(item.cost);
-                let costMsg = [];
-                if(item.cost.log) costMsg.push(`🪵${item.cost.log}`); if(item.cost.stone) costMsg.push(`🪨${item.cost.stone}`);
-                if(item.cost.fiber) costMsg.push(`🌾${item.cost.fiber}`); if(item.cost.sand) costMsg.push(`🏜️${item.cost.sand}`);
-                if(item.cost.clay) costMsg.push(`🧱${item.cost.clay}`); if(item.cost.iron) costMsg.push(`🪙${item.cost.iron}`);
-                if(item.cost.gold) costMsg.push(`🌟${item.cost.gold}`); if(item.cost.emerald) costMsg.push(`❇️${item.cost.emerald}`);
-
-                card.innerHTML = `<div class="craft-item-top"><div class="craft-item-icon">${item.icon}</div><div class="craft-item-info"><h4>${item.name}</h4><p>${item.desc}</p><div class="craft-cost">需求：${costMsg.join(' ')}</div></div></div><button class="craft-buy-btn" ${canAfford ? '' : 'disabled'} onclick="craftItem('${item.id}')">🔨 合成</button>`;
-                container.appendChild(card);
-            });
-        }
-
-        function craftItem(itemId) {
-            let item = craftRecipes.find(i => i.id === itemId);
-            if (canAffordCraft(item.cost)) {
-                sfx.craft(); 
-                if(item.cost.log) materials.log -= item.cost.log; if(item.cost.stone) materials.stone -= item.cost.stone;
-                if(item.cost.fiber) materials.fiber -= item.cost.fiber; if(item.cost.sand) materials.sand -= item.cost.sand;
-                if(item.cost.clay) materials.clay -= item.cost.clay; if(item.cost.iron) materials.iron -= item.cost.iron;
-                if(item.cost.gold) materials.gold -= item.cost.gold; if(item.cost.emerald) emeralds -= item.cost.emerald;
-                
-                if (item.type === 'upgrade' && itemId === 'expand') { gridSize += 2; updateGridSize(); alert("綠地已成功擴大！"); } 
-                else { if(!inventory[itemId]) inventory[itemId] = 0; inventory[itemId]++; renderHotbar(); }
-                updateMaterialUI(); renderCraftItems();
-            }
-        }
-
-        document.addEventListener('keydown', function(event) {
-            if (document.getElementById('rpg-game').style.display === 'block') {
-                if (event.key === "ArrowUp" || event.key === "w") movePlayer(0, -1);
-                if (event.key === "ArrowDown" || event.key === "s") movePlayer(0, 1);
-                if (event.key === "ArrowLeft" || event.key === "a") movePlayer(-1, 0);
-                if (event.key === "ArrowRight" || event.key === "d") movePlayer(1, 0);
-            }
+        globalAudio.play().catch(e => {
+            console.error("iOS Playback Error:", e);
+            if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         });
 
-        // =====================================
-        // 🚀 註冊 Service Worker (PWA 安裝核心)
-        // =====================================
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.log('Service Worker 註冊成功', reg);
-                }).catch(err => {
-                    console.log('Service Worker 註冊失敗', err);
-                });
-            });
-        }
-    </script>
+      } catch(err) {
+        console.error(err);
+        if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(false);
+        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+      }
+    });
+  }
+
+  function transformPunctuation(text, accent) {
+    const isEnglish = accent.startsWith('en');
+    if (isEnglish) {
+      return text.replace(/,/g, ' comma ').replace(/\./g, ' full stop ').replace(/\?/g, ' question mark ').replace(/!/g, ' exclamation mark ');
+    } else {
+      return text.replace(/，/g, '，逗號，').replace(/。/g, '，句號，').replace(/！/g, '，感嘆號，').replace(/？/g, '，問號，').replace(/；/g, '，分號，').replace(/：/g, '，冒號，');
+    }
+  }
+
+  // --- 句子勾選頁面 ---
+  function openSentenceSelection() {
+    const sentences = getSentences(currentDictation.content);
+    tempSelectedIndices = [...activeSentenceIndices];
+    renderSelectionList();
+    showPage('select-screen');
+  }
+
+  function renderSelectionList() {
+    const sentences = getSentences(currentDictation.content);
+    document.getElementById('selectionSubTitle').innerText = `已選 ${tempSelectedIndices.length}/${sentences.length} 項`;
+    document.getElementById('startPracticeBtn').innerText = `開始練習 (${tempSelectedIndices.length} 項)`;
+
+    const container = document.getElementById('selectListContainer');
+    container.innerHTML = '';
+
+    sentences.forEach((sText, idx) => {
+      const checked = tempSelectedIndices.includes(idx);
+      container.innerHTML += `
+        <div class="select-item-card" onclick="toggleSelectSentence(${idx})">
+          <div class="select-num-badge">${idx + 1}</div>
+          <div style="flex:1; font-size:16px; white-space:pre-wrap; word-break:break-word; line-height:1.5;">${escapeXml(sText)}</div>
+          <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectSentence(${idx});">
+        </div>
+      `;
+    });
+  }
+
+  function toggleSelectSentence(idx) {
+    if(tempSelectedIndices.includes(idx)) tempSelectedIndices = tempSelectedIndices.filter(i => i !== idx);
+    else { tempSelectedIndices.push(idx); tempSelectedIndices.sort((a,b) => a - b); }
+    renderSelectionList();
+  }
+
+  function selectAllSentences(select) {
+    const sentences = getSentences(currentDictation.content);
+    if(select) tempSelectedIndices = sentences.map((_, i) => i);
+    else tempSelectedIndices = [];
+    renderSelectionList();
+  }
+
+  function selectRandomSentences(count) {
+    const sentences = getSentences(currentDictation.content);
+    const indices = sentences.map((_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    tempSelectedIndices = indices.slice(0, count).sort((a,b) => a - b);
+    renderSelectionList();
+  }
+
+  function confirmSentenceSelection() {
+    if(tempSelectedIndices.length === 0) { alert('請至少勾選一個句子！'); return; }
+    activeSentenceIndices = [...tempSelectedIndices];
+    currentPlayingIndex = 0;
+    updateDetailUI();
+    showPage('detail-screen');
+  }
+
+  function cancelSentenceSelection() { showPage('detail-screen'); }
+  function clearSelectionAndPlayAll() { selectAllSentences(true); confirmSentenceSelection(); }
+
+  // --- 新增/編輯頁面 ---
+  function openEditScreen(id) {
+    if(id) {
+      const dic = dictations.find(d => String(d.id) === String(id));
+      if(!dic) return;
+      document.getElementById('editScreenTitle').innerText = '✏️ 編輯默書';
+      document.getElementById('editId').value = dic.id;
+      document.getElementById('editTitle').value = dic.title;
+      document.getElementById('editLang').value = dic.lang || 'zh';
+      document.getElementById('editContent').value = dic.content;
+    } else {
+      document.getElementById('editScreenTitle').innerText = '➕ 新增默書';
+      document.getElementById('editId').value = '';
+      document.getElementById('editTitle').value = '默書 ' + new Date().toISOString().slice(0,10);
+      document.getElementById('editLang').value = 'zh';
+      document.getElementById('editContent').value = '';
+    }
+    document.getElementById('ocrStatus').innerText = '';
+    showPage('edit-screen');
+  }
+
+  function saveDictation() {
+    const id = document.getElementById('editId').value;
+    const title = document.getElementById('editTitle').value.trim();
+    const lang = document.getElementById('editLang').value;
+    let content = document.getElementById('editContent').value.trim();
+
+    if(!title || !content) { alert('請輸入標題與默書內容！'); return; }
+
+    if(id) {
+      const index = dictations.findIndex(d => String(d.id) === String(id));
+      if(index !== -1) dictations[index] = { id: parseInt(id), title, lang, content };
+    } else {
+      dictations.unshift({ id: Date.now(), title, lang, content });
+    }
+
+    localStorage.setItem('dictations', JSON.stringify(dictations));
+    renderList();
+    openDetailScreen(id ? parseInt(id) : dictations[0].id);
+  }
+
+  // --- 🌟 V20 題號過濾與排版修復 ---
+  function filterNumbers() {
+    let text = document.getElementById('editContent').value;
+    text = text.replace(/([a-zA-Z\u4e00-\u9fa5])\s*(\d+[\.\)])/g, '$1\n$2');
+    text = text.replace(/\s+(\d+[\.\)])/g, '\n$1');
+    text = text.replace(/^[\s]*([0-9一二三四五六七八九十]+[\.\)、、\s]+|\([0-9]+\)[\s]*)/gm, '');
+    text = text.split('\n').map(s => s.trim()).filter(s => s.length > 0).join('\n');
+    document.getElementById('editContent').value = text;
+  }
+
+  function filterPinyin() {
+    let text = document.getElementById('editContent').value;
+    text = text.replace(/\([a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+\)/g, '');
+    text = text.replace(/（[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+）/g, '');
+    text = text.replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/g, '');
+    document.getElementById('editContent').value = text;
+  }
+
+  function openSegmentEditor() {
+    const text = document.getElementById('editContent').value.trim();
+    if(!text) { alert('請先輸入默書內容！'); return; }
+    tempSegments = getSentences(text);
+    document.getElementById('segmentModal').classList.add('active');
+    renderSegmentList();
+  }
+
+  function closeSegmentModal() { document.getElementById('segmentModal').classList.remove('active'); }
+
+  function autoSmartSegment() {
+    let text = tempSegments.join('\n');
+    text = text.replace(/([.。！？!?]+)\s*/g, "$1\n");
+    tempSegments = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    renderSegmentList();
+  }
+
+  function renderSegmentList() {
+    const container = document.getElementById('segmentListContainer');
+    document.getElementById('segmentCountLabel').innerText = `分段結果 (${tempSegments.length} 個詞/句)`;
+    container.innerHTML = '';
+    
+    tempSegments.forEach((seg, idx) => {
+      container.innerHTML += `
+        <div class="segment-item">
+          <div class="segment-idx">${idx + 1}</div>
+          <div class="segment-text">${escapeXml(seg)}</div>
+          <div class="segment-actions">
+            <button class="btn-action" onclick="openSplitModal(${idx})">✂ 拆分</button>
+            ${idx < tempSegments.length - 1 ? `<button class="btn-action" onclick="mergeSegmentDown(${idx})">🔗 合併</button>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function mergeSegmentDown(idx) {
+    if (idx < tempSegments.length - 1) {
+      tempSegments[idx] = tempSegments[idx] + ' ' + tempSegments[idx+1];
+      tempSegments.splice(idx + 1, 1);
+      renderSegmentList();
+    }
+  }
+
+  function openSplitModal(idx) {
+    currentSplitIndex = idx;
+    const text = tempSegments[idx];
+    const regex = /([a-zA-Z0-9_']+)|([^a-zA-Z0-9_'\s]+)/g;
+    let tokens = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      if(match[0].trim()) tokens.push(match[0]);
+    }
+    if (tokens.length === 0) tokens = Array.from(text);
+
+    const splitContainer = document.getElementById('splitContent');
+    splitContainer.innerHTML = '';
+
+    tokens.forEach((token, tIdx) => {
+      const span = document.createElement('span');
+      span.className = 'split-token';
+      span.innerText = token;
+      splitContainer.appendChild(span);
+
+      if (tIdx < tokens.length - 1) {
+        const divider = document.createElement('span');
+        divider.className = 'split-divider';
+        divider.innerText = '|';
+        divider.onclick = () => executeSplit(tIdx, tokens);
+        splitContainer.appendChild(divider);
+      }
+    });
+
+    document.getElementById('splitModal').classList.add('active');
+  }
+
+  function executeSplit(tokenIdx, tokens) {
+    const leftPart = tokens.slice(0, tokenIdx + 1).join(' ')
+      .replace(/\s+([.,!?])/g, '$1') 
+      .replace(/([\u4e00-\u9fa5])\s+(?=[\u4e00-\u9fa5，。！？])/g, '$1'); 
+    
+    const rightPart = tokens.slice(tokenIdx + 1).join(' ')
+      .replace(/\s+([.,!?])/g, '$1')
+      .replace(/([\u4e00-\u9fa5])\s+(?=[\u4e00-\u9fa5，。！？])/g, '$1');
+
+    tempSegments.splice(currentSplitIndex, 1, leftPart.trim(), rightPart.trim());
+    closeSplitModal();
+    renderSegmentList();
+  }
+
+  function closeSplitModal() { document.getElementById('splitModal').classList.remove('active'); }
+  function saveSegmentsToTextarea() { document.getElementById('editContent').value = tempSegments.join('\n'); closeSegmentModal(); }
+
+  async function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    if(file.type === 'application/pdf') {
+      document.getElementById('ocrStatus').innerText = "⏳ 正在載入 PDF...";
+      if(typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) {
+        alert("PDF 處理引擎尚未載入完成，請稍候再試或檢查網路連線。");
+        return;
+      }
+      const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 3.0 }); 
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      openCropModal(canvas.toDataURL('image/png'));
+    } else {
+      const reader = new FileReader();
+      reader.onload = (evt) => openCropModal(evt.target.result);
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function openCropModal(imageSrc) {
+    const img = document.getElementById('cropImage');
+    img.src = imageSrc;
+    document.getElementById('cropModal').classList.add('active');
+    if(cropper) cropper.destroy();
+    cropper = new Cropper(img, { viewMode: 1, autoCropArea: 0.85, responsive: true });
+  }
+
+  function closeCropModal() { document.getElementById('cropModal').classList.remove('active'); if(cropper) cropper.destroy(); }
+
+  async function confirmCropAndOCR() {
+    if(!cropper) return;
+    const croppedCanvas = cropper.getCroppedCanvas();
+    closeCropModal();
+    
+    const statusText = document.getElementById('ocrStatus');
+    statusText.innerText = "⏳ 正在辨識文字 (這可能需要幾秒鐘)...";
+    
+    try {
+      const langMode = document.getElementById('editLang').value;
+      const tesseractLang = langMode === 'en' ? 'eng' : 'chi_tra+eng';
+      
+      const result = await Tesseract.recognize(croppedCanvas, tesseractLang);
+      
+      let text = result.data.text.replace(/\|/g, '\n').replace(/bio'ogy/gi, 'biology').replace(/\n\s*\n/g, '\n').trim();
+      document.getElementById('editContent').value = text;
+      
+      statusText.innerText = "✅ 辨識成功！請點擊上方的「🧹 過濾題號」自動拆解排版！";
+    } catch(err) {
+      console.error(err);
+      statusText.innerText = "❌ 辨識失敗，請重新嘗試。";
+    }
+  }
+
+  function openQrScanner() {
+    document.getElementById('qrScanModal').classList.add('active');
+    html5QrCode = new Html5Qrcode("qr-reader");
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => { handleQrCodeScanned(decodedText); },
+      (errorMessage) => {}
+    ).catch(err => {
+      alert("無法啟動相機權限：" + err);
+      closeQrScanner();
+    });
+  }
+
+  function closeQrScanner() {
+    if (html5QrCode) { html5QrCode.stop().then(() => { html5QrCode.clear(); }).catch(e => {}); }
+    document.getElementById('qrScanModal').classList.remove('active');
+  }
+
+  function handleQrCodeScanned(urlText) {
+    closeQrScanner();
+    try {
+      const url = new URL(urlText);
+      if (url.searchParams.has('v3')) {
+        const compressed = url.searchParams.get('v3');
+        const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
+        const parts = jsonStr.split('|||');
+        if (parts.length >= 3) {
+          document.getElementById('editTitle').value = parts[0];
+          document.getElementById('editLang').value = parts[1];
+          document.getElementById('editContent').value = parts.slice(2).join('|||');
+          alert('✅ 已成功掃描並讀取默書內容，請確認後按「儲存默書」！');
+        } else { alert('❌ QR Code 內容不完整。'); }
+        return;
+      }
+    } catch(e) { alert('❌ 無法解析此 QR Code。'); }
+  }
+
+  function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); toggleAutoSettingsDisplay(); }
+  function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('active'); updateDetailUI(); }
+  function toggleAutoSettingsDisplay() { document.getElementById('autoSettingsBox').style.display = (document.getElementById('playMode').value === 'auto') ? 'flex' : 'none'; }
+  function savePlaySettings() { updateDetailUI(); }
+
+  function escapeXml(unsafe) {
+    if (!unsafe) return "";
+    return String(unsafe).replace(/[<>&'"]/g, function(c) {
+      switch (c) { case '<': return '&lt;'; case '>': return '&gt;'; case '&': return '&amp;'; case "'": return '&apos;'; case '"': return '&quot;'; }
+      return c;
+    });
+  }
+</script>
+
 </body>
 </html>
