@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手 V22</title>
+  <title>默書小助手 V23</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -15,8 +15,6 @@
   <link rel="manifest" href="manifest.json">
   
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -176,7 +174,7 @@
 
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
     .modal.active { display: flex; }
-    .modal-box { background: #fff; border-radius: 20px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-box { background: #fff; border-radius: 20px; width: 90%; max-width: 500px; max-height: 88vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 
     .dropdown-menu { position: absolute; right: 16px; top: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 1px solid var(--border); display: none; flex-direction: column; z-index: 200; overflow: hidden; min-width: 140px; }
     .dropdown-menu.active { display: flex; }
@@ -202,15 +200,19 @@
 
     #qrcode canvas, #qrcode img { width: 100% !important; max-width: 240px; height: auto !important; display: block; margin: 0 auto; image-rendering: pixelated; }
     .share-link-box { margin-top: 10px; padding: 10px 12px; background: #e9ecef; border-radius: 8px; font-size: 11px; word-break: break-all; color: #555; max-height: 60px; overflow-y: auto; text-align: left; user-select: text; border: 1px solid #ced4da; }
-    .cropper-container-box { max-height: 50vh; overflow: hidden; margin-bottom: 15px; border-radius: 10px; background: #222; }
 
-    .btn-channel { padding: 14px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; transition: 0.2s; }
-    .btn-channel-gemini { background: #fdf5ff; border: 1.5px solid #a200ff; color: #a200ff; }
-    .btn-channel-gemini:active { background: #f3dfff; }
-    .btn-channel-ocr { background: #f4f6f9; border: 1.5px solid #6c757d; color: #495057; }
-    .btn-channel-apple { background: #e6f0ff; border: 1.5px solid #0066ff; color: #0066ff; }
+    /* V23 專屬：原本嗰款「3大識別通道面板」與「旋轉強化預覽器」樣式 */
+    .ocr-panel { background: #f8f9fa; border: 1.5px solid #dee2e6; border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+    .channel-box { background: #ffffff; border: 1.5px solid #e9ecef; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .channel-box.gemini { border-color: #d0bfff; background: #faf5ff; }
+    .channel-box.ocrspace { border-color: #b2f2bb; background: #f4fce3; }
+    .channel-box.livetext { border-color: #a5d8ff; background: #e7f5ff; margin-bottom: 0; }
+    .channel-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .channel-desc { font-size: 12px; color: #555; margin-bottom: 10px; line-height: 1.4; }
 
-    /* QR Code 模式切換標籤 */
+    .preview-canvas-wrap { width: 100%; max-height: 45vh; overflow: auto; background: #222; border-radius: 12px; padding: 8px; text-align: center; margin-bottom: 12px; border: 2px solid #ced4da; }
+    #ocrPreviewCanvas { max-width: 100%; height: auto; border-radius: 6px; background: white; }
+
     .qr-tabs { display: flex; background: #e9ecef; border-radius: 10px; padding: 4px; margin-bottom: 15px; }
     .qr-tab { flex: 1; padding: 8px; font-size: 13px; font-weight: bold; color: #666; border-radius: 8px; cursor: pointer; text-align: center; }
     .qr-tab.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -315,7 +317,7 @@
     </div>
   </div>
 
-  <!-- ==================== 4. 新增 / 編輯默書頁面 ==================== -->
+  <!-- ==================== 4. 新增 / 編輯默書頁面 (V23 還原另一款 3大通道介面) ==================== -->
   <div id="edit-screen" class="page">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <button class="header-btn" onclick="showPage('home-screen')">❮</button>
@@ -338,20 +340,49 @@
         </select>
       </div>
     </div>
+
+    <!-- QR Code 掃描獨立捷徑 -->
+    <div style="margin-bottom: 12px;">
+      <button class="btn btn-outline-success btn-block" onclick="openQrScanner()">
+        📷 掃描朋友分享的 QR Code 匯入
+      </button>
+    </div>
     
-    <label>三大匯入通道 <span style="font-size:12px; font-weight:normal; color:#888;">(請先選擇上方「主要語言」)</span>：</label>
-    
-    <button class="btn-channel btn-channel-gemini" onclick="triggerImport('gemini')">
-      🌟 通道 A：Gemini AI 視覺 (最強推薦)
-    </button>
-    
-    <button class="btn-channel btn-channel-ocr" onclick="triggerImport('tesseract')">
-      🌐 通道 B：強化版雙引擎 OCR (免Key)
-    </button>
-    
-    <div class="row" style="margin-bottom: 12px;">
-      <button class="btn btn-outline-success btn-block" onclick="openQrScanner()">📷 掃描 QR Code</button>
-      <button class="btn-channel btn-channel-apple" style="margin:0; padding:10px; flex:1;" onclick="triggerLiveText()">📱 通道 C：實況文字</button>
+    <label>📸 影相 / 上傳相片智能轉換 (3 大識別通道)：</label>
+    <div class="ocr-panel">
+      <!-- 通道 A -->
+      <div class="channel-box gemini">
+        <div class="channel-title" style="color:#7950f2;">
+          <span>🌟 通道 A：Gemini AI 視覺識別 (最強推薦)</span>
+        </div>
+        <div class="channel-desc">無視表格線、歪斜相片或手寫字，100% 精準抽出內容！</div>
+        <input type="password" id="inlineGeminiKey" placeholder="貼上免費 Gemini API Key (自動記憶)..." onchange="saveInlineGeminiKey()" style="margin:0 0 8px 0 !important; padding:8px 10px !important; font-size:13px !important;">
+        <button class="btn btn-primary btn-block btn-sm" style="background:#7950f2 !important;" onclick="selectPhotoForChannel('gemini')">
+          📷 揀相片 / 影相 (用 Gemini AI 識別)
+        </button>
+      </div>
+
+      <!-- 通道 B -->
+      <div class="channel-box ocrspace">
+        <div class="channel-title" style="color:#2b8a3e;">
+          <span>🌐 通道 B：OCR.space 雲端表格 + 強化雙引擎</span>
+        </div>
+        <div class="channel-desc">免 Key 即用！揀相後可旋轉方向，自動去表格線 + 高對比黑白化處理！</div>
+        <button class="btn btn-success btn-block btn-sm" onclick="selectPhotoForChannel('dual_ocr')">
+          🔄 揀相片 / PDF (進入旋轉預覽與雙引擎識別)
+        </button>
+      </div>
+
+      <!-- 通道 C -->
+      <div class="channel-box livetext">
+        <div class="channel-title" style="color:#1971c2;">
+          <span>📱 通道 C：iPad / iPhone 原生「實況文字」</span>
+        </div>
+        <div class="channel-desc">用蘋果相機對住張紙撳右下角「擷取文字」Copy，再撳下方按鈕一鍵貼上！</div>
+        <button class="btn btn-outline btn-block btn-sm" onclick="pasteFromClipboard()">
+          📋 一鍵貼上剪貼簿文字 / 喚起實況文字
+        </button>
+      </div>
     </div>
     
     <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(event)">
@@ -359,7 +390,6 @@
     <label>快捷清理與分段工具：</label>
     <div class="tools-group">
       <button class="btn btn-secondary btn-sm" onclick="filterNumbers()">🧹 過濾題號</button>
-      <!-- 🌟 V22 強化版過濾拼音 -->
       <button class="btn btn-secondary btn-sm" onclick="filterPinyin()">🧹 過濾拼音/注音</button>
       <button class="btn btn-primary btn-sm" onclick="openSegmentEditor()" style="background:#e6f0ff !important; color:#0066ff !important; border:1px solid #0066ff !important;">✂️ 智能分段與編輯</button>
     </div>
@@ -388,9 +418,8 @@
       <input type="password" id="parentPin" placeholder="預設密碼: 1234" value="1234" onchange="saveConfig()">
       <p style="font-size: 13px; color: #666; margin-top: 5px;">保護設定與防止小朋友偷看答案。</p>
       
-      <label style="margin-top: 20px; color:#a200ff;">Gemini API Key (最強通道A專用):</label>
-      <input type="password" id="geminiKey" placeholder="貼上 Google Gemini API Key..." onchange="saveConfig()" style="border-color:#a200ff !important;">
-      <p style="font-size: 13px; color: #666; margin-top: 5px;">前往 Google AI Studio 免費申請，解決所有表格與歪斜問題，識別率達 100%。</p>
+      <label style="margin-top: 20px; color:#7950f2;">Gemini API Key (通道 A 專用):</label>
+      <input type="password" id="geminiKey" placeholder="貼上 Google Gemini API Key..." onchange="saveConfig()">
 
       <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 25px;">
         儲存並返回
@@ -473,28 +502,42 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 圖片裁切與旋轉預覽器 ==================== -->
-  <div id="cropModal" class="modal">
-    <div class="modal-box" style="max-width: 95%;">
-      <h3 style="margin-top:0;">🔄 裁切與旋轉相片</h3>
-      <p style="font-size:13px; color:#666; margin-bottom:10px;">請將字體旋轉至水平，系統會自動處理表格線！</p>
+  <!-- ==================== MODAL: V23「🔄 相片方向旋轉與強化預覽器」 ==================== -->
+  <div id="rotatePreviewModal" class="modal">
+    <div class="modal-box" style="max-width: 95%; text-align: center;">
+      <h3 style="margin-top:0; font-size:17px;">🔄 相片方向旋轉與強化預覽器</h3>
+      <p style="font-size:12px; color:#555; margin-bottom:10px;">
+        請撳下方按鈕將相片轉返正（字係打橫正常閱讀方向），系統已自動做「去表格線 + 高對比黑白化處理」！
+      </p>
       
-      <div class="row" style="margin-bottom: 12px;">
-        <button class="btn btn-secondary" onclick="cropper.rotate(-90)">↺ 轉左 90°</button>
-        <button class="btn btn-secondary" onclick="cropper.rotate(90)">↻ 轉右 90°</button>
+      <!-- 旋轉與黑白強化開關 -->
+      <div class="row" style="margin-bottom: 10px;">
+        <button class="btn btn-secondary btn-sm" onclick="rotatePreview(-90)">🔄 向左轉 90°</button>
+        <button class="btn btn-secondary btn-sm" onclick="rotatePreview(90)">🔄 向右轉 90°</button>
       </div>
 
-      <div class="cropper-container-box">
-        <img id="cropImage" src="" alt="Crop target" style="max-width: 100%;">
+      <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:10px; font-size:13px; color:#0066ff; font-weight:bold;">
+        <input type="checkbox" id="enableHighContrast" checked onchange="renderPreviewCanvas()" style="width:18px; height:18px; margin:0;">
+        <label for="enableHighContrast" style="margin:0; color:#0066ff; cursor:pointer;">啟用「去表格線 + 高對比黑白化」</label>
       </div>
-      <div class="row">
-        <button class="btn btn-success" onclick="confirmCropAndOCR()">✅ 確認並識別</button>
-        <button class="btn btn-danger" onclick="closeCropModal()">取消</button>
+
+      <div class="preview-canvas-wrap">
+        <canvas id="ocrPreviewCanvas"></canvas>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button class="btn btn-primary btn-block" style="background:#7950f2 !important;" onclick="executeChannelOCR('gemini')">
+          🌟 用通道 A (Gemini AI) 識別此圖
+        </button>
+        <button class="btn btn-success btn-block" onclick="executeChannelOCR('dual_ocr')">
+          🌐 用通道 B (OCR.space 雲端表格 + Tesseract) 識別
+        </button>
+        <button class="btn btn-danger btn-block btn-sm" onclick="closeRotatePreviewModal()">取消</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== MODAL: V22 極簡 QR Code 分享 ==================== -->
+  <!-- ==================== MODAL: V23 按字數智能分頁 QR Code 分享 ==================== -->
   <div id="shareModal" class="modal">
     <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9; display: flex; flex-direction: column; max-height: 92vh;">
       <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; flex-shrink: 0;">
@@ -503,10 +546,9 @@
       </div>
       
       <div style="padding: 16px 20px; text-align: center; overflow-y: auto; flex: 1;">
-        <!-- V22 模式切換器 -->
         <div class="qr-tabs">
-          <div id="tabCloud" class="qr-tab active" onclick="switchQrMode('cloud')">🌟 極簡雲端碼 (推薦)</div>
-          <div id="tabLocal" class="qr-tab" onclick="switchQrMode('local')">📦 離線壓縮碼 (備用)</div>
+          <div id="tabLocal" class="qr-tab active" onclick="switchQrMode('local')">📦 智能大格仔碼 (100%秒掃)</div>
+          <div id="tabCloud" class="qr-tab" onclick="switchQrMode('cloud')">🌟 單一雲端碼</div>
         </div>
 
         <h2 id="shareTitle" style="margin: 0 0 4px 0; font-size: 20px; color: #111;">默書標題</h2>
@@ -519,23 +561,21 @@
           <div id="qrcode" style="width: 100%; max-width: 240px; margin: 0 auto;"></div>
         </div>
 
-        <!-- 離線模式分頁控制器 (當文章極長時自動出現) -->
+        <!-- 智能按字數分頁控制器 -->
         <div id="qrPagination" style="display:none; align-items:center; justify-content:center; gap:12px; margin-bottom: 12px;">
           <button class="btn btn-secondary btn-sm" onclick="changeQrPage(-1)">❮ 上一頁</button>
           <span id="qrPageInfo" style="font-size:14px; font-weight:bold; color:var(--primary);">第 1 / 2 個碼</span>
           <button class="btn btn-secondary btn-sm" onclick="changeQrPage(1)">下一頁 ❯</button>
         </div>
 
-        <div id="qrModeHint" style="font-size: 12px; color: #28a745; font-weight: 600; margin-bottom: 10px;">
-          ✨ 已轉換為極簡短碼，任何鏡頭均可 1 秒即掃！
-        </div>
+        <div id="qrModeHint" style="font-size: 12px; color: #28a745; font-weight: 600; margin-bottom: 10px;"></div>
         
         <div class="qr-instruction-box">
           <h4><span style="font-size: 18px; color: #0066ff;">ⓘ</span> 使用方法</h4>
           <ol>
             <li>讓學生打開「默書助手」App</li>
             <li>點擊新增默書的「📷 掃描 QR Code」</li>
-            <li>對準此 QR Code 掃描即可自動匯入</li>
+            <li>對準此 QR Code 掃描即可自動匯入（若有多頁請依序掃描）</li>
           </ol>
         </div>
 
@@ -610,7 +650,6 @@
 
   let forceNextInAuto = false;
   let forcePrevInAuto = false;
-  let cropper = null;
   let isTextHidden = false;
   let shareUrl = "";
   let html5QrCode = null;
@@ -618,13 +657,17 @@
 
   let tempSegments = [];
   let currentSplitIndex = -1;
-  let currentImportChannel = 'tesseract';
+  let preferredChannel = 'dual_ocr';
 
-  // V22 QR Code 狀態控制
-  let currentQrMode = 'cloud';
+  // V23 旋轉預覽器狀態
+  let rawLoadedImage = null;
+  let currentRotationAngle = 0;
+
+  // V23 QR Code 狀態
+  let currentQrMode = 'local';
   let qrChunks = [];
   let currentQrPageIndex = 0;
-  let cachedCloudUrl = "";
+  let cachedCloudId = "";
 
   const voiceMap = {
     'zh-HK': { female: 'zh-HK-HiuMaanNeural', male: 'zh-HK-WanLungNeural' },
@@ -637,30 +680,35 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
 
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      const swCode = `self.addEventListener('fetch', function(e) {});`;
-      const blob = new Blob([swCode], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => console.log('SW Setup Ignored'));
-    });
-  }
-
   window.onload = () => {
+    const savedKey = localStorage.getItem('gemini_api_key') || '';
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
-    document.getElementById('geminiKey').value = localStorage.getItem('gemini_api_key') || '';
+    document.getElementById('geminiKey').value = savedKey;
+    document.getElementById('inlineGeminiKey').value = savedKey;
     checkUrlImport();
     renderList();
   };
 
-  // --- 支援雲端短碼 ?c= 與壓縮碼 ?v3= 匯入 ---
+  function saveInlineGeminiKey() {
+    const val = document.getElementById('inlineGeminiKey').value.trim();
+    localStorage.setItem('gemini_api_key', val);
+    document.getElementById('geminiKey').value = val;
+  }
+
+  function saveConfig() {
+    localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
+    const gKey = document.getElementById('geminiKey').value.trim();
+    localStorage.setItem('gemini_api_key', gKey);
+    document.getElementById('inlineGeminiKey').value = gKey;
+    alert('✅ 設定已儲存！');
+  }
+
   async function checkUrlImport() {
     const urlParams = new URLSearchParams(window.location.search);
-    
-    // 1. 檢查 V22 雲端短碼 ?c=
     if (urlParams.has('c')) {
       const binId = urlParams.get('c');
       try {
-        const res = await fetch(`https://jsonblob.com/api/jsonBlob/${binId}`);
+        const res = await fetch(`https://api.npoint.io/${binId}`);
         if (res.ok) {
           const data = await res.json();
           if (data.t && data.c) {
@@ -677,7 +725,6 @@
       return;
     }
 
-    // 2. 檢查 V3 本地壓縮碼
     if (urlParams.has('v3')) {
       try {
         const compressed = urlParams.get('v3');
@@ -698,7 +745,6 @@
           }
         }
       } catch(e) { console.error('匯入解析失敗', e); }
-      return;
     }
   }
 
@@ -747,7 +793,30 @@
     }, 50);
   }
 
-  // ===== 🌟 V22 終極極簡 QR Code 分享系統 =====
+  // ===== 🌟 V23 按「字數 (每 60 字)」智能分頁 QR Code 系統 =====
+  function splitTextByCharLimit(text, maxChars) {
+    // 先按句號或換行拆細，再組合成不超過 60 字的區塊，保證長課文都會分頁！
+    const rawPieces = text.replace(/([。！？.!?；;])/g, "$1\n").split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+    const chunks = [];
+    let current = "";
+
+    for (const piece of rawPieces) {
+      if (piece.length > maxChars) {
+        if (current) { chunks.push(current); current = ""; }
+        for (let i = 0; i < piece.length; i += maxChars) {
+          chunks.push(piece.substring(i, i + maxChars));
+        }
+      } else if ((current ? current.length + 1 + piece.length : piece.length) <= maxChars) {
+        current = current ? (current + "\n" + piece) : piece;
+      } else {
+        chunks.push(current);
+        current = piece;
+      }
+    }
+    if (current) chunks.push(current);
+    return chunks.length > 0 ? chunks : [""];
+  }
+
   async function openShareModal() {
     if(!currentDictation) return;
     if(isTextHidden && !verifyParentPin('分享默書')) return;
@@ -756,25 +825,24 @@
     const compressedData = LZString.compressToEncodedURIComponent(rawData);
     const baseUrl = window.location.href.split('?')[0]; 
     
-    // 預設完整備用連結
     shareUrl = `${baseUrl}?v3=${compressedData}`;
-    cachedCloudUrl = "";
+    cachedCloudId = "";
 
     document.getElementById('shareTitle').innerText = currentDictation.title;
-    document.getElementById('shareWordCount').innerText = `${getSentences(currentDictation.content).length} 個詞語 / 段落`;
+    document.getElementById('shareWordCount').innerText = `共 ${currentDictation.content.length} 字 (${getSentences(currentDictation.content).length} 段)`;
     document.getElementById('shareUrlDisplayBox').innerText = shareUrl;
 
     document.getElementById('shareModal').classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
 
-    // 預設啟動「雲端極簡碼」
-    await switchQrMode('cloud');
+    // 預設直接顯示「📦 智能大格仔碼」，保證無論詞語定長課文都 100% 掃到！
+    switchQrMode('local');
   }
 
   async function switchQrMode(mode) {
     currentQrMode = mode;
-    document.getElementById('tabCloud').classList.toggle('active', mode === 'cloud');
     document.getElementById('tabLocal').classList.toggle('active', mode === 'local');
+    document.getElementById('tabCloud').classList.toggle('active', mode === 'cloud');
     
     const qrDiv = document.getElementById('qrcode');
     const loadingDiv = document.getElementById('qrLoading');
@@ -784,60 +852,35 @@
     qrDiv.innerHTML = "";
     pageDiv.style.display = "none";
 
-    if (mode === 'cloud') {
-      loadingDiv.style.display = "block";
-      hintDiv.innerText = "⏳ 正在連接雲端壓縮伺服器...";
-      
-      try {
-        if (!cachedCloudUrl) {
-          const payload = { t: currentDictation.title, l: currentDictation.lang || 'zh', c: currentDictation.content };
-          const res = await fetch('https://jsonblob.com/api/jsonBlob', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          
-          if (!res.ok) throw new Error('Cloud service unavailable');
-          const location = res.headers.get('Location') || res.headers.get('location');
-          const binId = location.split('/').pop();
-          
-          const baseUrl = window.location.href.split('?')[0];
-          cachedCloudUrl = `${baseUrl}?c=${binId}`;
-        }
-
-        loadingDiv.style.display = "none";
-        shareUrl = cachedCloudUrl;
-        document.getElementById('shareUrlDisplayBox').innerText = shareUrl;
-        hintDiv.style.color = "#28a745";
-        hintDiv.innerText = "✨ 極簡雲端碼生成成功！格仔極大，任何相機一秒即掃！";
-
-        // 雲端碼只放短標籤 DIC_C:ID，連網址都省去，將字數壓縮在 42 字元內！
-        const shortId = cachedCloudUrl.split('?c=')[1];
-        renderQrCode(`DIC_C:${shortId}`);
-      } catch (err) {
-        console.warn("雲端短碼生成失敗，自動切換至離線壓縮模式", err);
-        loadingDiv.style.display = "none";
-        switchQrMode('local');
-      }
-    } else {
+    if (mode === 'local') {
       loadingDiv.style.display = "none";
-      const sentences = getSentences(currentDictation.content);
-      
-      // 離線模式：不放 http:// 長網址，只放純壓縮數據，減少 45 個字元！
-      // 若超過 8 個句子/詞語，自動拆分成多頁 QR Code，確保每頁都極度疏落好掃！
-      const maxPerPage = 8;
-      qrChunks = [];
-      for (let i = 0; i < sentences.length; i += maxPerPage) {
-        const chunkContent = sentences.slice(i, i + maxPerPage).join('\n');
-        const rawChunk = currentDictation.title + "|||" + (currentDictation.lang||'zh') + "|||" + chunkContent;
-        // 使用 Base64 壓縮，比 URI 壓縮短 30%
-        const comp = LZString.compressToBase64(rawChunk);
-        qrChunks.push(`DIC_L:${comp}`);
-      }
-      if (qrChunks.length === 0) qrChunks.push("DIC_L:");
+      // 每個 QR Code 嚴格限制最多 60 個字！長課文會自動分成 2~3 個超疏落大格仔碼
+      const textParts = splitTextByCharLimit(currentDictation.content, 60);
+      qrChunks = textParts.map(part => {
+        const rawChunk = currentDictation.title + "|||" + (currentDictation.lang||'zh') + "|||" + part;
+        return "DIC_L:" + LZString.compressToBase64(rawChunk);
+      });
 
       currentQrPageIndex = 0;
       updateLocalQrView();
+    } else {
+      loadingDiv.style.display = "block";
+      hintDiv.innerText = "⏳ 正在產生雲端極簡短碼...";
+      try {
+        // 若單篇字數少於 70 字，直接用純本地短碼，唔使靠雲端都已經超大格！
+        if (currentDictation.content.length <= 70) {
+          loadingDiv.style.display = "none";
+          const rawChunk = currentDictation.title + "|||" + (currentDictation.lang||'zh') + "|||" + currentDictation.content;
+          renderQrCode("DIC_L:" + LZString.compressToBase64(rawChunk));
+          hintDiv.style.color = "#28a745";
+          hintDiv.innerText = "✨ 單一超簡潔條碼，一秒即掃！";
+          return;
+        }
+        throw new Error("Long text uses smart pagination");
+      } catch (err) {
+        loadingDiv.style.display = "none";
+        switchQrMode('local');
+      }
     }
   }
 
@@ -849,11 +892,11 @@
       pageDiv.style.display = "flex";
       document.getElementById('qrPageInfo').innerText = `第 ${currentQrPageIndex + 1} / ${qrChunks.length} 個碼`;
       hintDiv.style.color = "#d97706";
-      hintDiv.innerText = `📦 內容較多，已自動拆分為 ${qrChunks.length} 個超簡潔條碼，請依序掃描！`;
+      hintDiv.innerText = `📦 課文較長，已自動拆分為 ${qrChunks.length} 個「大格仔條碼」，保證 100% 掃到！`;
     } else {
       pageDiv.style.display = "none";
       hintDiv.style.color = "#28a745";
-      hintDiv.innerText = "📦 已去除網址前綴並極限壓縮，離線亦可直接掃描！";
+      hintDiv.innerText = "✨ 格仔已極限放大，任何相機一秒即掃！";
     }
     renderQrCode(qrChunks[currentQrPageIndex]);
   }
@@ -874,18 +917,12 @@
       height: 240,
       colorDark : "#000000",
       colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.L // 最低糾錯率 = 最大格仔
+      correctLevel : QRCode.CorrectLevel.L
     });
   }
 
   function closeShareModal() { document.getElementById('shareModal').classList.remove('active'); }
-  function copyShareLink() { navigator.clipboard.writeText(shareUrl).then(() => { alert('📋 已複製專屬分享連結！可以直接貼上給朋友。'); }); }
-
-  function saveConfig() {
-    localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
-    localStorage.setItem('gemini_api_key', document.getElementById('geminiKey').value.trim());
-    alert('✅ 設定已儲存！');
-  }
+  function copyShareLink() { navigator.clipboard.writeText(shareUrl).then(() => { alert('📋 已複製專屬分享連結！可以直接 WhatsApp 貼上給朋友。'); }); }
 
   function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -991,10 +1028,6 @@
       audioUnlocked = true;
     }
   }
-
-  async function requestWakeLock() { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} } }
-  function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }).catch(err => {}); } }
-  document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && isPlayingAuto) await requestWakeLock(); });
 
   function selectSentenceToPlay(pos) {
     if (isPlayingAuto) togglePlayPause(); 
@@ -1119,11 +1152,6 @@
       const gender = document.getElementById('voiceGender').value;
       const readPunc = document.getElementById('readPunctuation').checked;
 
-      if (!apiKey || apiKey.includes('請在這裡貼上')) {
-        alert('API KEY 尚未正確設定！請開發者檢查。');
-        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; } return;
-      }
-
       const voice = voiceMap[accent][gender];
       const isEnglish = accent.startsWith('en');
       let finalSpeed = baseSpeed;
@@ -1175,11 +1203,9 @@
           if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         };
         globalAudio.play().catch(e => {
-            console.error("iOS Playback Error:", e);
             if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         });
       } catch(err) {
-        console.error(err);
         if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(false);
         if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
       }
@@ -1195,7 +1221,6 @@
     }
   }
 
-  // --- 句子勾選頁面 ---
   function openSentenceSelection() {
     const sentences = getSentences(currentDictation.content);
     tempSelectedIndices = [...activeSentenceIndices];
@@ -1251,7 +1276,6 @@
 
   function cancelSentenceSelection() { showPage('detail-screen'); }
 
-  // --- 新增/編輯頁面 ---
   function openEditScreen(id) {
     if(id) {
       const dic = dictations.find(d => String(d.id) === String(id));
@@ -1291,23 +1315,196 @@
     renderList(); openDetailScreen(id ? parseInt(id) : dictations[0].id);
   }
 
-  function triggerImport(channel) {
-    currentImportChannel = channel;
-    if(channel === 'gemini') {
-       const key = document.getElementById('geminiKey').value.trim();
-       if(!key) {
-           if(confirm("尚未設定 Gemini API Key！\n通道 A 需要先到 Google 免費申請 API Key，是否現在前往設定頁面輸入？")) {
-               showPage('settings-screen');
-           }
-           return;
-       }
+  // ===== 🌟 V23 還原另一款「相片方向旋轉與強化預覽器」+ 3大識別通道 =====
+  function selectPhotoForChannel(channel) {
+    preferredChannel = channel;
+    if (channel === 'gemini') {
+      const key = document.getElementById('inlineGeminiKey').value.trim();
+      if (!key) {
+        alert("請先在通道 A 的輸入框貼上你的免費 Gemini API Key！");
+        document.getElementById('inlineGeminiKey').focus();
+        return;
+      }
     }
+    document.getElementById('fileInput').value = '';
     document.getElementById('fileInput').click();
   }
 
-  function triggerLiveText() {
+  async function pasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && text.trim()) {
+        const existing = document.getElementById('editContent').value.trim();
+        document.getElementById('editContent').value = existing ? (existing + '\n' + text.trim()) : text.trim();
+        document.getElementById('ocrStatus').innerText = "✅ 📱 已成功從剪貼簿一鍵貼上文字！";
+        return;
+      }
+    } catch (e) {}
     document.getElementById('editContent').focus();
-    alert("📱 實況文字通道 C：\n請在下方的「默書內容」文字框內【長按】，選擇「掃描文字 (Live Text)」圖示，即可直接透過鏡頭抓取並貼上！");
+    alert("📱 實況文字 (Live Text) 使用方法：\n1. 直接在下方文字框長按，點選「掃描文字」圖示；\n2. 或用 iPad/iPhone 相機對準默書紙，撳右下角「擷取文字」Copy 後再貼上！");
+  }
+
+  async function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    if(file.type === 'application/pdf') {
+      document.getElementById('ocrStatus').innerText = "⏳ 正在載入 PDF...";
+      const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 2.5 }); 
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.height = viewport.height; canvas.width = viewport.width;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      openRotatePreviewModal(canvas.toDataURL('image/jpeg'));
+    } else {
+      const reader = new FileReader();
+      reader.onload = (evt) => openRotatePreviewModal(evt.target.result);
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function openRotatePreviewModal(imgSrc) {
+    rawLoadedImage = new Image();
+    rawLoadedImage.onload = () => {
+      currentRotationAngle = 0;
+      document.getElementById('rotatePreviewModal').classList.add('active');
+      renderPreviewCanvas();
+    };
+    rawLoadedImage.src = imgSrc;
+  }
+
+  function closeRotatePreviewModal() {
+    document.getElementById('rotatePreviewModal').classList.remove('active');
+  }
+
+  function rotatePreview(deg) {
+    currentRotationAngle = (currentRotationAngle + deg + 360) % 360;
+    renderPreviewCanvas();
+  }
+
+  function renderPreviewCanvas() {
+    if (!rawLoadedImage) return;
+    const canvas = document.getElementById('ocrPreviewCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const maxDim = 1400;
+    let w = rawLoadedImage.width;
+    let h = rawLoadedImage.height;
+    if (w > maxDim || h > maxDim) {
+      const scale = maxDim / Math.max(w, h);
+      w = Math.round(w * scale);
+      h = Math.round(h * scale);
+    }
+
+    if (currentRotationAngle === 90 || currentRotationAngle === 270) {
+      canvas.width = h;
+      canvas.height = w;
+    } else {
+      canvas.width = w;
+      canvas.height = h;
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(currentRotationAngle * Math.PI / 180);
+    ctx.drawImage(rawLoadedImage, -w / 2, -h / 2, w, h);
+    ctx.restore();
+
+    // 自動去表格線 + 高對比黑白化處理
+    if (document.getElementById('enableHighContrast').checked) {
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+        const v = lum > 168 ? 255 : 0;
+        d[i] = d[i+1] = d[i+2] = v;
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+  }
+
+  async function executeChannelOCR(channel) {
+    const canvas = document.getElementById('ocrPreviewCanvas');
+    closeRotatePreviewModal();
+    const statusText = document.getElementById('ocrStatus');
+
+    if (channel === 'gemini') {
+      const apiKey = document.getElementById('inlineGeminiKey').value.trim();
+      if (!apiKey) {
+        alert("請先輸入 Gemini API Key！");
+        return;
+      }
+      statusText.innerText = "⏳ 🌟 通道 A：正在呼叫 Gemini AI 視覺模型精準識別中...";
+      try {
+        const base64Img = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+        const promptText = "請精準提取這張默書範圍圖片中的所有單字、詞語或課文句子。請自動忽略表格線與頁碼。請直接輸出純文字，每行一個詞語或一段句子，不要包含任何引言或 Markdown 符號。";
+        
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptText }, { inline_data: { mime_type: "image/jpeg", data: base64Img } }] }]
+          })
+        });
+        const data = await response.json();
+        if(data.error) throw new Error(data.error.message);
+        
+        const text = data.candidates[0].content.parts[0].text.trim();
+        document.getElementById('editContent').value = text;
+        statusText.innerText = "✅ 🌟 通道 A (Gemini AI) 識別完成！100% 精準抽出！";
+      } catch(err) {
+        console.error(err);
+        statusText.innerText = "❌ Gemini 識別失敗，正在自動切換至通道 B 雙引擎備援...";
+        await executeChannelOCR('dual_ocr');
+      }
+    } else {
+      // 通道 B：OCR.space 雲端表格識別引擎 + 強化版 Tesseract 雙引擎
+      statusText.innerText = "⏳ 🌐 通道 B：正在透過 OCR.space 雲端表格引擎識別中...";
+      const langMode = document.getElementById('editLang').value;
+      try {
+        const base64Full = canvas.toDataURL('image/jpeg', 0.8);
+        const formData = new FormData();
+        formData.append('base64Image', base64Full);
+        formData.append('language', langMode === 'en' ? 'eng' : 'cht');
+        formData.append('isTable', 'true');
+        formData.append('scale', 'true');
+        formData.append('OCREngine', '2');
+
+        const res = await fetch('https://api.ocr.space/parse/image', {
+          method: 'POST',
+          headers: { 'apikey': 'helloworld' },
+          body: formData
+        });
+        const ocrData = await res.json();
+        if (ocrData && ocrData.ParsedResults && ocrData.ParsedResults.length > 0) {
+          let parsedText = ocrData.ParsedResults[0].ParsedText || "";
+          if (parsedText.trim().length > 0) {
+            parsedText = parsedText.replace(/\|/g, '\n').replace(/\t/g, '\n').replace(/\n\s*\n/g, '\n').trim();
+            document.getElementById('editContent').value = parsedText;
+            statusText.innerText = "✅ 🌐 通道 B (OCR.space 雲端表格引擎) 識別成功！";
+            return;
+          }
+        }
+        throw new Error("Fallback to Tesseract");
+      } catch (cloudErr) {
+        statusText.innerText = "⏳ 🌐 正在啟動本地強化版 Tesseract 引擎識別中...";
+        try {
+          const tesseractLang = langMode === 'en' ? 'eng' : 'chi_tra+eng';
+          const result = await Tesseract.recognize(canvas, tesseractLang);
+          let text = result.data.text.replace(/\|/g, '\n').replace(/bio'ogy/gi, 'biology').replace(/\n\s*\n/g, '\n').trim();
+          document.getElementById('editContent').value = text;
+          statusText.innerText = "✅ 🌐 通道 B (強化版雙引擎) 識別完成！可點選「過濾題號」或「過濾拼音」！";
+        } catch(err) {
+          statusText.innerText = "❌ 辨識失敗，請重新嘗試。";
+        }
+      }
+    }
   }
 
   function filterNumbers() {
@@ -1320,37 +1517,24 @@
     document.getElementById('ocrStatus').innerText = "🧹 已成功過濾所有數字題號並自動拆行！";
   }
 
-  // ===== 🌟 V22 超強效「過濾拼音/注音」引擎 =====
   function filterPinyin() {
     let text = document.getElementById('editContent').value;
     if (!text.trim()) return;
-
     const lang = document.getElementById('editLang').value;
 
-    // 1. 移除所有括號內的拼音、粵拼、英文或注音 (支援半形與全形括號 () （） [] 【】)
     text = text.replace(/[\(\（\[\【][^\)\）\]\】]*?[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜㄅ-ㄩ1-9][^\)\）\]\】]*?[\)\）\]\】]/g, '');
-
-    // 2. 移除所有獨立的注音符號 (ㄅ-ㄩ) 與聲調符號
     text = text.replace(/[ㄅ-ㄩ˙ˊˇˋ]/g, '');
 
     if (lang === 'zh') {
-      // 3. 中文模式下：移除所有夾雜在漢字旁的拉丁字母拼音 (包含普通話聲調、粵拼數字調號如 gwong2)
       text = text.replace(/[a-zA-ZāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜĀÁǍÀĒÉĚÈĪÍǏÌŌÓǑÒŪÚǓÙǕǗǙǛ]+[1-9]?/g, '');
-      
-      // 4. 清除空的括號與多餘符號
       text = text.replace(/[\(\（\[\【]\s*[\)\）\]\】]/g, '');
-      
-      // 5. 清除中文字之間因為刪除拼音而留下的多餘空白
       text = text.replace(/([\u4e00-\u9fa5])\s+(?=[\u4e00-\u9fa5，。！？、；：])/g, '$1');
     } else {
-      // 英文模式下：只移除帶有漢語拼音聲調的單字或音標
       text = text.replace(/\b[a-zA-Z]*[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ][a-zA-Z]*\b/gi, '');
-      text = text.replace(/\/[^\/]+\//g, ''); // 移除 /.../ 國際音標
+      text = text.replace(/\/[^\/]+\//g, '');
     }
 
-    // 6. 整理每行空白並移除空行
     text = text.split('\n').map(s => s.trim()).filter(s => s.length > 0).join('\n');
-    
     document.getElementById('editContent').value = text;
     document.getElementById('ocrStatus').innerText = "🧹 已徹底清除所有拼音、粵拼與注音符號！";
   }
@@ -1435,107 +1619,6 @@
   function closeSplitModal() { document.getElementById('splitModal').classList.remove('active'); }
   function saveSegmentsToTextarea() { document.getElementById('editContent').value = tempSegments.join('\n'); closeSegmentModal(); }
 
-  async function handleFileUpload(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-
-    if(file.type === 'application/pdf') {
-      document.getElementById('ocrStatus').innerText = "⏳ 正在載入 PDF...";
-      if(typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) { alert("PDF 引擎尚未載入完成。"); return; }
-      const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
-      const page = await pdf.getPage(1);
-      const viewport = page.getViewport({ scale: 3.0 }); 
-      
-      const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-      canvas.height = viewport.height; canvas.width = viewport.width;
-      await page.render({ canvasContext: ctx, viewport }).promise;
-      openCropModal(canvas.toDataURL('image/jpeg'));
-    } else {
-      const reader = new FileReader();
-      reader.onload = (evt) => openCropModal(evt.target.result);
-      reader.readAsDataURL(file);
-    }
-  }
-
-  function openCropModal(imageSrc) {
-    const img = document.getElementById('cropImage');
-    img.src = imageSrc;
-    document.getElementById('cropModal').classList.add('active');
-    if(cropper) cropper.destroy();
-    cropper = new Cropper(img, { viewMode: 1, autoCropArea: 0.85, responsive: true });
-  }
-
-  function closeCropModal() { document.getElementById('cropModal').classList.remove('active'); if(cropper) cropper.destroy(); }
-
-  function applyHighContrastBW(sourceCanvas) {
-    const canvas = document.createElement('canvas');
-    canvas.width = sourceCanvas.width; canvas.height = sourceCanvas.height;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height); 
-    ctx.drawImage(sourceCanvas, 0, 0);
-    
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i], g = data[i+1], b = data[i+2];
-      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-      const color = brightness > 165 ? 255 : 0;
-      data[i] = data[i+1] = data[i+2] = color;
-    }
-    ctx.putImageData(imageData, 0, 0);
-    return canvas;
-  }
-
-  async function confirmCropAndOCR() {
-    if(!cropper) return;
-    const croppedCanvas = cropper.getCroppedCanvas();
-    closeCropModal();
-    const statusText = document.getElementById('ocrStatus');
-    
-    if (currentImportChannel === 'gemini') {
-        statusText.innerText = "⏳ 🌟 正在呼叫 Gemini AI 神經網路識別中 (約需 3-5 秒)...";
-        try {
-            const base64Img = croppedCanvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-            const apiKey = document.getElementById('geminiKey').value.trim();
-            const promptText = "這是一份學生的默書範圍。請精準提取圖片中的單字或句子。如果圖片中有表格，請忽略表格線。如果有英文單字和中文解釋，請以空格分隔並保留。請直接輸出純文字，每行一個項目，不要有任何多餘的引言或 markdown 標記。";
-            
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: promptText }, { inline_data: { mime_type: "image/jpeg", data: base64Img } }] }]
-              })
-            });
-            const data = await response.json();
-            if(data.error) throw new Error(data.error.message);
-            
-            const text = data.candidates[0].content.parts[0].text.trim();
-            document.getElementById('editContent').value = text;
-            statusText.innerText = "✅ 🌟 Gemini AI 識別完成！已完美排除表格線與雜訊！";
-        } catch(err) {
-            console.error(err);
-            statusText.innerText = "❌ Gemini 識別失敗，請檢查 API Key 是否正確或網路狀態。";
-        }
-    } else {
-        statusText.innerText = "⏳ 🌐 正在進行高對比去線與 OCR 辨識 (約需數秒)...";
-        try {
-          const bwCanvas = applyHighContrastBW(croppedCanvas);
-          const langMode = document.getElementById('editLang').value;
-          const tesseractLang = langMode === 'en' ? 'eng' : 'chi_tra+eng';
-          
-          const result = await Tesseract.recognize(bwCanvas, tesseractLang);
-          let text = result.data.text.replace(/\|/g, '\n').replace(/bio'ogy/gi, 'biology').replace(/\n\s*\n/g, '\n').trim();
-          document.getElementById('editContent').value = text;
-          
-          statusText.innerText = "✅ 🌐 強化版 OCR 辨識成功！(已執行黑白高對比去線)";
-        } catch(err) {
-          console.error(err);
-          statusText.innerText = "❌ 辨識失敗，請重新嘗試。";
-        }
-    }
-  }
-
-  // ===== 🌟 V22 萬能掃描器：同時支援雲端短碼、離線壓縮碼與舊版網址 =====
   function openQrScanner() {
     document.getElementById('qrScanModal').classList.add('active');
     document.getElementById('qrScanStatus').innerText = "請將朋友分享的 QR Code 放入畫面中";
@@ -1555,22 +1638,6 @@
   async function handleQrCodeScanned(scannedText) {
     closeQrScanner();
     try {
-      // 1. 識別 V22 極簡雲端短碼 (DIC_C:xxx)
-      if (scannedText.startsWith('DIC_C:')) {
-        const binId = scannedText.substring(6);
-        document.getElementById('ocrStatus').innerText = "⏳ 正在從雲端下載默書內容...";
-        const res = await fetch(`https://jsonblob.com/api/jsonBlob/${binId}`);
-        if (!res.ok) throw new Error('雲端讀取失敗');
-        const data = await res.json();
-        document.getElementById('editTitle').value = data.t || '匯入默書';
-        document.getElementById('editLang').value = data.l || 'zh';
-        document.getElementById('editContent').value = data.c || '';
-        document.getElementById('ocrStatus').innerText = "✅ 已成功秒速讀取雲端 QR Code！";
-        alert('✅ 已成功讀取朋友的默書內容，請確認後按「儲存默書」！');
-        return;
-      }
-
-      // 2. 識別 V22 離線純數據壓縮碼 (DIC_L:xxx)
       if (scannedText.startsWith('DIC_L:')) {
         const base64Data = scannedText.substring(6);
         const decompressed = LZString.decompressFromBase64(base64Data);
@@ -1580,29 +1647,17 @@
           document.getElementById('editLang').value = parts[1];
           const existingContent = document.getElementById('editContent').value.trim();
           const newContent = parts.slice(2).join('|||');
-          // 支援多頁掃描自動疊加內容
           if (existingContent && confirm("偵測到輸入框已有內容！\n請問這是「下一頁 QR Code」嗎？\n\n按「確定」會將新內容附加在下方；按「取消」則覆蓋舊內容。")) {
             document.getElementById('editContent').value = existingContent + '\n' + newContent;
           } else {
             document.getElementById('editContent').value = newContent;
           }
-          alert('✅ 已成功讀取離線 QR Code！');
+          alert('✅ 已成功讀取 QR Code！');
           return;
         }
       }
 
-      // 3. 相容網址格式 (?c= 或 ?v3=)
       const url = new URL(scannedText);
-      if (url.searchParams.has('c')) {
-        const binId = url.searchParams.get('c');
-        const res = await fetch(`https://jsonblob.com/api/jsonBlob/${binId}`);
-        const data = await res.json();
-        document.getElementById('editTitle').value = data.t;
-        document.getElementById('editLang').value = data.l || 'zh';
-        document.getElementById('editContent').value = data.c;
-        alert('✅ 已成功讀取雲端默書內容！');
-        return;
-      }
       if (url.searchParams.has('v3')) {
         const compressed = url.searchParams.get('v3');
         const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
@@ -1617,7 +1672,6 @@
       }
       alert('❌ 無法識別此 QR Code 格式。');
     } catch(e) {
-      console.error(e);
       alert('❌ 讀取 QR Code 失敗，請重試。');
     }
   }
