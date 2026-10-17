@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手 V23</title>
+  <title>默書小助手 V21</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -15,6 +15,8 @@
   <link rel="manifest" href="manifest.json">
   
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -112,6 +114,7 @@
     .btn-secondary { background: #e9ecef !important; color: #495057 !important; border: 1px solid #ced4da !important; }
     .btn-outline { background: transparent !important; border: 1.5px solid var(--primary) !important; color: var(--primary) !important; }
     .btn-outline-success { background: transparent !important; border: 1.5px solid var(--success) !important; color: var(--success) !important; }
+    .btn-outline-info { background: transparent !important; border: 1.5px solid #17a2b8 !important; color: #17a2b8 !important; }
     .btn-block { width: 100%; }
     .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
 
@@ -130,7 +133,10 @@
       box-sizing: border-box;
       user-select: text; 
     }
-    input:focus, select:focus, textarea:focus { border-color: var(--primary) !important; outline: none; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary) !important;
+      outline: none;
+    }
     textarea::placeholder, input::placeholder { color: #888888 !important; opacity: 1 !important; }
     
     textarea#editContent { height: 200px; min-height: 180px; resize: vertical; line-height: 1.6; }
@@ -139,25 +145,42 @@
     .row > div { flex: 1; }
     .tools-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 
-    .dictation-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #fff; border-radius: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); border: 1px solid var(--border); }
+    .dictation-item {
+      display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #fff;
+      border-radius: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); border: 1px solid var(--border);
+    }
     .dictation-item-title { font-size: 17px; font-weight: 700; color: #111; cursor: pointer; flex: 1; }
     .dictation-item-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
     .play-controls-bar { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 15px 0 20px 0; }
-    .btn-circle { width: 52px; height: 52px; border-radius: 50%; border: none; background: #e9ecef; color: #333; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
-    .btn-circle-main { width: 68px; height: 68px; background: var(--primary); color: white; font-size: 26px; box-shadow: 0 4px 12px rgba(0, 102, 255, 0.35); }
+    .btn-circle {
+      width: 52px; height: 52px; border-radius: 50%; border: none; background: #e9ecef; color: #333;
+      font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-circle-main {
+      width: 68px; height: 68px; background: var(--primary); color: white; font-size: 26px; box-shadow: 0 4px 12px rgba(0, 102, 255, 0.35);
+    }
     .btn-circle-main.playing { background: #ffaa00; box-shadow: 0 4px 12px rgba(255, 170, 0, 0.35); }
 
-    .mode-pill-btn { background: #28a745; color: white; border-radius: 30px; padding: 10px 20px; display: inline-flex; align-items: center; gap: 10px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 2px 6px rgba(40,167,69,0.25); }
+    .mode-pill-btn {
+      background: #28a745; color: white; border-radius: 30px; padding: 10px 20px; display: inline-flex;
+      align-items: center; gap: 10px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 2px 6px rgba(40,167,69,0.25);
+    }
     .mode-pill-badge { background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 12px; font-size: 13px; }
 
-    .settings-summary-card { background: #f8f9fa; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: 1px solid #ebedf0; margin-bottom: 20px; }
+    .settings-summary-card {
+      background: #f8f9fa; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center;
+      justify-content: space-between; cursor: pointer; border: 1px solid #ebedf0; margin-bottom: 20px;
+    }
     .settings-summary-title { font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 6px; }
     .settings-summary-tag { background: #ffe8cc; color: #d97706; font-size: 11px; padding: 2px 6px; border-radius: 6px; font-weight: normal; }
     .settings-summary-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
 
     .sentence-card-list { display: flex; flex-direction: column; gap: 10px; }
-    .sentence-card { background: #ffffff; border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px; cursor: pointer; transition: all 0.2s; }
+    .sentence-card {
+      background: #ffffff; border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px;
+      display: flex; align-items: flex-start; gap: 14px; cursor: pointer; transition: all 0.2s;
+    }
     .sentence-num { color: #8c98a4; font-size: 16px; font-weight: bold; min-width: 24px; margin-top: 2px; }
     .sentence-text { flex: 1; font-size: 17px; line-height: 1.5; font-weight: 500; white-space: pre-wrap; word-break: break-word; }
     .sentence-audio-btn { color: #8c98a4; font-size: 18px; margin-top: 2px; }
@@ -174,7 +197,7 @@
 
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
     .modal.active { display: flex; }
-    .modal-box { background: #fff; border-radius: 20px; width: 90%; max-width: 500px; max-height: 88vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-box { background: #fff; border-radius: 20px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 
     .dropdown-menu { position: absolute; right: 16px; top: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 1px solid var(--border); display: none; flex-direction: column; z-index: 200; overflow: hidden; min-width: 140px; }
     .dropdown-menu.active { display: flex; }
@@ -188,7 +211,7 @@
     .segment-text { flex: 1; font-size: 16px; line-height: 1.5; color: #333; }
     .segment-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
     .btn-action { padding: 5px 10px; font-size: 12px; border: 1px solid #ced4da; background: #f8f9fa; border-radius: 6px; cursor: pointer; color: #495057; font-weight: 600; }
-
+    
     .split-token { display: inline-block; }
     .split-divider { display: inline-block; width: 14px; color: #ccc; cursor: pointer; font-weight: bold; margin: 0 2px; user-select: none; transition: all 0.2s; }
     .split-divider:hover { color: var(--danger); transform: scale(1.6); }
@@ -199,23 +222,8 @@
     .qr-instruction-box li::marker { color: #0066ff; font-weight: bold; }
 
     #qrcode canvas, #qrcode img { width: 100% !important; max-width: 240px; height: auto !important; display: block; margin: 0 auto; image-rendering: pixelated; }
-    .share-link-box { margin-top: 10px; padding: 10px 12px; background: #e9ecef; border-radius: 8px; font-size: 11px; word-break: break-all; color: #555; max-height: 60px; overflow-y: auto; text-align: left; user-select: text; border: 1px solid #ced4da; }
-
-    /* V23 專屬：原本嗰款「3大識別通道面板」與「旋轉強化預覽器」樣式 */
-    .ocr-panel { background: #f8f9fa; border: 1.5px solid #dee2e6; border-radius: 14px; padding: 14px; margin-bottom: 14px; }
-    .channel-box { background: #ffffff; border: 1.5px solid #e9ecef; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
-    .channel-box.gemini { border-color: #d0bfff; background: #faf5ff; }
-    .channel-box.ocrspace { border-color: #b2f2bb; background: #f4fce3; }
-    .channel-box.livetext { border-color: #a5d8ff; background: #e7f5ff; margin-bottom: 0; }
-    .channel-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
-    .channel-desc { font-size: 12px; color: #555; margin-bottom: 10px; line-height: 1.4; }
-
-    .preview-canvas-wrap { width: 100%; max-height: 45vh; overflow: auto; background: #222; border-radius: 12px; padding: 8px; text-align: center; margin-bottom: 12px; border: 2px solid #ced4da; }
-    #ocrPreviewCanvas { max-width: 100%; height: auto; border-radius: 6px; background: white; }
-
-    .qr-tabs { display: flex; background: #e9ecef; border-radius: 10px; padding: 4px; margin-bottom: 15px; }
-    .qr-tab { flex: 1; padding: 8px; font-size: 13px; font-weight: bold; color: #666; border-radius: 8px; cursor: pointer; text-align: center; }
-    .qr-tab.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .share-link-box { margin-top: 15px; padding: 10px 12px; background: #e9ecef; border-radius: 8px; font-size: 11px; word-break: break-all; color: #555; max-height: 60px; overflow-y: auto; text-align: left; user-select: text; border: 1px solid #ced4da; }
+    .cropper-container-box { max-height: 45vh; overflow: hidden; margin-bottom: 15px; border-radius: 8px; border: 1px solid #eee; }
   </style>
 </head>
 <body>
@@ -228,9 +236,7 @@
       <h1>📚 我的默書清單</h1>
       <button class="header-btn" onclick="checkAndShowSettings()" title="系統設定">⚙️</button>
     </div>
-
     <div id="dictation-list"></div>
-
     <button class="btn btn-primary btn-block" onclick="openEditScreen(null)" style="margin-top: 15px;">
       ➕ 新增默書
     </button>
@@ -242,7 +248,6 @@
       <button class="header-btn" onclick="showPage('home-screen')">❮</button>
       <h2 id="detailTitle">默書詳情</h2>
       <button class="header-btn" onclick="toggleHeaderMenu()">⋮</button>
-
       <div id="headerDropdown" class="dropdown-menu">
         <div class="dropdown-item" onclick="editCurrentDictation()">✏️ 編輯默書</div>
         <div class="dropdown-item" onclick="openShareModal()">📤 分享默書 (QR Code)</div>
@@ -256,7 +261,6 @@
         <button class="btn-circle btn-circle-main" id="mainPlayBtn" onclick="togglePlayPause()" title="播放/暫停">▶</button>
         <button class="btn-circle" onclick="nextSentence()" title="下一句">⏭</button>
       </div>
-      
       <div id="playStatus" style="font-size: 15px; color: var(--primary); font-weight: bold; min-height: 22px; margin-bottom: 5px;"></div>
 
       <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
@@ -270,24 +274,16 @@
 
     <div class="settings-summary-card" onclick="openSettingsModal()" style="margin-top: 20px;">
       <div>
-        <div class="settings-summary-title">
-          <span>🎛️ 播放設定</span>
-          <span class="settings-summary-tag">Azure 語音</span>
-        </div>
-        <div class="settings-summary-sub" id="settingsSummaryText">
-          手動模式 | 廣東話 | 1.0x速
-        </div>
+        <div class="settings-summary-title"><span>🎛️ 播放設定</span><span class="settings-summary-tag">Azure 語音</span></div>
+        <div class="settings-summary-sub" id="settingsSummaryText">手動模式 | 廣東話 | 1.0x速</div>
       </div>
       <div style="color: #ccc; font-size: 18px;">❯</div>
     </div>
 
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
       <h3 style="margin: 0; font-size: 18px;">默書內容</h3>
-      <div style="font-size: 13px; color: var(--primary); cursor: pointer;" onclick="toggleHideText()">
-        👁 <span id="toggleTextHideLabel">隱藏/顯示文字</span>
-      </div>
+      <div style="font-size: 13px; color: var(--primary); cursor: pointer;" onclick="toggleHideText()">👁 <span id="toggleTextHideLabel">隱藏/顯示文字</span></div>
     </div>
-
     <div class="sentence-card-list" id="sentenceCardList"></div>
   </div>
 
@@ -301,30 +297,24 @@
       </div>
       <button class="header-btn" style="color: var(--primary); font-weight: bold; font-size: 16px;" onclick="confirmSentenceSelection()">完成</button>
     </div>
-
     <div class="selection-header-tools">
       <span onclick="selectAllSentences(true)">全選</span>
       <span onclick="selectAllSentences(false)">取消全選</span>
       <span onclick="selectRandomSentences(3)">🔀 隨機選3項</span>
     </div>
-
     <div id="selectListContainer"></div>
-
     <div style="margin-top: 25px; margin-bottom: 30px; text-align: center;">
-      <button class="btn btn-primary btn-block" id="startPracticeBtn" onclick="confirmSentenceSelection()" style="padding: 15px; font-size: 17px;">
-        開始練習 (0 項)
-      </button>
+      <button class="btn btn-primary btn-block" id="startPracticeBtn" onclick="confirmSentenceSelection()" style="padding: 15px; font-size: 17px;">開始練習 (0 項)</button>
     </div>
   </div>
 
-  <!-- ==================== 4. 新增 / 編輯默書頁面 (V23 還原另一款 3大通道介面) ==================== -->
+  <!-- ==================== 4. 新增 / 編輯默書頁面 ==================== -->
   <div id="edit-screen" class="page">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <button class="header-btn" onclick="showPage('home-screen')">❮</button>
       <h2 id="editScreenTitle">✏️ 新增/編輯默書</h2>
       <div style="width: 30px;"></div>
     </div>
-
     <input type="hidden" id="editId">
     
     <div class="row">
@@ -340,64 +330,31 @@
         </select>
       </div>
     </div>
-
-    <!-- QR Code 掃描獨立捷徑 -->
-    <div style="margin-bottom: 12px;">
-      <button class="btn btn-outline-success btn-block" onclick="openQrScanner()">
-        📷 掃描朋友分享的 QR Code 匯入
+    
+    <label>智能匯入工具集：</label>
+    <!-- V21：保留你指定的三大通道按鈕 -->
+    <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+      <button class="btn btn-outline btn-block" onclick="document.getElementById('fileInput').click()">
+        📷 拍攝/相片/PDF 智能辨識
       </button>
-    </div>
-    
-    <label>📸 影相 / 上傳相片智能轉換 (3 大識別通道)：</label>
-    <div class="ocr-panel">
-      <!-- 通道 A -->
-      <div class="channel-box gemini">
-        <div class="channel-title" style="color:#7950f2;">
-          <span>🌟 通道 A：Gemini AI 視覺識別 (最強推薦)</span>
-        </div>
-        <div class="channel-desc">無視表格線、歪斜相片或手寫字，100% 精準抽出內容！</div>
-        <input type="password" id="inlineGeminiKey" placeholder="貼上免費 Gemini API Key (自動記憶)..." onchange="saveInlineGeminiKey()" style="margin:0 0 8px 0 !important; padding:8px 10px !important; font-size:13px !important;">
-        <button class="btn btn-primary btn-block btn-sm" style="background:#7950f2 !important;" onclick="selectPhotoForChannel('gemini')">
-          📷 揀相片 / 影相 (用 Gemini AI 識別)
-        </button>
-      </div>
-
-      <!-- 通道 B -->
-      <div class="channel-box ocrspace">
-        <div class="channel-title" style="color:#2b8a3e;">
-          <span>🌐 通道 B：OCR.space 雲端表格 + 強化雙引擎</span>
-        </div>
-        <div class="channel-desc">免 Key 即用！揀相後可旋轉方向，自動去表格線 + 高對比黑白化處理！</div>
-        <button class="btn btn-success btn-block btn-sm" onclick="selectPhotoForChannel('dual_ocr')">
-          🔄 揀相片 / PDF (進入旋轉預覽與雙引擎識別)
-        </button>
-      </div>
-
-      <!-- 通道 C -->
-      <div class="channel-box livetext">
-        <div class="channel-title" style="color:#1971c2;">
-          <span>📱 通道 C：iPad / iPhone 原生「實況文字」</span>
-        </div>
-        <div class="channel-desc">用蘋果相機對住張紙撳右下角「擷取文字」Copy，再撳下方按鈕一鍵貼上！</div>
-        <button class="btn btn-outline btn-block btn-sm" onclick="pasteFromClipboard()">
-          📋 一鍵貼上剪貼簿文字 / 喚起實況文字
-        </button>
+      <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(event)">
+      
+      <div class="row">
+        <button class="btn btn-outline-success" onclick="openQrScanner()">📷 掃 QR Code</button>
+        <button class="btn btn-outline-info" onclick="alertLiveText()">📱 實況文字 (Live Text)</button>
       </div>
     </div>
-    
-    <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(event)">
     
     <label>快捷清理與分段工具：</label>
     <div class="tools-group">
       <button class="btn btn-secondary btn-sm" onclick="filterNumbers()">🧹 過濾題號</button>
-      <button class="btn btn-secondary btn-sm" onclick="filterPinyin()">🧹 過濾拼音/注音</button>
+      <button class="btn btn-secondary btn-sm" onclick="filterPinyin()">🧹 過濾拼音</button>
       <button class="btn btn-primary btn-sm" onclick="openSegmentEditor()" style="background:#e6f0ff !important; color:#0066ff !important; border:1px solid #0066ff !important;">✂️ 智能分段與編輯</button>
     </div>
 
     <label>默書內容 (每行代表一段或一個詞語)：</label>
     <textarea id="editContent" placeholder="請在此輸入或貼上默書內容..."></textarea>
-    
-    <p id="ocrStatus" style="color: #28a745; font-weight: bold; font-size: 13px; margin: 0 0 12px 0;"></p>
+    <p id="ocrStatus" style="color: #0066ff; font-weight: bold; font-size: 13px; margin: 0 0 12px 0;"></p>
 
     <div class="row">
       <button class="btn btn-primary" onclick="saveDictation()">💾 儲存默書</button>
@@ -414,14 +371,15 @@
     </div>
 
     <div class="card" style="margin-top: 15px;">
-      <label>更改家長解鎖密碼 (4位數字):</label>
+      <label>家長解鎖密碼 (4位數字):</label>
       <input type="password" id="parentPin" placeholder="預設密碼: 1234" value="1234" onchange="saveConfig()">
-      <p style="font-size: 13px; color: #666; margin-top: 5px;">保護設定與防止小朋友偷看答案。</p>
       
-      <label style="margin-top: 20px; color:#7950f2;">Gemini API Key (通道 A 專用):</label>
-      <input type="password" id="geminiKey" placeholder="貼上 Google Gemini API Key..." onchange="saveConfig()">
+      <!-- V21：Gemini API Key 設定區 -->
+      <label style="margin-top: 15px;">🌟 Gemini API Key (選填):</label>
+      <input type="password" id="geminiKey" placeholder="用於最強相片與表格識別..." value="" onchange="saveConfig()">
+      <p style="font-size: 12px; color: #666; margin-top: 5px;">於 Google AI Studio 免費申請 API Key 後，可解鎖「通道 A」完美辨識歪斜相片與手寫字。</p>
 
-      <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 25px;">
+      <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 15px;">
         儲存並返回
       </button>
     </div>
@@ -434,155 +392,99 @@
         <h3 style="margin:0;">🎛️ 播放語音設定</h3>
         <button class="header-btn" onclick="closeSettingsModal()">✕</button>
       </div>
-
       <label>語音模式與聲線：</label>
       <div class="row">
         <div>
           <select id="voiceAccent" onchange="savePlaySettings()">
-            <option value="zh-HK">廣東話 (香港)</option>
-            <option value="zh-CN">普通話 (中國)</option>
-            <option value="en-US">英文 (美式 US)</option>
-            <option value="en-GB">英文 (英式 UK)</option>
+            <option value="zh-HK">廣東話 (香港)</option><option value="zh-CN">普通話 (中國)</option>
+            <option value="en-US">英文 (美式 US)</option><option value="en-GB">英文 (英式 UK)</option>
           </select>
         </div>
         <div>
           <select id="voiceGender" onchange="savePlaySettings()">
-            <option value="female">👩 女聲 (最自然)</option>
-            <option value="male">👨 男聲 (沉穩)</option>
+            <option value="female">👩 女聲 (最自然)</option><option value="male">👨 男聲 (沉穩)</option>
           </select>
         </div>
       </div>
-
       <label>播放模式：</label>
       <select id="playMode" onchange="toggleAutoSettingsDisplay(); savePlaySettings();">
-        <option value="manual">手動模式 (按鍵跳下一句)</option>
-        <option value="auto">自動默書 (定時朗讀)</option>
+        <option value="manual">手動模式 (按鍵跳下一句)</option><option value="auto">自動默書 (定時朗讀)</option>
       </select>
-
       <div id="autoSettingsBox" class="row" style="display: none;">
-        <div>
-          <label>重複次數：</label>
-          <select id="setupRepeat" onchange="savePlaySettings()">
-            <option value="1">讀 1 次</option>
-            <option value="2" selected>讀 2 次</option>
-            <option value="3">讀 3 次</option>
-            <option value="4">讀 4 次</option>
-          </select>
-        </div>
-        <div>
-          <label>停頓間隔：</label>
-          <select id="setupDelay" onchange="savePlaySettings()">
-            <option value="3">3 秒</option>
-            <option value="5">5 秒</option>
-            <option value="8" selected>8 秒 (建議)</option>
-            <option value="10">10 秒</option>
-            <option value="15">15 秒</option>
-          </select>
-        </div>
+        <div><label>重複次數：</label><select id="setupRepeat" onchange="savePlaySettings()"><option value="1">讀 1 次</option><option value="2" selected>讀 2 次</option><option value="3">讀 3 次</option><option value="4">讀 4 次</option></select></div>
+        <div><label>停頓間隔：</label><select id="setupDelay" onchange="savePlaySettings()"><option value="3">3 秒</option><option value="5">5 秒</option><option value="8" selected>8 秒 (建議)</option><option value="10">10 秒</option><option value="15">15 秒</option></select></div>
       </div>
-
       <label>朗讀語速：</label>
       <select id="setupSpeed" onchange="savePlaySettings()">
-        <option value="0.3">0.3x (極慢)</option>
-        <option value="0.5">0.5x (超慢)</option>
-        <option value="0.7">0.7x (慢速)</option>
-        <option value="0.8">0.8x (微慢)</option>
-        <option value="0.9">0.9x</option>
-        <option value="1.0" selected>1.0x (最自然原聲)</option>
+        <option value="0.3">0.3x (極慢)</option><option value="0.5">0.5x (超慢)</option><option value="0.7">0.7x (慢速)</option>
+        <option value="0.8" selected>0.8x (適中默書)</option><option value="0.9">0.9x (微慢)</option><option value="1.0">1.0x (正常)</option><option value="1.1">1.1x (稍快)</option>
       </select>
-
       <div style="margin-top: 15px; background: #f8f9fa; padding: 12px; border-radius: 10px;">
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
           <input type="checkbox" id="readPunctuation" style="width: auto; margin-right: 8px; transform: scale(1.2);" onchange="savePlaySettings()">
           <label for="readPunctuation" style="margin: 0; cursor: pointer;">🗣️ 讀出標點符號 (英文: full stop)</label>
         </div>
       </div>
-
       <button class="btn btn-primary btn-block" onclick="closeSettingsModal()" style="margin-top: 20px;">確認儲存</button>
     </div>
   </div>
 
-  <!-- ==================== MODAL: V23「🔄 相片方向旋轉與強化預覽器」 ==================== -->
-  <div id="rotatePreviewModal" class="modal">
-    <div class="modal-box" style="max-width: 95%; text-align: center;">
-      <h3 style="margin-top:0; font-size:17px;">🔄 相片方向旋轉與強化預覽器</h3>
-      <p style="font-size:12px; color:#555; margin-bottom:10px;">
-        請撳下方按鈕將相片轉返正（字係打橫正常閱讀方向），系統已自動做「去表格線 + 高對比黑白化處理」！
-      </p>
+  <!-- ==================== MODAL: 相片方向旋轉與強化預覽器 (V21) ==================== -->
+  <div id="cropModal" class="modal">
+    <div class="modal-box" style="max-width: 95%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="margin:0;">✂️ 旋轉與裁切預覽</h3>
+        <button class="header-btn" onclick="closeCropModal()">✕</button>
+      </div>
       
-      <!-- 旋轉與黑白強化開關 -->
-      <div class="row" style="margin-bottom: 10px;">
-        <button class="btn btn-secondary btn-sm" onclick="rotatePreview(-90)">🔄 向左轉 90°</button>
-        <button class="btn btn-secondary btn-sm" onclick="rotatePreview(90)">🔄 向右轉 90°</button>
+      <!-- 旋轉控制區 -->
+      <div style="display:flex; justify-content:center; gap:10px; margin-bottom:10px;">
+         <button class="btn btn-secondary btn-sm" onclick="if(cropper) cropper.rotate(-90)">↺ 向左轉 90°</button>
+         <button class="btn btn-secondary btn-sm" onclick="if(cropper) cropper.rotate(90)">↻ 向右轉 90°</button>
       </div>
 
-      <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:10px; font-size:13px; color:#0066ff; font-weight:bold;">
-        <input type="checkbox" id="enableHighContrast" checked onchange="renderPreviewCanvas()" style="width:18px; height:18px; margin:0;">
-        <label for="enableHighContrast" style="margin:0; color:#0066ff; cursor:pointer;">啟用「去表格線 + 高對比黑白化」</label>
+      <div class="cropper-container-box">
+        <img id="cropImage" src="" alt="Crop target" style="max-width: 100%;">
       </div>
-
-      <div class="preview-canvas-wrap">
-        <canvas id="ocrPreviewCanvas"></canvas>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:8px;">
-        <button class="btn btn-primary btn-block" style="background:#7950f2 !important;" onclick="executeChannelOCR('gemini')">
-          🌟 用通道 A (Gemini AI) 識別此圖
-        </button>
-        <button class="btn btn-success btn-block" onclick="executeChannelOCR('dual_ocr')">
-          🌐 用通道 B (OCR.space 雲端表格 + Tesseract) 識別
-        </button>
-        <button class="btn btn-danger btn-block btn-sm" onclick="closeRotatePreviewModal()">取消</button>
+      
+      <p style="font-size: 13px; color: #666; margin-bottom: 15px; text-align: center;">請將相片轉正，然後選擇一種識別通道：</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn btn-primary" onclick="recognizeWithGemini()" style="background:#1a73e8 !important; border-color:#1a73e8 !important;">🌟 通道 A：Gemini AI 視覺識別 (最強推薦)</button>
+        <button class="btn btn-outline" onclick="recognizeWithOCRSpace()">🌐 通道 B：雲端去格線 + Tesseract 雙引擎</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== MODAL: V23 按字數智能分頁 QR Code 分享 ==================== -->
+  <!-- ==================== MODAL: 分享與 QR Code (已修正智能分頁大格仔碼) ==================== -->
   <div id="shareModal" class="modal">
-    <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9; display: flex; flex-direction: column; max-height: 92vh;">
+    <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9; display: flex; flex-direction: column; max-height: 90vh;">
       <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; flex-shrink: 0;">
         <h3 style="margin:0; font-size:18px; color: #333;">📤 QR Code 分享</h3>
         <button class="header-btn" onclick="closeShareModal()">✕</button>
       </div>
-      
-      <div style="padding: 16px 20px; text-align: center; overflow-y: auto; flex: 1;">
-        <div class="qr-tabs">
-          <div id="tabLocal" class="qr-tab active" onclick="switchQrMode('local')">📦 智能大格仔碼 (100%秒掃)</div>
-          <div id="tabCloud" class="qr-tab" onclick="switchQrMode('cloud')">🌟 單一雲端碼</div>
-        </div>
-
-        <h2 id="shareTitle" style="margin: 0 0 4px 0; font-size: 20px; color: #111;">默書標題</h2>
-        <p id="shareWordCount" style="color: #6c757d; margin: 0 0 12px 0; font-size: 14px;">X 個詞語 / 段落</p>
-        
-        <div style="background: white; padding: 18px; border-radius: 20px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 10px; min-width: 240px; min-height: 240px;">
-          <div id="qrLoading" style="display:none; padding: 80px 10px; color: var(--primary); font-weight: bold;">
-            ⏳ 正在生成超簡潔 QR Code...
-          </div>
+      <div style="padding: 20px; text-align: center; overflow-y: auto; flex: 1;">
+        <h2 id="shareTitle" style="margin: 0 0 5px 0; font-size: 22px; color: #111;">默書標題</h2>
+        <p id="shareWordCount" style="color: #6c757d; margin: 0 0 15px 0; font-size: 15px;">X 個詞語</p>
+        <div style="background: white; padding: 15px; border-radius: 20px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 12px;">
           <div id="qrcode" style="width: 100%; max-width: 240px; margin: 0 auto;"></div>
         </div>
 
-        <!-- 智能按字數分頁控制器 -->
-        <div id="qrPagination" style="display:none; align-items:center; justify-content:center; gap:12px; margin-bottom: 12px;">
+        <!-- 智能分頁切換器 (當課文字數超過 60 字時自動出現) -->
+        <div id="qrPagination" style="display:none; align-items:center; justify-content:center; gap:12px; margin-bottom: 10px;">
           <button class="btn btn-secondary btn-sm" onclick="changeQrPage(-1)">❮ 上一頁</button>
           <span id="qrPageInfo" style="font-size:14px; font-weight:bold; color:var(--primary);">第 1 / 2 個碼</span>
           <button class="btn btn-secondary btn-sm" onclick="changeQrPage(1)">下一頁 ❯</button>
         </div>
 
         <div id="qrModeHint" style="font-size: 12px; color: #28a745; font-weight: 600; margin-bottom: 10px;"></div>
-        
+
         <div class="qr-instruction-box">
           <h4><span style="font-size: 18px; color: #0066ff;">ⓘ</span> 使用方法</h4>
-          <ol>
-            <li>讓學生打開「默書助手」App</li>
-            <li>點擊新增默書的「📷 掃描 QR Code」</li>
-            <li>對準此 QR Code 掃描即可自動匯入（若有多頁請依序掃描）</li>
-          </ol>
+          <ol><li>打開「默書助手」App</li><li>新增默書 ➔ 📷 掃描 QR Code</li><li>對準條碼即自動匯入（若有多頁請依序掃描）</li></ol>
         </div>
-
-        <p style="font-size:13px; color:#999; margin: 15px 0 5px 0; text-align: left;">或者直接複製連結傳給朋友：</p>
         <div id="shareUrlDisplayBox" class="share-link-box"></div>
-        
-        <button class="btn btn-primary btn-block" style="margin-top: 10px;" onclick="copyShareLink()">📋 複製一鍵匯入連結</button>
+        <button class="btn btn-primary btn-block" style="margin-top: 12px;" onclick="copyShareLink()">📋 複製一鍵匯入連結</button>
       </div>
     </div>
   </div>
@@ -595,8 +497,7 @@
         <button class="header-btn" onclick="closeQrScanner()">✕</button>
       </div>
       <div id="qr-reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000;"></div>
-      <p id="qrScanStatus" style="font-size: 14px; color: var(--primary); font-weight: bold; margin-top: 15px;">請將朋友分享的 QR Code 放入畫面中</p>
-      <button class="btn btn-danger btn-block" style="margin-top: 10px;" onclick="closeQrScanner()">取消掃描</button>
+      <button class="btn btn-danger btn-block" style="margin-top: 15px;" onclick="closeQrScanner()">取消掃描</button>
     </div>
   </div>
 
@@ -650,6 +551,7 @@
 
   let forceNextInAuto = false;
   let forcePrevInAuto = false;
+  let cropper = null;
   let isTextHidden = false;
   let shareUrl = "";
   let html5QrCode = null;
@@ -657,17 +559,10 @@
 
   let tempSegments = [];
   let currentSplitIndex = -1;
-  let preferredChannel = 'dual_ocr';
 
-  // V23 旋轉預覽器狀態
-  let rawLoadedImage = null;
-  let currentRotationAngle = 0;
-
-  // V23 QR Code 狀態
-  let currentQrMode = 'local';
+  // 智能分頁 QR Code 狀態
   let qrChunks = [];
   let currentQrPageIndex = 0;
-  let cachedCloudId = "";
 
   const voiceMap = {
     'zh-HK': { female: 'zh-HK-HiuMaanNeural', male: 'zh-HK-WanLungNeural' },
@@ -680,51 +575,23 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
 
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      const swCode = `self.addEventListener('fetch', function(e) {});`;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => console.log('SW Setup Ignored'));
+    });
+  }
+
   window.onload = () => {
-    const savedKey = localStorage.getItem('gemini_api_key') || '';
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
-    document.getElementById('geminiKey').value = savedKey;
-    document.getElementById('inlineGeminiKey').value = savedKey;
+    document.getElementById('geminiKey').value = localStorage.getItem('gemini_key') || '';
     checkUrlImport();
     renderList();
   };
 
-  function saveInlineGeminiKey() {
-    const val = document.getElementById('inlineGeminiKey').value.trim();
-    localStorage.setItem('gemini_api_key', val);
-    document.getElementById('geminiKey').value = val;
-  }
-
-  function saveConfig() {
-    localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
-    const gKey = document.getElementById('geminiKey').value.trim();
-    localStorage.setItem('gemini_api_key', gKey);
-    document.getElementById('inlineGeminiKey').value = gKey;
-    alert('✅ 設定已儲存！');
-  }
-
-  async function checkUrlImport() {
+  function checkUrlImport() {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('c')) {
-      const binId = urlParams.get('c');
-      try {
-        const res = await fetch(`https://api.npoint.io/${binId}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.t && data.c) {
-            if (confirm(`📬 收到一份雲端分享的默書：\n「${data.t}」\n\n請問是否要匯入到你的清單中？`)) {
-              dictations.unshift({ id: Date.now(), title: data.t, lang: data.l || 'zh', content: data.c });
-              localStorage.setItem('dictations', JSON.stringify(dictations));
-              alert('✅ 成功匯入默書！');
-              renderList();
-            }
-          }
-        }
-      } catch(e) { console.error('雲端匯入失敗', e); }
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return;
-    }
-
     if (urlParams.has('v3')) {
       try {
         const compressed = urlParams.get('v3');
@@ -745,6 +612,7 @@
           }
         }
       } catch(e) { console.error('匯入解析失敗', e); }
+      return;
     }
   }
 
@@ -753,20 +621,19 @@
   function verifyParentPin(actionName) {
     const currentPin = getParentPin();
     const input = prompt(`🔒 ${actionName}：請輸入家長解鎖密碼`);
-    if (input === currentPin) return true;
-    if (input === '0000') {
+    if (input === currentPin) { return true; } 
+    else if (input === '0000') {
       localStorage.setItem('parent_pin', '1234');
       document.getElementById('parentPin').value = '1234';
       alert('✅ 密碼已成功重置為預設的 1234！');
       return true;
-    } 
-    if (input !== null) alert('❌ 密碼錯誤，拒絕存取！');
+    } else if (input !== null) { alert('❌ 密碼錯誤，拒絕存取！'); }
     return false;
   }
 
   function checkAndShowSettings() { if (verifyParentPin('系統設定')) showPage('settings-screen'); }
   function toggleHideText() {
-    if(!isTextHidden) isTextHidden = true; 
+    if(!isTextHidden) { isTextHidden = true; } 
     else { if(verifyParentPin('顯示文字')) isTextHidden = false; else return; }
     updateDetailUI();
   }
@@ -793,9 +660,8 @@
     }, 50);
   }
 
-  // ===== 🌟 V23 按「字數 (每 60 字)」智能分頁 QR Code 系統 =====
+  // ===== 🌟 修正版：按字數 (每 60 字) 智能分頁大格仔 QR Code =====
   function splitTextByCharLimit(text, maxChars) {
-    // 先按句號或換行拆細，再組合成不超過 60 字的區塊，保證長課文都會分頁！
     const rawPieces = text.replace(/([。！？.!?；;])/g, "$1\n").split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
     const chunks = [];
     let current = "";
@@ -817,74 +683,34 @@
     return chunks.length > 0 ? chunks : [""];
   }
 
-  async function openShareModal() {
+  function openShareModal() {
     if(!currentDictation) return;
     if(isTextHidden && !verifyParentPin('分享默書')) return;
     
     const rawData = currentDictation.title + "|||" + (currentDictation.lang||'zh') + "|||" + currentDictation.content;
     const compressedData = LZString.compressToEncodedURIComponent(rawData);
     const baseUrl = window.location.href.split('?')[0]; 
-    
     shareUrl = `${baseUrl}?v3=${compressedData}`;
-    cachedCloudId = "";
 
     document.getElementById('shareTitle').innerText = currentDictation.title;
-    document.getElementById('shareWordCount').innerText = `共 ${currentDictation.content.length} 字 (${getSentences(currentDictation.content).length} 段)`;
+    document.getElementById('shareWordCount').innerText = `${getSentences(currentDictation.content).length} 個詞語 / 段落`;
     document.getElementById('shareUrlDisplayBox').innerText = shareUrl;
 
     document.getElementById('shareModal').classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
 
-    // 預設直接顯示「📦 智能大格仔碼」，保證無論詞語定長課文都 100% 掃到！
-    switchQrMode('local');
+    // 按每 60 個字自動切分，去除網址前綴並使用 Base64 壓縮，確保每個 QR Code 都極度疏落好掃！
+    const textParts = splitTextByCharLimit(currentDictation.content, 60);
+    qrChunks = textParts.map(part => {
+      const rawChunk = currentDictation.title + "|||" + (currentDictation.lang||'zh') + "|||" + part;
+      return "DIC_L:" + LZString.compressToBase64(rawChunk);
+    });
+
+    currentQrPageIndex = 0;
+    updateQrView();
   }
 
-  async function switchQrMode(mode) {
-    currentQrMode = mode;
-    document.getElementById('tabLocal').classList.toggle('active', mode === 'local');
-    document.getElementById('tabCloud').classList.toggle('active', mode === 'cloud');
-    
-    const qrDiv = document.getElementById('qrcode');
-    const loadingDiv = document.getElementById('qrLoading');
-    const pageDiv = document.getElementById('qrPagination');
-    const hintDiv = document.getElementById('qrModeHint');
-
-    qrDiv.innerHTML = "";
-    pageDiv.style.display = "none";
-
-    if (mode === 'local') {
-      loadingDiv.style.display = "none";
-      // 每個 QR Code 嚴格限制最多 60 個字！長課文會自動分成 2~3 個超疏落大格仔碼
-      const textParts = splitTextByCharLimit(currentDictation.content, 60);
-      qrChunks = textParts.map(part => {
-        const rawChunk = currentDictation.title + "|||" + (currentDictation.lang||'zh') + "|||" + part;
-        return "DIC_L:" + LZString.compressToBase64(rawChunk);
-      });
-
-      currentQrPageIndex = 0;
-      updateLocalQrView();
-    } else {
-      loadingDiv.style.display = "block";
-      hintDiv.innerText = "⏳ 正在產生雲端極簡短碼...";
-      try {
-        // 若單篇字數少於 70 字，直接用純本地短碼，唔使靠雲端都已經超大格！
-        if (currentDictation.content.length <= 70) {
-          loadingDiv.style.display = "none";
-          const rawChunk = currentDictation.title + "|||" + (currentDictation.lang||'zh') + "|||" + currentDictation.content;
-          renderQrCode("DIC_L:" + LZString.compressToBase64(rawChunk));
-          hintDiv.style.color = "#28a745";
-          hintDiv.innerText = "✨ 單一超簡潔條碼，一秒即掃！";
-          return;
-        }
-        throw new Error("Long text uses smart pagination");
-      } catch (err) {
-        loadingDiv.style.display = "none";
-        switchQrMode('local');
-      }
-    }
-  }
-
-  function updateLocalQrView() {
+  function updateQrView() {
     const pageDiv = document.getElementById('qrPagination');
     const hintDiv = document.getElementById('qrModeHint');
     
@@ -892,43 +718,64 @@
       pageDiv.style.display = "flex";
       document.getElementById('qrPageInfo').innerText = `第 ${currentQrPageIndex + 1} / ${qrChunks.length} 個碼`;
       hintDiv.style.color = "#d97706";
-      hintDiv.innerText = `📦 課文較長，已自動拆分為 ${qrChunks.length} 個「大格仔條碼」，保證 100% 掃到！`;
+      hintDiv.innerText = `📦 課文較長，已自動拆分為 ${qrChunks.length} 個超簡潔條碼，請依序掃描！`;
     } else {
       pageDiv.style.display = "none";
       hintDiv.style.color = "#28a745";
-      hintDiv.innerText = "✨ 格仔已極限放大，任何相機一秒即掃！";
+      hintDiv.innerText = "✨ 已極限壓縮並放大格仔，任何鏡頭一秒即掃！";
     }
-    renderQrCode(qrChunks[currentQrPageIndex]);
+
+    const container = document.getElementById('qrcode');
+    container.innerHTML = ""; 
+    new QRCode(container, {
+      text: qrChunks[currentQrPageIndex],
+      width: 240,
+      height: 240,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.L 
+    });
   }
 
   function changeQrPage(delta) {
     currentQrPageIndex += delta;
     if (currentQrPageIndex < 0) currentQrPageIndex = qrChunks.length - 1;
     if (currentQrPageIndex >= qrChunks.length) currentQrPageIndex = 0;
-    updateLocalQrView();
-  }
-
-  function renderQrCode(textData) {
-    const container = document.getElementById('qrcode');
-    container.innerHTML = "";
-    new QRCode(container, {
-      text: textData,
-      width: 240,
-      height: 240,
-      colorDark : "#000000",
-      colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.L
-    });
+    updateQrView();
   }
 
   function closeShareModal() { document.getElementById('shareModal').classList.remove('active'); }
-  function copyShareLink() { navigator.clipboard.writeText(shareUrl).then(() => { alert('📋 已複製專屬分享連結！可以直接 WhatsApp 貼上給朋友。'); }); }
+  function copyShareLink() { navigator.clipboard.writeText(shareUrl).then(() => { alert('📋 已複製專屬分享連結！可以直接貼上給朋友。'); }); }
+
+  function unlockAudioEngine() {
+    if (!audioUnlocked) {
+      globalAudio.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//NXQAAAAAAASW5mbwAAAA8AAAAEAAABIwBRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpv/zV0AAADQAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
+      let p = globalAudio.play();
+      if(p !== undefined) { p.catch(e => {}); }
+      audioUnlocked = true;
+    }
+  }
+
+  async function requestWakeLock() { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} } }
+  function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }).catch(err => {}); } }
+
+  document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible' && isPlayingAuto) { await requestWakeLock(); }
+  });
+
+  function saveConfig() {
+    localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
+    localStorage.setItem('gemini_key', document.getElementById('geminiKey').value.trim());
+    alert('✅ 設定已成功儲存！');
+  }
 
   function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
-    if (isPlayingAuto) { isPlayingAuto = false; stopAudio(); updatePlayBtnUI(false); } else { stopAudio(); }
+    
+    if (isPlayingAuto) { isPlayingAuto = false; stopAudio(); updatePlayBtnUI(false); } 
+    else { stopAudio(); }
     const ps = document.getElementById('playStatus');
     if(ps) ps.innerText = '';
   }
@@ -943,15 +790,20 @@
   function renderList() {
     const listDiv = document.getElementById('dictation-list');
     listDiv.innerHTML = '';
+    
     if(dictations.length === 0) {
       listDiv.innerHTML = '<p style="color:#888; text-align:center; padding: 40px 0;">目前沒有默書紀錄<br>請點擊下方按鈕新增！</p>';
       return;
     }
+
     dictations.forEach(d => {
       const sentences = getSentences(d.content);
       listDiv.innerHTML += `
         <div class="dictation-item" onclick="openDetailScreen('${d.id}')">
-          <div><div class="dictation-item-title">${escapeXml(d.title)}</div><div class="dictation-item-sub">共 ${sentences.length} 句 | 語言: ${d.lang === 'en' ? '英文' : '中文'}</div></div>
+          <div>
+            <div class="dictation-item-title">${escapeXml(d.title)}</div>
+            <div class="dictation-item-sub">共 ${sentences.length} 句 | 語言: ${d.lang === 'en' ? '英文' : '中文'}</div>
+          </div>
           <div style="font-size: 20px; color: var(--primary);">❯</div>
         </div>
       `;
@@ -970,10 +822,11 @@
     currentPlayingIndex = 0;
 
     const vAccent = document.getElementById('voiceAccent');
-    if(vAccent) vAccent.value = (currentDictation.lang === 'en') ? 'en-US' : 'zh-HK';
+    if(vAccent) { vAccent.value = (currentDictation.lang === 'en') ? 'en-US' : 'zh-HK'; }
 
     const ps = document.getElementById('playStatus');
     if(ps) ps.innerText = '';
+    
     updatePlayBtnUI(false);
     updateDetailUI();
     showPage('detail-screen');
@@ -982,6 +835,7 @@
   function updateDetailUI() {
     if(!currentDictation) return;
     const sentences = getSentences(currentDictation.content);
+    
     const badge = document.getElementById('selectedCountBadge');
     if(badge) badge.innerText = `${activeSentenceIndices.length}/${sentences.length}`;
 
@@ -990,10 +844,12 @@
     if(voiceSelect && voiceSelect.options && voiceSelect.options.length > 0 && voiceSelect.selectedIndex >= 0) {
         accentText = voiceSelect.options[voiceSelect.selectedIndex].text.split(' ')[0];
     }
+    
     const speedEl = document.getElementById('setupSpeed');
     const modeEl = document.getElementById('playMode');
     const speed = speedEl ? speedEl.value : '1.0';
     const modeText = (modeEl && modeEl.value === 'auto') ? '自動模式' : '手動模式';
+    
     const summary = document.getElementById('settingsSummaryText');
     if(summary) summary.innerText = `${modeText} | ${accentText} | ${speed}x速`;
 
@@ -1003,6 +859,7 @@
         sentences.forEach((sText, idx) => {
           const isSelected = activeSentenceIndices.includes(idx);
           if(!isSelected) return; 
+
           const activePos = activeSentenceIndices.indexOf(idx);
           const isActive = (activePos === currentPlayingIndex);
 
@@ -1020,30 +877,19 @@
     }
   }
 
-  function unlockAudioEngine() {
-    if (!audioUnlocked) {
-      globalAudio.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//NXQAAAAAAASW5mbwAAAA8AAAAEAAABIwBRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpv/zV0AAADQAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
-      let p = globalAudio.play();
-      if(p !== undefined) { p.catch(e => {}); }
-      audioUnlocked = true;
-    }
-  }
+  function selectSentenceToPlay(pos) { unlockAudioEngine(); if (isPlayingAuto) togglePlayPause(); currentPlayingIndex = pos; updateDetailUI(); playCurrentSentence(false); }
+  function selectSentenceToPlaySlowly(pos) { unlockAudioEngine(); if (isPlayingAuto) togglePlayPause(); currentPlayingIndex = pos; updateDetailUI(); playCurrentSentence(true); }
 
-  function selectSentenceToPlay(pos) {
-    if (isPlayingAuto) togglePlayPause(); 
-    currentPlayingIndex = pos; updateDetailUI(); playCurrentSentence(false);
-  }
-  function selectSentenceToPlaySlowly(pos) {
-    if (isPlayingAuto) togglePlayPause(); 
-    currentPlayingIndex = pos; updateDetailUI(); playCurrentSentence(true);
-  }
   function prevSentence() {
+    unlockAudioEngine();
     if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) { forcePrevInAuto = true; stopAudio(); return; }
     if(currentPlayingIndex > 0) currentPlayingIndex--; else currentPlayingIndex = activeSentenceIndices.length - 1;
     updateDetailUI(); playCurrentSentence(false);
   }
+
   function nextSentence() {
+    unlockAudioEngine();
     if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) { forceNextInAuto = true; stopAudio(); return; }
     if(currentPlayingIndex < activeSentenceIndices.length - 1) currentPlayingIndex++; else currentPlayingIndex = 0;
@@ -1053,8 +899,7 @@
   function updatePlayBtnUI(isPlaying) {
     const btn = document.getElementById('mainPlayBtn');
     if(!btn) return;
-    if (isPlaying) { btn.innerHTML = '⏸'; btn.classList.add('playing'); } 
-    else { btn.innerHTML = '▶'; btn.classList.remove('playing'); }
+    if (isPlaying) { btn.innerHTML = '⏸'; btn.classList.add('playing'); } else { btn.innerHTML = '▶'; btn.classList.remove('playing'); }
   }
 
   function stopAudio() {
@@ -1088,6 +933,7 @@
 
     while (isPlayingAuto && currentPlayingIndex < activeSentenceIndices.length) {
       forceNextInAuto = false; forcePrevInAuto = false; updateDetailUI();
+
       for (let r = 0; r < repeats; r++) {
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
         const ps = document.getElementById('playStatus');
@@ -1096,8 +942,8 @@
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
         if (r < repeats - 1) await sleep(1200); 
       }
-      if (!isPlayingAuto) break;
 
+      if (!isPlayingAuto) break;
       if (forceNextInAuto) {
         if (currentPlayingIndex < activeSentenceIndices.length - 1) { currentPlayingIndex++; } 
         else { isPlayingAuto = false; updatePlayBtnUI(false); const ps = document.getElementById('playStatus'); if(ps) ps.innerText = '🎉 默書播放完畢！'; break; }
@@ -1133,24 +979,26 @@
     unlockAudioEngine();
     return new Promise(async (resolve) => {
       stopAudio(); currentAudioResolve = resolve;
-
-      if (!currentDictation || activeSentenceIndices.length === 0) {
-        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; } return;
-      }
+      if (!currentDictation || activeSentenceIndices.length === 0) { if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; } return; }
 
       const rawSentences = getSentences(currentDictation.content);
       const realIndex = activeSentenceIndices[currentPlayingIndex];
       let sentenceText = rawSentences[realIndex];
 
-      if (!sentenceText) {
-        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; } return;
-      }
+      if (!sentenceText) { if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; } return; }
 
-      const apiKey = AZURE_API_KEY; const region = AZURE_REGION;
+      const apiKey = AZURE_API_KEY;
+      const region = AZURE_REGION;
       const baseSpeed = document.getElementById('setupSpeed').value;
       const accent = document.getElementById('voiceAccent').value;
       const gender = document.getElementById('voiceGender').value;
       const readPunc = document.getElementById('readPunctuation').checked;
+
+      if (!apiKey || apiKey.includes('請在這裡貼上')) {
+        alert('API KEY 尚未正確設定！請開發者檢查。');
+        if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+        return;
+      }
 
       const voice = voiceMap[accent][gender];
       const isEnglish = accent.startsWith('en');
@@ -1179,13 +1027,10 @@
 
       try {
         const response = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
-          method: 'POST',
-          headers: { 'Ocp-Apim-Subscription-Key': apiKey, 'Content-Type': 'application/ssml+xml', 'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3' },
-          body: ssml
+          method: 'POST', headers: { 'Ocp-Apim-Subscription-Key': apiKey, 'Content-Type': 'application/ssml+xml', 'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3' }, body: ssml
         });
 
         if (!response.ok) throw new Error('TTS Fetch Error');
-
         const blob = await response.blob();
         if(globalAudio.src) URL.revokeObjectURL(globalAudio.src);
         
@@ -1193,19 +1038,20 @@
         if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(true);
 
         globalAudio.onended = () => {
-          if (document.getElementById('playMode').value === 'manual') {
-              updatePlayBtnUI(false); const ps = document.getElementById('playStatus'); if(ps) ps.innerText = '準備就緒';
-          }
+          if (document.getElementById('playMode').value === 'manual') { updatePlayBtnUI(false); const ps = document.getElementById('playStatus'); if(ps) ps.innerText = '準備就緒'; }
           if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         };
         globalAudio.onerror = () => {
           if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(false);
           if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         };
+        
         globalAudio.play().catch(e => {
+            console.error("iOS Playback Error:", e);
             if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         });
       } catch(err) {
+        console.error(err);
         if (document.getElementById('playMode').value === 'manual') updatePlayBtnUI(false);
         if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
       }
@@ -1214,13 +1060,11 @@
 
   function transformPunctuation(text, accent) {
     const isEnglish = accent.startsWith('en');
-    if (isEnglish) {
-      return text.replace(/,/g, ' comma ').replace(/\./g, ' full stop ').replace(/\?/g, ' question mark ').replace(/!/g, ' exclamation mark ');
-    } else {
-      return text.replace(/，/g, '，逗號，').replace(/。/g, '，句號，').replace(/！/g, '，感嘆號，').replace(/？/g, '，問號，').replace(/；/g, '，分號，').replace(/：/g, '，冒號，');
-    }
+    if (isEnglish) { return text.replace(/,/g, ' comma ').replace(/\./g, ' full stop ').replace(/\?/g, ' question mark ').replace(/!/g, ' exclamation mark '); } 
+    else { return text.replace(/，/g, '，逗號，').replace(/。/g, '，句號，').replace(/！/g, '，感嘆號，').replace(/？/g, '，問號，').replace(/；/g, '，分號，').replace(/：/g, '，冒號，'); }
   }
 
+  // --- 句子勾選頁面 ---
   function openSentenceSelection() {
     const sentences = getSentences(currentDictation.content);
     tempSelectedIndices = [...activeSentenceIndices];
@@ -1235,6 +1079,7 @@
 
     const container = document.getElementById('selectListContainer');
     container.innerHTML = '';
+
     sentences.forEach((sText, idx) => {
       const checked = tempSelectedIndices.includes(idx);
       container.innerHTML += `
@@ -1255,8 +1100,7 @@
 
   function selectAllSentences(select) {
     const sentences = getSentences(currentDictation.content);
-    if(select) tempSelectedIndices = sentences.map((_, i) => i);
-    else tempSelectedIndices = [];
+    if(select) tempSelectedIndices = sentences.map((_, i) => i); else tempSelectedIndices = [];
     renderSelectionList();
   }
 
@@ -1271,11 +1115,14 @@
   function confirmSentenceSelection() {
     if(tempSelectedIndices.length === 0) { alert('請至少勾選一個句子！'); return; }
     activeSentenceIndices = [...tempSelectedIndices];
-    currentPlayingIndex = 0; updateDetailUI(); showPage('detail-screen');
+    currentPlayingIndex = 0;
+    updateDetailUI();
+    showPage('detail-screen');
   }
 
   function cancelSentenceSelection() { showPage('detail-screen'); }
 
+  // --- 新增/編輯頁面 ---
   function openEditScreen(id) {
     if(id) {
       const dic = dictations.find(d => String(d.id) === String(id));
@@ -1312,199 +1159,8 @@
     }
 
     localStorage.setItem('dictations', JSON.stringify(dictations));
-    renderList(); openDetailScreen(id ? parseInt(id) : dictations[0].id);
-  }
-
-  // ===== 🌟 V23 還原另一款「相片方向旋轉與強化預覽器」+ 3大識別通道 =====
-  function selectPhotoForChannel(channel) {
-    preferredChannel = channel;
-    if (channel === 'gemini') {
-      const key = document.getElementById('inlineGeminiKey').value.trim();
-      if (!key) {
-        alert("請先在通道 A 的輸入框貼上你的免費 Gemini API Key！");
-        document.getElementById('inlineGeminiKey').focus();
-        return;
-      }
-    }
-    document.getElementById('fileInput').value = '';
-    document.getElementById('fileInput').click();
-  }
-
-  async function pasteFromClipboard() {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text && text.trim()) {
-        const existing = document.getElementById('editContent').value.trim();
-        document.getElementById('editContent').value = existing ? (existing + '\n' + text.trim()) : text.trim();
-        document.getElementById('ocrStatus').innerText = "✅ 📱 已成功從剪貼簿一鍵貼上文字！";
-        return;
-      }
-    } catch (e) {}
-    document.getElementById('editContent').focus();
-    alert("📱 實況文字 (Live Text) 使用方法：\n1. 直接在下方文字框長按，點選「掃描文字」圖示；\n2. 或用 iPad/iPhone 相機對準默書紙，撳右下角「擷取文字」Copy 後再貼上！");
-  }
-
-  async function handleFileUpload(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-
-    if(file.type === 'application/pdf') {
-      document.getElementById('ocrStatus').innerText = "⏳ 正在載入 PDF...";
-      const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
-      const page = await pdf.getPage(1);
-      const viewport = page.getViewport({ scale: 2.5 }); 
-      
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.height = viewport.height; canvas.width = viewport.width;
-      await page.render({ canvasContext: ctx, viewport }).promise;
-      openRotatePreviewModal(canvas.toDataURL('image/jpeg'));
-    } else {
-      const reader = new FileReader();
-      reader.onload = (evt) => openRotatePreviewModal(evt.target.result);
-      reader.readAsDataURL(file);
-    }
-  }
-
-  function openRotatePreviewModal(imgSrc) {
-    rawLoadedImage = new Image();
-    rawLoadedImage.onload = () => {
-      currentRotationAngle = 0;
-      document.getElementById('rotatePreviewModal').classList.add('active');
-      renderPreviewCanvas();
-    };
-    rawLoadedImage.src = imgSrc;
-  }
-
-  function closeRotatePreviewModal() {
-    document.getElementById('rotatePreviewModal').classList.remove('active');
-  }
-
-  function rotatePreview(deg) {
-    currentRotationAngle = (currentRotationAngle + deg + 360) % 360;
-    renderPreviewCanvas();
-  }
-
-  function renderPreviewCanvas() {
-    if (!rawLoadedImage) return;
-    const canvas = document.getElementById('ocrPreviewCanvas');
-    const ctx = canvas.getContext('2d');
-
-    const maxDim = 1400;
-    let w = rawLoadedImage.width;
-    let h = rawLoadedImage.height;
-    if (w > maxDim || h > maxDim) {
-      const scale = maxDim / Math.max(w, h);
-      w = Math.round(w * scale);
-      h = Math.round(h * scale);
-    }
-
-    if (currentRotationAngle === 90 || currentRotationAngle === 270) {
-      canvas.width = h;
-      canvas.height = w;
-    } else {
-      canvas.width = w;
-      canvas.height = h;
-    }
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(currentRotationAngle * Math.PI / 180);
-    ctx.drawImage(rawLoadedImage, -w / 2, -h / 2, w, h);
-    ctx.restore();
-
-    // 自動去表格線 + 高對比黑白化處理
-    if (document.getElementById('enableHighContrast').checked) {
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const d = imgData.data;
-      for (let i = 0; i < d.length; i += 4) {
-        const lum = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
-        const v = lum > 168 ? 255 : 0;
-        d[i] = d[i+1] = d[i+2] = v;
-      }
-      ctx.putImageData(imgData, 0, 0);
-    }
-  }
-
-  async function executeChannelOCR(channel) {
-    const canvas = document.getElementById('ocrPreviewCanvas');
-    closeRotatePreviewModal();
-    const statusText = document.getElementById('ocrStatus');
-
-    if (channel === 'gemini') {
-      const apiKey = document.getElementById('inlineGeminiKey').value.trim();
-      if (!apiKey) {
-        alert("請先輸入 Gemini API Key！");
-        return;
-      }
-      statusText.innerText = "⏳ 🌟 通道 A：正在呼叫 Gemini AI 視覺模型精準識別中...";
-      try {
-        const base64Img = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
-        const promptText = "請精準提取這張默書範圍圖片中的所有單字、詞語或課文句子。請自動忽略表格線與頁碼。請直接輸出純文字，每行一個詞語或一段句子，不要包含任何引言或 Markdown 符號。";
-        
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }, { inline_data: { mime_type: "image/jpeg", data: base64Img } }] }]
-          })
-        });
-        const data = await response.json();
-        if(data.error) throw new Error(data.error.message);
-        
-        const text = data.candidates[0].content.parts[0].text.trim();
-        document.getElementById('editContent').value = text;
-        statusText.innerText = "✅ 🌟 通道 A (Gemini AI) 識別完成！100% 精準抽出！";
-      } catch(err) {
-        console.error(err);
-        statusText.innerText = "❌ Gemini 識別失敗，正在自動切換至通道 B 雙引擎備援...";
-        await executeChannelOCR('dual_ocr');
-      }
-    } else {
-      // 通道 B：OCR.space 雲端表格識別引擎 + 強化版 Tesseract 雙引擎
-      statusText.innerText = "⏳ 🌐 通道 B：正在透過 OCR.space 雲端表格引擎識別中...";
-      const langMode = document.getElementById('editLang').value;
-      try {
-        const base64Full = canvas.toDataURL('image/jpeg', 0.8);
-        const formData = new FormData();
-        formData.append('base64Image', base64Full);
-        formData.append('language', langMode === 'en' ? 'eng' : 'cht');
-        formData.append('isTable', 'true');
-        formData.append('scale', 'true');
-        formData.append('OCREngine', '2');
-
-        const res = await fetch('https://api.ocr.space/parse/image', {
-          method: 'POST',
-          headers: { 'apikey': 'helloworld' },
-          body: formData
-        });
-        const ocrData = await res.json();
-        if (ocrData && ocrData.ParsedResults && ocrData.ParsedResults.length > 0) {
-          let parsedText = ocrData.ParsedResults[0].ParsedText || "";
-          if (parsedText.trim().length > 0) {
-            parsedText = parsedText.replace(/\|/g, '\n').replace(/\t/g, '\n').replace(/\n\s*\n/g, '\n').trim();
-            document.getElementById('editContent').value = parsedText;
-            statusText.innerText = "✅ 🌐 通道 B (OCR.space 雲端表格引擎) 識別成功！";
-            return;
-          }
-        }
-        throw new Error("Fallback to Tesseract");
-      } catch (cloudErr) {
-        statusText.innerText = "⏳ 🌐 正在啟動本地強化版 Tesseract 引擎識別中...";
-        try {
-          const tesseractLang = langMode === 'en' ? 'eng' : 'chi_tra+eng';
-          const result = await Tesseract.recognize(canvas, tesseractLang);
-          let text = result.data.text.replace(/\|/g, '\n').replace(/bio'ogy/gi, 'biology').replace(/\n\s*\n/g, '\n').trim();
-          document.getElementById('editContent').value = text;
-          statusText.innerText = "✅ 🌐 通道 B (強化版雙引擎) 識別完成！可點選「過濾題號」或「過濾拼音」！";
-        } catch(err) {
-          statusText.innerText = "❌ 辨識失敗，請重新嘗試。";
-        }
-      }
-    }
+    renderList();
+    openDetailScreen(id ? parseInt(id) : dictations[0].id);
   }
 
   function filterNumbers() {
@@ -1514,22 +1170,28 @@
     text = text.replace(/^[\s]*([0-9一二三四五六七八九十]+[\.\)、、\s]+|\([0-9]+\)[\s]*)/gm, '');
     text = text.split('\n').map(s => s.trim()).filter(s => s.length > 0).join('\n');
     document.getElementById('editContent').value = text;
-    document.getElementById('ocrStatus').innerText = "🧹 已成功過濾所有數字題號並自動拆行！";
+    document.getElementById('ocrStatus').innerText = "🧹 已成功過濾所有數字題號！";
   }
 
+  // ===== 🌟 修正版：超強效「過濾拼音/注音」引擎 =====
   function filterPinyin() {
     let text = document.getElementById('editContent').value;
     if (!text.trim()) return;
     const lang = document.getElementById('editLang').value;
 
+    // 1. 移除所有括號內的拼音、粵拼、英文或注音 (支援 () （） [] 【】)
     text = text.replace(/[\(\（\[\【][^\)\）\]\】]*?[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜㄅ-ㄩ1-9][^\)\）\]\】]*?[\)\）\]\】]/g, '');
+
+    // 2. 移除所有獨立注音符號与聲調
     text = text.replace(/[ㄅ-ㄩ˙ˊˇˋ]/g, '');
 
     if (lang === 'zh') {
+      // 3. 中文模式下：徹底清除夾雜在漢字旁的所有拉丁字母拼音、聲調及粵拼數字 (如 gwong2)
       text = text.replace(/[a-zA-ZāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜĀÁǍÀĒÉĚÈĪÍǏÌŌÓǑÒŪÚǓÙǕǗǙǛ]+[1-9]?/g, '');
       text = text.replace(/[\(\（\[\【]\s*[\)\）\]\】]/g, '');
       text = text.replace(/([\u4e00-\u9fa5])\s+(?=[\u4e00-\u9fa5，。！？、；：])/g, '$1');
     } else {
+      // 英文模式下：只清除帶有漢語拼音聲調的單字或音標
       text = text.replace(/\b[a-zA-Z]*[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ][a-zA-Z]*\b/gi, '');
       text = text.replace(/\/[^\/]+\//g, '');
     }
@@ -1595,17 +1257,12 @@
     splitContainer.innerHTML = '';
 
     tokens.forEach((token, tIdx) => {
-      const span = document.createElement('span');
-      span.className = 'split-token'; span.innerText = token;
-      splitContainer.appendChild(span);
-
+      const span = document.createElement('span'); span.className = 'split-token'; span.innerText = token; splitContainer.appendChild(span);
       if (tIdx < tokens.length - 1) {
-        const divider = document.createElement('span');
-        divider.className = 'split-divider'; divider.innerText = '|';
-        divider.onclick = () => executeSplit(tIdx, tokens);
-        splitContainer.appendChild(divider);
+        const divider = document.createElement('span'); divider.className = 'split-divider'; divider.innerText = '|'; divider.onclick = () => executeSplit(tIdx, tokens); splitContainer.appendChild(divider);
       }
     });
+
     document.getElementById('splitModal').classList.add('active');
   }
 
@@ -1619,15 +1276,160 @@
   function closeSplitModal() { document.getElementById('splitModal').classList.remove('active'); }
   function saveSegmentsToTextarea() { document.getElementById('editContent').value = tempSegments.join('\n'); closeSegmentModal(); }
 
+  // ===== 🌟 V21 智能相片/PDF 處理核心 =====
+  async function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    if(file.type === 'application/pdf') {
+      document.getElementById('ocrStatus').innerText = "⏳ 正在載入 PDF...";
+      if(typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) { alert("PDF 引擎載入中，請稍候。"); return; }
+      const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 3.0 }); // 3.0x 超清渲染
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.height = viewport.height; canvas.width = viewport.width;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      openCropModal(canvas.toDataURL('image/png'));
+    } else {
+      const reader = new FileReader();
+      reader.onload = (evt) => openCropModal(evt.target.result);
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function openCropModal(imageSrc) {
+    const img = document.getElementById('cropImage');
+    img.src = imageSrc;
+    document.getElementById('cropModal').classList.add('active');
+    if(cropper) cropper.destroy();
+    cropper = new Cropper(img, { viewMode: 1, autoCropArea: 0.85, responsive: true });
+  }
+
+  function closeCropModal() { document.getElementById('cropModal').classList.remove('active'); if(cropper) cropper.destroy(); }
+
+  // --- 通道 A：Gemini AI 視覺識別 ---
+  async function recognizeWithGemini() {
+    let geminiKey = localStorage.getItem('gemini_key');
+    if (!geminiKey) {
+        geminiKey = prompt("請輸入您的 Gemini API Key 以啟用最強識別通道：\n(免費申請: aistudio.google.com)");
+        if (geminiKey) {
+            localStorage.setItem('gemini_key', geminiKey.trim());
+            document.getElementById('geminiKey').value = geminiKey.trim();
+        } else { return; }
+    }
+
+    if(!cropper) return;
+    const canvas = cropper.getCroppedCanvas();
+    const base64Img = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+    closeCropModal();
+    
+    const statusText = document.getElementById('ocrStatus');
+    statusText.innerText = "⏳ 正在使用 Gemini AI 進行視覺辨識 (約需 5-10 秒)...";
+    
+    const promptText = "請辨識這張圖片中的文字。這是一份默書或詞彙表。請忽略多餘的表格線條、題號，只提取出『詞彙』和對應的『中文解釋』。請以純文字回覆，每行一個項目，不要包含任何 Markdown 標記，不要輸出其他對話。";
+    
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [ { text: promptText }, { inline_data: { mime_type: "image/jpeg", data: base64Img } } ] }]
+            })
+        });
+        
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message);
+        
+        const resultText = data.candidates[0].content.parts[0].text;
+        document.getElementById('editContent').value = resultText.trim();
+        statusText.innerText = "🌟 通道 A (Gemini AI) 辨識成功！";
+    } catch (err) {
+        console.error(err);
+        statusText.innerText = "❌ Gemini 辨識失敗，請檢查 API Key 或網路連線。";
+        if (err.message && err.message.includes("API key not valid")) {
+            localStorage.removeItem('gemini_key');
+            document.getElementById('geminiKey').value = '';
+        }
+    }
+  }
+
+  // --- 通道 B：OCR.space + 強化版 Tesseract 雙引擎 ---
+  async function recognizeWithOCRSpace() {
+    if(!cropper) return;
+    const canvas = cropper.getCroppedCanvas();
+    closeCropModal();
+    const statusText = document.getElementById('ocrStatus');
+    statusText.innerText = "⏳ 正在使用雲端表格引擎辨識...";
+    
+    const base64Image = canvas.toDataURL('image/jpeg', 0.6);
+    const langMode = document.getElementById('editLang').value;
+    const ocrLang = langMode === 'en' ? 'eng' : 'cht';
+    
+    try {
+        const formData = new FormData();
+        formData.append('base64Image', base64Image);
+        formData.append('language', ocrLang);
+        formData.append('isTable', 'true'); // 強制去表格線
+        formData.append('scale', 'true');
+        formData.append('apikey', 'helloworld'); // OCR.space 免費金鑰
+        
+        const response = await fetch('https://api.ocr.space/parse/image', { method: 'POST', body: formData });
+        const data = await response.json();
+        
+        if (!data.IsErroredOnProcessing && data.ParsedResults && data.ParsedResults.length > 0 && data.ParsedResults[0].ParsedText) {
+            let parsedText = data.ParsedResults[0].ParsedText;
+            document.getElementById('editContent').value = parsedText.trim();
+            statusText.innerText = "🌐 通道 B (雲端引擎) 辨識成功！";
+            return;
+        }
+        throw new Error("OCR.space failed or returned empty");
+    } catch (err) {
+        console.log("Fallback to Tesseract", err);
+        statusText.innerText = "⏳ 雲端繁忙，正在啟動本機強化雙引擎...";
+        await fallbackTesseract(canvas);
+    }
+  }
+
+  async function fallbackTesseract(originalCanvas) {
+    const statusText = document.getElementById('ocrStatus');
+    try {
+        // 高對比黑白化處理 (移除淺色格線與雜訊)
+        const ctx = originalCanvas.getContext('2d');
+        const imgData = ctx.getImageData(0, 0, originalCanvas.width, originalCanvas.height);
+        const data = imgData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+            const bin = gray < 130 ? 0 : 255;
+            data[i] = data[i+1] = data[i+2] = bin;
+        }
+        ctx.putImageData(imgData, 0, 0);
+        
+        const langMode = document.getElementById('editLang').value;
+        const tesseractLang = langMode === 'en' ? 'eng' : 'chi_tra+eng';
+        const result = await Tesseract.recognize(originalCanvas, tesseractLang);
+        
+        let text = result.data.text.replace(/\|/g, '\n').replace(/bio'ogy/gi, 'biology').replace(/\n\s*\n/g, '\n').trim();
+        document.getElementById('editContent').value = text;
+        statusText.innerText = "✅ 通道 B (本機高對比引擎) 辨識成功！";
+    } catch(err) {
+        console.error(err);
+        statusText.innerText = "❌ 辨識失敗，請嘗試手動輸入或使用通道 A。";
+    }
+  }
+
+  // --- 通道 C：實況文字 (Live Text) 教學 ---
+  function alertLiveText() {
+    alert('💡 實況文字 (Live Text) 零誤差貼上神技：\n\n1. 在下方「默書內容」的大白框內輕點一下。\n2. 點擊彈出的「掃描文字」圖示 (一個小相框框住三條線)。\n3. 將相機對準你的默書紙/課本，文字就會一秒零誤差貼上！');
+    document.getElementById('editContent').focus();
+  }
+
+  // --- 相機掃描 QR Code (支援最新智能分頁碼 + 舊版網址碼) ---
   function openQrScanner() {
     document.getElementById('qrScanModal').classList.add('active');
-    document.getElementById('qrScanStatus').innerText = "請將朋友分享的 QR Code 放入畫面中";
     html5QrCode = new Html5Qrcode("qr-reader");
-    html5QrCode.start(
-      { facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } },
-      (decodedText) => { handleQrCodeScanned(decodedText); },
-      (errorMessage) => {}
-    ).catch(err => { alert("無法啟動相機權限：" + err); closeQrScanner(); });
+    html5QrCode.start({ facingMode: "environment" }, { fps: 12, qrbox: { width: 250, height: 250 } }, (decodedText) => { handleQrCodeScanned(decodedText); }, (errorMessage) => {}).catch(err => { alert("無法啟動相機權限：" + err); closeQrScanner(); });
   }
 
   function closeQrScanner() {
@@ -1635,9 +1437,10 @@
     document.getElementById('qrScanModal').classList.remove('active');
   }
 
-  async function handleQrCodeScanned(scannedText) {
+  function handleQrCodeScanned(scannedText) {
     closeQrScanner();
     try {
+      // 1. 識別最新 Base64 短碼與多頁疊加 (DIC_L:xxx)
       if (scannedText.startsWith('DIC_L:')) {
         const base64Data = scannedText.substring(6);
         const decompressed = LZString.decompressFromBase64(base64Data);
@@ -1652,28 +1455,25 @@
           } else {
             document.getElementById('editContent').value = newContent;
           }
-          alert('✅ 已成功讀取 QR Code！');
+          alert('✅ 已成功掃描並讀取默書內容，請確認後按「儲存默書」！');
           return;
         }
       }
 
+      // 2. 相容網址格式 (?v3=)
       const url = new URL(scannedText);
       if (url.searchParams.has('v3')) {
         const compressed = url.searchParams.get('v3');
         const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
         const parts = jsonStr.split('|||');
         if (parts.length >= 3) {
-          document.getElementById('editTitle').value = parts[0];
-          document.getElementById('editLang').value = parts[1];
-          document.getElementById('editContent').value = parts.slice(2).join('|||');
+          document.getElementById('editTitle').value = parts[0]; document.getElementById('editLang').value = parts[1]; document.getElementById('editContent').value = parts.slice(2).join('|||');
           alert('✅ 已成功掃描並讀取默書內容，請確認後按「儲存默書」！');
-        }
+        } else { alert('❌ QR Code 內容不完整。'); }
         return;
       }
-      alert('❌ 無法識別此 QR Code 格式。');
-    } catch(e) {
-      alert('❌ 讀取 QR Code 失敗，請重試。');
-    }
+      alert('❌ 無法解析此 QR Code。');
+    } catch(e) { alert('❌ 無法解析此 QR Code。'); }
   }
 
   function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); toggleAutoSettingsDisplay(); }
