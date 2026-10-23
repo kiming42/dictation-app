@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手 V24</title>
+  <title>默書小助手 V25</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -239,7 +239,7 @@
     </div>
   </div>
 
-  <!-- ==================== 5. 全局系統設定頁面 (V24: Azure Key 設定區) ==================== -->
+  <!-- ==================== 5. ⚙️ 全局系統設定頁面 (V25 Azure Key 專屬區) ==================== -->
   <div id="settings-screen" class="page">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <button class="header-btn" onclick="showPage('home-screen')">❮</button>
@@ -251,12 +251,16 @@
       <label>家長解鎖密碼 (4位數字):</label>
       <input type="password" id="parentPin" placeholder="預設密碼: 1234" value="1234" onchange="saveConfig()">
       
-      <!-- 🌟 語音復活核心：專屬 Azure API Key 輸入框 -->
-      <label style="margin-top: 15px; color:#0066ff;">🔊 Azure 語音 API Key (發聲必填):</label>
-      <input type="password" id="azureKey" placeholder="貼上微軟 Azure API Key..." value="" onchange="saveConfig()" style="border-color:#0066ff !important;">
-      <p style="font-size: 12px; color: #666; margin-top: 5px;">必須填寫正確的 Azure 語音金鑰才能發聲。</p>
+      <!-- 🌟 V25 安全升級：在 UI 動態綁定金鑰與區域，防止 GitHub 外洩 -->
+      <label style="margin-top: 20px; color:#0066ff;">🔊 Azure 語音 API Key (發聲必填):</label>
+      <input type="password" id="azureKey" placeholder="貼上 32 位元的 Azure 金鑰 (Key 1)..." value="" onchange="saveConfig()" style="border-color:#0066ff !important;">
+      
+      <label style="margin-top: 10px; color:#0066ff;">🌍 Azure 伺服器區域 (Region):</label>
+      <input type="text" id="azureRegion" placeholder="例如: eastasia, southeastasia" value="eastasia" onchange="saveConfig()" style="border-color:#0066ff !important;">
+      
+      <p style="font-size: 12px; color: #666; margin-top: 5px;">請輸入你在微軟 Azure 後台建立的 32 位元金鑰。設定只會保存在這部手機中，絕不外洩。</p>
 
-      <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 15px;">
+      <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 20px;">
         儲存並返回
       </button>
     </div>
@@ -306,7 +310,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 相片方向旋轉與強化預覽器 (只保留通道B) ==================== -->
+  <!-- ==================== MODAL: 相片方向旋轉與強化預覽器 ==================== -->
   <div id="cropModal" class="modal">
     <div class="modal-box" style="max-width: 95%;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -332,7 +336,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 分享與單一極簡 QR Code (強制不分拆) ==================== -->
+  <!-- ==================== MODAL: 分享與單一極簡 QR Code ==================== -->
   <div id="shareModal" class="modal">
     <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9; display: flex; flex-direction: column; max-height: 90vh;">
       <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; flex-shrink: 0;">
@@ -347,7 +351,7 @@
         </div>
 
         <div id="qrModeHint" style="font-size: 12px; color: #28a745; font-weight: 600; margin-bottom: 10px;">
-          ✨ 已套用 Alphanumeric 純大寫高密度編碼，單一碼極速掃描！
+          ✨ 已套用純大寫高密度編碼，單一碼一秒即掃！
         </div>
 
         <div class="qr-instruction-box">
@@ -360,7 +364,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 相機掃描 QR Code (支援 iPad 鏡頭旋轉修正) ==================== -->
+  <!-- ==================== MODAL: 相機掃描 QR Code ==================== -->
   <div id="qrScanModal" class="modal">
     <div class="modal-box" style="text-align: center; padding: 15px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -409,7 +413,6 @@
   let currentDictation = null;   
   let activeSentenceIndices = []; 
   let currentPlayingIndex = 0;   
-  
   let isPlayingAuto = false;
   let currentAudioResolve = null;
   const globalAudio = document.getElementById('globalAudio');
@@ -446,10 +449,8 @@
 
   window.onload = () => {
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
-    // 預設寫回之前的 Key，避免你需要重新去舊 Code 搵
-    const defaultKey = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS";
-    document.getElementById('azureKey').value = localStorage.getItem('azure_api_key') || defaultKey;
-    
+    document.getElementById('azureKey').value = localStorage.getItem('azure_api_key') || '';
+    document.getElementById('azureRegion').value = localStorage.getItem('azure_region') || 'eastasia';
     checkUrlImport();
     renderList();
   };
@@ -457,6 +458,7 @@
   function saveConfig() {
     localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
     localStorage.setItem('azure_api_key', document.getElementById('azureKey').value.trim());
+    localStorage.setItem('azure_region', document.getElementById('azureRegion').value.trim());
     alert('✅ 設定已成功儲存！');
   }
 
@@ -501,8 +503,7 @@
 
   function checkAndShowSettings() { if (verifyParentPin('系統設定')) showPage('settings-screen'); }
   function toggleHideText() {
-    if(!isTextHidden) { isTextHidden = true; } 
-    else { if(verifyParentPin('顯示文字')) isTextHidden = false; else return; }
+    if(!isTextHidden) { isTextHidden = true; } else { if(verifyParentPin('顯示文字')) isTextHidden = false; else return; }
     updateDetailUI();
   }
   function checkAndOpenSentenceSelection() {
@@ -527,7 +528,7 @@
     }, 50);
   }
 
-  // ===== 🌟 Base32 智能單一極簡 QR Code (拒絕分拆) =====
+  // ===== 🌟 Base32 極簡單一 QR Code =====
   const B32_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
   function uint8ToBase32(uint8Arr) {
     let bits = 0, value = 0, output = "";
@@ -568,7 +569,6 @@
     document.getElementById('shareTitle').innerText = currentDictation.title;
     document.getElementById('shareWordCount').innerText = `${getSentences(currentDictation.content).length} 個詞語 / 段落`;
     document.getElementById('shareUrlDisplayBox').innerText = shareUrl;
-
     document.getElementById('shareModal').classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
 
@@ -578,13 +578,10 @@
     hintDiv.style.color = "#28a745";
     hintDiv.innerText = "✨ 已套用 Alphanumeric 純大寫極限編碼，單一碼不拆頁！";
 
-    // 課文如果極長，嘗試在背景自動生成雲端短碼（失敗依然保持單一 QR Code）
     if (rawData.length > 80) {
       try {
         const res = await fetch('https://bytebin.lucko.me/post', {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-          body: rawData
+          method: 'POST', headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: rawData
         });
         if (res.ok) {
           const json = await res.json();
@@ -612,7 +609,7 @@
   }
 
   function closeShareModal() { document.getElementById('shareModal').classList.remove('active'); }
-  function copyShareLink() { navigator.clipboard.writeText(shareUrl).then(() => { alert('📋 已複製專屬分享連結！可以直接貼上給朋友。'); }); }
+  function copyShareLink() { navigator.clipboard.writeText(shareUrl).then(() => { alert('📋 已複製專屬分享連結！'); }); }
 
   function unlockAudioEngine() {
     if (!audioUnlocked) {
@@ -625,16 +622,12 @@
 
   async function requestWakeLock() { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} } }
   function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }).catch(err => {}); } }
-
-  document.addEventListener('visibilitychange', async () => {
-    if (wakeLock !== null && document.visibilityState === 'visible' && isPlayingAuto) { await requestWakeLock(); }
-  });
+  document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && isPlayingAuto) { await requestWakeLock(); } });
 
   function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
-    
     if (isPlayingAuto) { isPlayingAuto = false; stopAudio(); updatePlayBtnUI(false); } 
     else { stopAudio(); }
     const ps = document.getElementById('playStatus');
@@ -642,29 +635,20 @@
   }
 
   function toggleHeaderMenu() { document.getElementById('headerDropdown').classList.toggle('active'); }
-
-  function getSentences(content) {
-    if(!content) return [];
-    return content.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
-  }
+  function getSentences(content) { if(!content) return []; return content.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0); }
 
   function renderList() {
     const listDiv = document.getElementById('dictation-list');
     listDiv.innerHTML = '';
-    
     if(dictations.length === 0) {
       listDiv.innerHTML = '<p style="color:#888; text-align:center; padding: 40px 0;">目前沒有默書紀錄<br>請點擊下方按鈕新增！</p>';
       return;
     }
-
     dictations.forEach(d => {
       const sentences = getSentences(d.content);
       listDiv.innerHTML += `
         <div class="dictation-item" onclick="openDetailScreen('${d.id}')">
-          <div>
-            <div class="dictation-item-title">${escapeXml(d.title)}</div>
-            <div class="dictation-item-sub">共 ${sentences.length} 句 | 語言: ${d.lang === 'en' ? '英文' : '中文'}</div>
-          </div>
+          <div><div class="dictation-item-title">${escapeXml(d.title)}</div><div class="dictation-item-sub">共 ${sentences.length} 句 | 語言: ${d.lang === 'en' ? '英文' : '中文'}</div></div>
           <div style="font-size: 20px; color: var(--primary);">❯</div>
         </div>
       `;
@@ -674,29 +658,20 @@
   function openDetailScreen(id) {
     currentDictation = dictations.find(d => String(d.id) === String(id));
     if(!currentDictation) { alert('⚠️ 找不到這份默書紀錄！'); return; }
-
-    const titleEl = document.getElementById('detailTitle');
-    if(titleEl) titleEl.innerText = currentDictation.title;
-    
+    document.getElementById('detailTitle').innerText = currentDictation.title;
     const sentences = getSentences(currentDictation.content);
     activeSentenceIndices = sentences.map((_, i) => i);
     currentPlayingIndex = 0;
-
     const vAccent = document.getElementById('voiceAccent');
     if(vAccent) { vAccent.value = (currentDictation.lang === 'en') ? 'en-US' : 'zh-HK'; }
-
     const ps = document.getElementById('playStatus');
     if(ps) ps.innerText = '';
-    
-    updatePlayBtnUI(false);
-    updateDetailUI();
-    showPage('detail-screen');
+    updatePlayBtnUI(false); updateDetailUI(); showPage('detail-screen');
   }
 
   function updateDetailUI() {
     if(!currentDictation) return;
     const sentences = getSentences(currentDictation.content);
-    
     const badge = document.getElementById('selectedCountBadge');
     if(badge) badge.innerText = `${activeSentenceIndices.length}/${sentences.length}`;
 
@@ -705,12 +680,10 @@
     if(voiceSelect && voiceSelect.options && voiceSelect.options.length > 0 && voiceSelect.selectedIndex >= 0) {
         accentText = voiceSelect.options[voiceSelect.selectedIndex].text.split(' ')[0];
     }
-    
     const speedEl = document.getElementById('setupSpeed');
     const modeEl = document.getElementById('playMode');
     const speed = speedEl ? speedEl.value : '1.0';
     const modeText = (modeEl && modeEl.value === 'auto') ? '自動模式' : '手動模式';
-    
     const summary = document.getElementById('settingsSummaryText');
     if(summary) summary.innerText = `${modeText} | ${accentText} | ${speed}x速`;
 
@@ -720,7 +693,6 @@
         sentences.forEach((sText, idx) => {
           const isSelected = activeSentenceIndices.includes(idx);
           if(!isSelected) return; 
-
           const activePos = activeSentenceIndices.indexOf(idx);
           const isActive = (activePos === currentPlayingIndex);
 
@@ -742,16 +714,13 @@
   function selectSentenceToPlaySlowly(pos) { unlockAudioEngine(); if (isPlayingAuto) togglePlayPause(); currentPlayingIndex = pos; updateDetailUI(); playCurrentSentence(true); }
 
   function prevSentence() {
-    unlockAudioEngine();
-    if(activeSentenceIndices.length === 0) return;
+    unlockAudioEngine(); if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) { forcePrevInAuto = true; stopAudio(); return; }
     if(currentPlayingIndex > 0) currentPlayingIndex--; else currentPlayingIndex = activeSentenceIndices.length - 1;
     updateDetailUI(); playCurrentSentence(false);
   }
-
   function nextSentence() {
-    unlockAudioEngine();
-    if(activeSentenceIndices.length === 0) return;
+    unlockAudioEngine(); if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) { forceNextInAuto = true; stopAudio(); return; }
     if(currentPlayingIndex < activeSentenceIndices.length - 1) currentPlayingIndex++; else currentPlayingIndex = 0;
     updateDetailUI(); playCurrentSentence(false);
@@ -794,7 +763,6 @@
 
     while (isPlayingAuto && currentPlayingIndex < activeSentenceIndices.length) {
       forceNextInAuto = false; forcePrevInAuto = false; updateDetailUI();
-
       for (let r = 0; r < repeats; r++) {
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
         const ps = document.getElementById('playStatus');
@@ -845,20 +813,19 @@
       const rawSentences = getSentences(currentDictation.content);
       const realIndex = activeSentenceIndices[currentPlayingIndex];
       let sentenceText = rawSentences[realIndex];
-
       if (!sentenceText) { if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; } return; }
 
-      // 🌟 動態獲取用家填入嘅真實 Azure Key
+      // 🌟 V25: 動態獲取用家填入嘅真實 Azure Key 與 Region
       const apiKey = localStorage.getItem('azure_api_key') || document.getElementById('azureKey').value.trim();
-      const region = "eastasia";
+      const region = localStorage.getItem('azure_region') || document.getElementById('azureRegion').value.trim() || 'eastasia';
       
       const baseSpeed = document.getElementById('setupSpeed').value;
       const accent = document.getElementById('voiceAccent').value;
       const gender = document.getElementById('voiceGender').value;
       const readPunc = document.getElementById('readPunctuation').checked;
 
-      if (!apiKey || apiKey.includes('請在這裡貼上')) {
-        alert('❌ 尚未設定 Azure API Key！請到「系統設定」貼上金鑰才能播放語音。');
+      if (!apiKey || apiKey.length < 20 || apiKey.includes('請在這裡')) {
+        alert('❌ 尚未設定有效的 Azure API Key！\n請先到 App 的「⚙️ 系統設定」頁面輸入 32 位元的 Azure 金鑰才能發聲。');
         if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         return;
       }
@@ -894,7 +861,7 @@
         });
 
         if (response.status === 401 || response.status === 403) {
-          alert("❌ Azure API Key 無效或已過期！請到設定頁面重新檢查金鑰是否正確。");
+          alert("❌ Azure API Key 無效、伺服器區域 (Region) 錯誤，或免費額度已滿！\n請到「⚙️ 系統設定」重新檢查金鑰與區域設定。");
           throw new Error('Unauthorized');
         }
         if (!response.ok) throw new Error('TTS Fetch Error');
@@ -932,7 +899,6 @@
     else { return text.replace(/，/g, '，逗號，').replace(/。/g, '，句號，').replace(/！/g, '，感嘆號，').replace(/？/g, '，問號，').replace(/；/g, '，分號，').replace(/：/g, '，冒號，'); }
   }
 
-  // --- 句子勾選頁面 ---
   function openSentenceSelection() {
     const sentences = getSentences(currentDictation.content);
     tempSelectedIndices = [...activeSentenceIndices];
@@ -990,7 +956,6 @@
 
   function cancelSentenceSelection() { showPage('detail-screen'); }
 
-  // --- 新增/編輯頁面 ---
   function openEditScreen(id) {
     if(id) {
       const dic = dictations.find(d => String(d.id) === String(id));
@@ -1041,29 +1006,21 @@
     document.getElementById('ocrStatus').innerText = "🧹 已成功過濾所有數字題號！";
   }
 
-  // ===== 🌟 V24 徹底修復：強效拼音/特殊重音字母過濾器 =====
   function filterPinyin() {
     let text = document.getElementById('editContent').value;
     if (!text.trim()) return;
     const lang = document.getElementById('editLang').value;
 
-    // 1. 強制剝離所有特殊重音符號 (解決越南文與普通話 ầ, ắ 殘留)
     text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC');
-
-    // 2. 移除所有括號內的拼音、粵拼、英文或注音
     text = text.replace(/[\(\（\[\【][^\)\）\]\】]*?[a-zA-Z\u00C0-\u024F\u1E00-\u1EFFㄅ-ㄩ1-9][^\)\）\]\】]*?[\)\）\]\】]/g, '');
-
-    // 3. 移除所有獨立注音符號与聲調符號
     text = text.replace(/[ㄅ-ㄩ˙ˊˇˋˆˇˉˊˇˋ]/g, '');
 
     if (lang === 'zh') {
-      // 4. 中文模式下：徹底清除夾雜在漢字旁的所有拉丁字母、拉丁擴展字元及粵拼數字
       text = text.replace(/[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]+[1-9]?/g, '');
       text = text.replace(/[\u02B0-\u02FF\u0300-\u036F]/g, '');
       text = text.replace(/[\(\（\[\【]\s*[\)\）\]\】]/g, '');
       text = text.replace(/([\u4e00-\u9fa5，。！？、；：「」『』（）])\s+(?=[\u4e00-\u9fa5，。！？、；：「」『』（）])/g, '$1');
     } else {
-      // 英文模式下：只清除音標
       text = text.replace(/\/[^\/]+\//g, '');
     }
 
@@ -1253,7 +1210,6 @@
     scannerVideoRotation = 0;
     html5QrCode = new Html5Qrcode("qr-reader");
     
-    // 解除強制比例限制，讓 iOS Safari 自然渲染直向相機
     const config = {
       fps: 15,
       qrbox: (viewfinderWidth, viewfinderHeight) => {
@@ -1290,7 +1246,6 @@
   async function handleQrCodeScanned(scannedText) {
     closeQrScanner();
     try {
-      // 1. 識別 Alphanumeric 純大寫單一碼 (DIC32:xxx)
       if (scannedText.startsWith('DIC32:')) {
         const decompressed = decompressFromAlphanumericQR(scannedText);
         const parts = decompressed.split('|||');
@@ -1303,7 +1258,6 @@
         }
       }
 
-      // 2. 識別雲端超極簡碼 (DICBB:KEY:realKey)
       if (scannedText.startsWith('DICBB:')) {
         const segs = scannedText.split(':');
         const key = segs[2] || segs[1];
@@ -1323,7 +1277,6 @@
         }
       }
 
-      // 3. 相容舊版 DIC_L: 與 ?v3= 網址格式
       if (scannedText.startsWith('DIC_L:')) {
         const base64Data = scannedText.substring(6);
         const decompressed = LZString.decompressFromBase64(base64Data);
