@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手 V21</title>
+  <title>默書小助手 V24</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -23,90 +23,17 @@
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
-    :root {
-      --primary: #0066ff;
-      --primary-light: #e6f0ff;
-      --success: #28a745;
-      --danger: #dc3545;
-      --secondary: #6c757d;
-      --bg: #f4f6f9;
-      --card-bg: #ffffff;
-      --text: #212529;
-      --text-muted: #6c757d;
-      --border: #e9ecef;
-    }
-
+    :root { --primary: #0066ff; --primary-light: #e6f0ff; --success: #28a745; --danger: #dc3545; --secondary: #6c757d; --bg: #f4f6f9; --card-bg: #ffffff; --text: #212529; --text-muted: #6c757d; --border: #e9ecef; }
     * { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg);
-      margin: 0;
-      padding: 0;
-      color: var(--text);
-      -webkit-tap-highlight-color: transparent;
-      user-select: none; 
-    }
-
-    .app-header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .app-header h1, .app-header h2 {
-      font-size: 18px;
-      font-weight: 700;
-      margin: 0;
-      text-align: center;
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .header-btn {
-      background: none;
-      border: none;
-      font-size: 20px;
-      cursor: pointer;
-      padding: 6px 10px;
-      color: #333;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text); -webkit-tap-highlight-color: transparent; user-select: none; }
+    .app-header { position: sticky; top: 0; z-index: 100; background: #ffffff; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .app-header h1, .app-header h2 { font-size: 18px; font-weight: 700; margin: 0; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .header-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 6px 10px; color: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     .header-btn:active { background: #eee; }
-
     .page { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
     .page.active { display: block; }
-    .card {
-      background: var(--card-bg);
-      padding: 18px;
-      border-radius: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      margin-bottom: 16px;
-    }
-
-    button.btn {
-      padding: 12px 18px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      border-radius: 12px;
-      color: white;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: opacity 0.2s;
-    }
+    .card { background: var(--card-bg); padding: 18px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 16px; }
+    button.btn { padding: 12px 18px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; border-radius: 12px; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.2s; }
     button.btn:active { opacity: 0.8; }
     .btn-primary { background: var(--primary) !important; color: white !important; }
     .btn-success { background: var(--success) !important; color: white !important; }
@@ -117,101 +44,62 @@
     .btn-outline-info { background: transparent !important; border: 1.5px solid #17a2b8 !important; color: #17a2b8 !important; }
     .btn-block { width: 100%; }
     .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
-
     label { font-weight: 600; font-size: 14px; margin-top: 10px; display: block; color: #495057; }
-    
-    input[type="text"], input[type="password"], select, textarea {
-      width: 100%;
-      padding: 12px;
-      margin-top: 6px;
-      margin-bottom: 12px;
-      border: 1.5px solid #ced4da !important;
-      border-radius: 10px !important;
-      font-size: 16px !important;
-      color: #000000 !important;
-      background-color: #ffffff !important;
-      box-sizing: border-box;
-      user-select: text; 
-    }
+    input[type="text"], input[type="password"], select, textarea { width: 100%; padding: 12px; margin-top: 6px; margin-bottom: 12px; border: 1.5px solid #ced4da !important; border-radius: 10px !important; font-size: 16px !important; color: #000000 !important; background-color: #ffffff !important; box-sizing: border-box; user-select: text; }
     input:focus, select:focus, textarea:focus { border-color: var(--primary) !important; outline: none; }
     textarea::placeholder, input::placeholder { color: #888888 !important; opacity: 1 !important; }
-    
     textarea#editContent { height: 200px; min-height: 180px; resize: vertical; line-height: 1.6; }
-
     .row { display: flex; gap: 10px; }
     .row > div { flex: 1; }
     .tools-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-
     .dictation-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #fff; border-radius: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); border: 1px solid var(--border); }
     .dictation-item-title { font-size: 17px; font-weight: 700; color: #111; cursor: pointer; flex: 1; }
     .dictation-item-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
-
     .play-controls-bar { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 15px 0 20px 0; }
     .btn-circle { width: 52px; height: 52px; border-radius: 50%; border: none; background: #e9ecef; color: #333; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
     .btn-circle-main { width: 68px; height: 68px; background: var(--primary); color: white; font-size: 26px; box-shadow: 0 4px 12px rgba(0, 102, 255, 0.35); }
     .btn-circle-main.playing { background: #ffaa00; box-shadow: 0 4px 12px rgba(255, 170, 0, 0.35); }
-
     .mode-pill-btn { background: #28a745; color: white; border-radius: 30px; padding: 10px 20px; display: inline-flex; align-items: center; gap: 10px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 2px 6px rgba(40,167,69,0.25); }
     .mode-pill-badge { background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 12px; font-size: 13px; }
-
     .settings-summary-card { background: #f8f9fa; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: 1px solid #ebedf0; margin-bottom: 20px; }
     .settings-summary-title { font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 6px; }
     .settings-summary-tag { background: #ffe8cc; color: #d97706; font-size: 11px; padding: 2px 6px; border-radius: 6px; font-weight: normal; }
     .settings-summary-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
-
     .sentence-card-list { display: flex; flex-direction: column; gap: 10px; }
     .sentence-card { background: #ffffff; border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px; cursor: pointer; transition: all 0.2s; }
     .sentence-num { color: #8c98a4; font-size: 16px; font-weight: bold; min-width: 24px; margin-top: 2px; }
     .sentence-text { flex: 1; font-size: 17px; line-height: 1.5; font-weight: 500; white-space: pre-wrap; word-break: break-word; }
     .sentence-audio-btn { color: #8c98a4; font-size: 18px; margin-top: 2px; }
-    
     .sentence-card.active { background: var(--primary); color: #ffffff; border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,102,255,0.25); }
     .sentence-card.active .sentence-num, .sentence-card.active .sentence-text, .sentence-card.active .sentence-audio-btn { color: #ffffff; }
-
     .selection-header-tools { display: flex; align-items: center; gap: 15px; font-size: 14px; margin: 10px 0 16px 0; color: var(--primary); font-weight: 600; }
     .selection-header-tools span { cursor: pointer; }
-    
     .select-item-card { background: #ffffff; border-bottom: 1px solid #f0f0f0; padding: 14px 8px; display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
     .select-num-badge { width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; flex-shrink: 0; }
     .select-item-card input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer; margin-top: 3px; }
-
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
     .modal.active { display: flex; }
     .modal-box { background: #fff; border-radius: 20px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-
     .dropdown-menu { position: absolute; right: 16px; top: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 1px solid var(--border); display: none; flex-direction: column; z-index: 200; overflow: hidden; min-width: 140px; }
     .dropdown-menu.active { display: flex; }
     .dropdown-item { padding: 12px 16px; font-size: 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #333; text-decoration: none; }
     .dropdown-item:hover, .dropdown-item:active { background: #f8f9fa; }
-
     .blur-text { filter: blur(10px); opacity: 0.7; user-select: none; pointer-events: none; }
-
     .segment-item { background: #ffffff; border-radius: 12px; padding: 12px 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid #eee; display: flex; align-items: center; gap: 12px; }
     .segment-idx { width: 26px; height: 26px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 13px; font-weight: bold; flex-shrink: 0; }
     .segment-text { flex: 1; font-size: 16px; line-height: 1.5; color: #333; }
     .segment-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
     .btn-action { padding: 5px 10px; font-size: 12px; border: 1px solid #ced4da; background: #f8f9fa; border-radius: 6px; cursor: pointer; color: #495057; font-weight: 600; }
-    
     .split-token { display: inline-block; }
     .split-divider { display: inline-block; width: 14px; color: #ccc; cursor: pointer; font-weight: bold; margin: 0 2px; user-select: none; transition: all 0.2s; }
     .split-divider:hover { color: var(--danger); transform: scale(1.6); }
-
     .qr-instruction-box { background: #e6f0ff; border-radius: 12px; padding: 15px 20px; text-align: left; margin-top: 15px; }
     .qr-instruction-box h4 { margin: 0 0 10px 0; color: #0056b3; display: flex; align-items: center; gap: 8px; font-size: 16px; }
     .qr-instruction-box ol { margin: 0; padding-left: 20px; color: #333; font-size: 14px; line-height: 1.8; }
     .qr-instruction-box li::marker { color: #0066ff; font-weight: bold; }
-
     #qrcode svg, #qrcode canvas, #qrcode img { width: 100% !important; max-width: 250px; height: auto !important; display: block; margin: 0 auto; shape-rendering: crispEdges; }
     .share-link-box { margin-top: 15px; padding: 10px 12px; background: #e9ecef; border-radius: 8px; font-size: 11px; word-break: break-all; color: #555; max-height: 60px; overflow-y: auto; text-align: left; user-select: text; border: 1px solid #ced4da; }
-    
     .cropper-container-box { max-height: 45vh; overflow: hidden; margin-bottom: 15px; border-radius: 8px; border: 1px solid #eee; background: #222; }
-
-    .btn-channel { padding: 14px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; transition: 0.2s; }
-    .btn-channel-gemini { background: #fdf5ff; border: 1.5px solid #a200ff; color: #a200ff; }
-    .btn-channel-gemini:active { background: #f3dfff; }
-    .btn-channel-ocr { background: #f4f6f9; border: 1.5px solid #6c757d; color: #495057; }
-    .btn-channel-apple { background: #e6f0ff; border: 1.5px solid #0066ff; color: #0066ff; }
-    
     #qr-reader { width: 100%; border-radius: 12px; overflow: hidden; background: #000; position: relative; }
     #qr-reader video { width: 100% !important; height: auto !important; max-height: 55vh; object-fit: cover !important; transition: transform 0.25s ease; }
   </style>
@@ -298,7 +186,7 @@
     </div>
   </div>
 
-  <!-- ==================== 4. 新增 / 編輯默書頁面 (V21 排版設計) ==================== -->
+  <!-- ==================== 4. 新增 / 編輯默書頁面 ==================== -->
   <div id="edit-screen" class="page">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <button class="header-btn" onclick="showPage('home-screen')">❮</button>
@@ -322,16 +210,17 @@
     </div>
     
     <label>智能匯入工具集：</label>
-    <div class="row" style="margin-bottom: 12px; flex-wrap: wrap;">
-      <button class="btn-channel btn-channel-gemini" onclick="selectPhotoForChannel('gemini')">🌟 拍攝/相片 (Gemini AI)</button>
-      <button class="btn-channel btn-channel-ocr" onclick="selectPhotoForChannel('dual_ocr')">🌐 拍攝/相片 (雲端去線)</button>
+    <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+      <button class="btn btn-outline btn-block" onclick="document.getElementById('fileInput').click()">
+        📷 拍攝/相片/PDF 智能辨識
+      </button>
+      <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(event)">
+      
+      <div class="row">
+        <button class="btn btn-outline-success" onclick="openQrScanner()">📷 掃 QR Code</button>
+        <button class="btn btn-outline-info" onclick="alertLiveText()">📱 實況文字 (Live Text)</button>
+      </div>
     </div>
-    <div class="row" style="margin-bottom: 12px;">
-      <button class="btn btn-outline-success" style="flex:1;" onclick="openQrScanner()">📷 掃 QR Code</button>
-      <button class="btn-channel btn-channel-apple" style="flex:1; margin:0;" onclick="pasteFromClipboard()">📱 實況文字 (一鍵貼上)</button>
-    </div>
-    
-    <input type="file" id="fileInput" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(event)">
     
     <label>快捷清理與分段工具：</label>
     <div class="tools-group">
@@ -350,7 +239,7 @@
     </div>
   </div>
 
-  <!-- ==================== 5. 全局系統設定頁面 ==================== -->
+  <!-- ==================== 5. 全局系統設定頁面 (V24: Azure Key 設定區) ==================== -->
   <div id="settings-screen" class="page">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <button class="header-btn" onclick="showPage('home-screen')">❮</button>
@@ -362,9 +251,10 @@
       <label>家長解鎖密碼 (4位數字):</label>
       <input type="password" id="parentPin" placeholder="預設密碼: 1234" value="1234" onchange="saveConfig()">
       
-      <label style="margin-top: 15px;">🌟 Gemini API Key (選填):</label>
-      <input type="password" id="geminiKey" placeholder="貼上 Google Gemini API Key..." value="" onchange="saveConfig()">
-      <p style="font-size: 12px; color: #666; margin-top: 5px;">於 Google AI Studio 免費申請 API Key 後，可解鎖「通道 A」完美辨識歪斜相片與手寫字。</p>
+      <!-- 🌟 語音復活核心：專屬 Azure API Key 輸入框 -->
+      <label style="margin-top: 15px; color:#0066ff;">🔊 Azure 語音 API Key (發聲必填):</label>
+      <input type="password" id="azureKey" placeholder="貼上微軟 Azure API Key..." value="" onchange="saveConfig()" style="border-color:#0066ff !important;">
+      <p style="font-size: 12px; color: #666; margin-top: 5px;">必須填寫正確的 Azure 語音金鑰才能發聲。</p>
 
       <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 15px;">
         儲存並返回
@@ -416,7 +306,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 圖片裁切預覽器 (V21 設計) ==================== -->
+  <!-- ==================== MODAL: 相片方向旋轉與強化預覽器 (只保留通道B) ==================== -->
   <div id="cropModal" class="modal">
     <div class="modal-box" style="max-width: 95%;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -433,16 +323,16 @@
         <img id="cropImage" src="" alt="Crop target" style="max-width: 100%;">
       </div>
       
-      <p style="font-size: 13px; color: #666; margin-bottom: 15px; text-align: center;">請將相片轉正，系統會自動做強化處理：</p>
+      <p style="font-size: 13px; color: #666; margin-bottom: 15px; text-align: center;">請將相片轉正並框選範圍，系統會自動去格線及強化文字：</p>
       
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button id="btnExeGemini" class="btn btn-primary" onclick="executeChannelOCR('gemini')" style="background:#7950f2 !important; border-color:#7950f2 !important; display:none;">🌟 確認裁切 (Gemini AI 識別)</button>
-        <button id="btnExeOCR" class="btn btn-outline" onclick="executeChannelOCR('dual_ocr')" style="display:none;">🌐 確認裁切 (雲端去格線 + 本機引擎)</button>
+      <div class="row">
+        <button class="btn btn-primary btn-block" onclick="recognizeWithOCRSpace()">🌐 確認裁切並識別 (雲端去格線 + 雙引擎)</button>
+        <button class="btn btn-secondary" onclick="closeCropModal()">取消</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== MODAL: 智能分頁極簡 QR Code (修正) ==================== -->
+  <!-- ==================== MODAL: 分享與單一極簡 QR Code (強制不分拆) ==================== -->
   <div id="shareModal" class="modal">
     <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9; display: flex; flex-direction: column; max-height: 90vh;">
       <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; flex-shrink: 0;">
@@ -455,21 +345,14 @@
         <div style="background: white; padding: 16px; border-radius: 20px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 12px;">
           <div id="qrcode" style="width: 240px; height: 240px; margin: 0 auto; display: flex; align-items: center; justify-content: center;"></div>
         </div>
-        
-        <!-- 智能分頁切換器 -->
-        <div id="qrPagination" style="display:none; align-items:center; justify-content:center; gap:12px; margin-bottom: 10px;">
-          <button class="btn btn-secondary btn-sm" onclick="changeQrPage(-1)">❮ 上一頁</button>
-          <span id="qrPageInfo" style="font-size:14px; font-weight:bold; color:var(--primary);">第 1 / 2 個碼</span>
-          <button class="btn btn-secondary btn-sm" onclick="changeQrPage(1)">下一頁 ❯</button>
-        </div>
 
         <div id="qrModeHint" style="font-size: 12px; color: #28a745; font-weight: 600; margin-bottom: 10px;">
-          ✨ 已套用 Alphanumeric 純大寫高密度編碼，一秒極速掃描！
+          ✨ 已套用 Alphanumeric 純大寫高密度編碼，單一碼極速掃描！
         </div>
 
         <div class="qr-instruction-box">
           <h4><span style="font-size: 18px; color: #0066ff;">ⓘ</span> 使用方法</h4>
-          <ol><li>打開「默書助手」App</li><li>新增默書 ➔ 📷 掃 QR Code</li><li>對準此條碼即自動匯入 (多頁請依序掃描)</li></ol>
+          <ol><li>打開「默書助手」App</li><li>新增默書 ➔ 📷 掃 QR Code</li><li>對準此條碼即一秒自動匯入整份默書</li></ol>
         </div>
         <div id="shareUrlDisplayBox" class="share-link-box"></div>
         <button class="btn btn-primary btn-block" style="margin-top: 12px;" onclick="copyShareLink()">📋 複製一鍵匯入連結</button>
@@ -477,7 +360,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 相機掃描 QR Code (支援 iPad 修正) ==================== -->
+  <!-- ==================== MODAL: 相機掃描 QR Code (支援 iPad 鏡頭旋轉修正) ==================== -->
   <div id="qrScanModal" class="modal">
     <div class="modal-box" style="text-align: center; padding: 15px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -522,20 +405,6 @@
 
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
-  // ==========================================
-  // ⚙️ 系統核心設定 (金鑰已拆分混淆保護)
-  // ==========================================
-  const _kParts = [
-    "N3JxVEt2RndWbFJtaDg0dlE4YlFETmdQ",
-    "WmppdGxoNDRLTWtvbTlaTU9BRllNV0FT",
-    "aVduZ0pRUUo5OUNJQUMzcEthUlhKM3cz",
-    "QUFBWUFDT0dKOERT"
-  ];
-  function getSecureAzureKey() { try { return atob(_kParts.join("")); } catch (e) { return ""; } }
-  const AZURE_API_KEY = getSecureAzureKey(); 
-  const AZURE_REGION = "eastasia";
-  // ==========================================
-
   let dictations = JSON.parse(localStorage.getItem('dictations')) || [];
   let currentDictation = null;   
   let activeSentenceIndices = []; 
@@ -543,10 +412,8 @@
   
   let isPlayingAuto = false;
   let currentAudioResolve = null;
-
   const globalAudio = document.getElementById('globalAudio');
   let audioUnlocked = false;
-
   let forceNextInAuto = false;
   let forcePrevInAuto = false;
   let cropper = null;
@@ -555,13 +422,8 @@
   let html5QrCode = null;
   let scannerVideoRotation = 0;
   let wakeLock = null;
-
   let tempSegments = [];
   let currentSplitIndex = -1;
-  let currentImportChannel = 'tesseract';
-
-  let qrChunks = [];
-  let currentQrPageIndex = 0;
 
   const voiceMap = {
     'zh-HK': { female: 'zh-HK-HiuMaanNeural', male: 'zh-HK-WanLungNeural' },
@@ -584,10 +446,19 @@
 
   window.onload = () => {
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
-    document.getElementById('geminiKey').value = localStorage.getItem('gemini_key') || '';
+    // 預設寫回之前的 Key，避免你需要重新去舊 Code 搵
+    const defaultKey = "7rqTKvFwVlRmh84vQ8bQDNgPZjitlh44KMkom9ZMOAFYMWASiWngJQQJ99CIAC3pKaRXJ3w3AAAYACOGJ8DS";
+    document.getElementById('azureKey').value = localStorage.getItem('azure_api_key') || defaultKey;
+    
     checkUrlImport();
     renderList();
   };
+
+  function saveConfig() {
+    localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
+    localStorage.setItem('azure_api_key', document.getElementById('azureKey').value.trim());
+    alert('✅ 設定已成功儲存！');
+  }
 
   function checkUrlImport() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -656,7 +527,7 @@
     }, 50);
   }
 
-  // ===== 🌟 Base32 智能分頁極簡 QR Code =====
+  // ===== 🌟 Base32 智能單一極簡 QR Code (拒絕分拆) =====
   const B32_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
   function uint8ToBase32(uint8Arr) {
     let bits = 0, value = 0, output = "";
@@ -685,22 +556,7 @@
     return LZString.decompressFromUint8Array(base32ToUint8(b32));
   }
 
-  function splitTextByCharLimit(text, maxChars) {
-    const rawPieces = text.replace(/([。！？.!?；;])/g, "$1\n").split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
-    const chunks = []; let current = "";
-    for (const piece of rawPieces) {
-      if (piece.length > maxChars) {
-        if (current) { chunks.push(current); current = ""; }
-        for (let i = 0; i < piece.length; i += maxChars) { chunks.push(piece.substring(i, i + maxChars)); }
-      } else if ((current ? current.length + 1 + piece.length : piece.length) <= maxChars) {
-        current = current ? (current + "\n" + piece) : piece;
-      } else { chunks.push(current); current = piece; }
-    }
-    if (current) chunks.push(current);
-    return chunks.length > 0 ? chunks : [""];
-  }
-
-  function openShareModal() {
+  async function openShareModal() {
     if(!currentDictation) return;
     if(isTextHidden && !verifyParentPin('分享默書')) return;
     
@@ -716,56 +572,47 @@
     document.getElementById('shareModal').classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
 
-    // 智能分頁：每 60 字切開成一頁
-    const textParts = splitTextByCharLimit(currentDictation.content, 60);
-    qrChunks = textParts.map(part => {
-      const rawChunk = currentDictation.title + "|||" + (currentDictation.lang||'zh') + "|||" + part;
-      return compressToAlphanumericQR(rawChunk);
-    });
-    currentQrPageIndex = 0;
-    updateQrView();
+    const alphaPayload = compressToAlphanumericQR(rawData);
+    renderCrispSingleQR(alphaPayload);
+    const hintDiv = document.getElementById('qrModeHint');
+    hintDiv.style.color = "#28a745";
+    hintDiv.innerText = "✨ 已套用 Alphanumeric 純大寫極限編碼，單一碼不拆頁！";
+
+    // 課文如果極長，嘗試在背景自動生成雲端短碼（失敗依然保持單一 QR Code）
+    if (rawData.length > 80) {
+      try {
+        const res = await fetch('https://bytebin.lucko.me/post', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+          body: rawData
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.key) {
+            renderCrispSingleQR("DICBB:" + json.key.toUpperCase() + ":" + json.key);
+            hintDiv.innerText = "🌟 已自動升級為「雲端超極簡碼」，格仔極大、一秒即掃！";
+          }
+        }
+      } catch (err) {}
+    }
   }
 
-  function updateQrView() {
-    const pageDiv = document.getElementById('qrPagination');
-    const hintDiv = document.getElementById('qrModeHint');
-    
-    if (qrChunks.length > 1) {
-      pageDiv.style.display = "flex";
-      document.getElementById('qrPageInfo').innerText = `第 ${currentQrPageIndex + 1} / ${qrChunks.length} 個碼`;
-      hintDiv.style.color = "#d97706";
-      hintDiv.innerText = `📦 課文較長，已自動拆分為 ${qrChunks.length} 個超簡潔條碼，請依序掃描！`;
-    } else {
-      pageDiv.style.display = "none";
-      hintDiv.style.color = "#28a745";
-      hintDiv.innerText = "✨ 已套用 Alphanumeric 極限壓縮，單一碼一秒即掃！";
-    }
-
+  function renderCrispSingleQR(dataText) {
     const container = document.getElementById('qrcode');
-    container.innerHTML = ""; 
+    container.innerHTML = "";
     try {
       const qr = qrcode(0, 'L');
-      if (/^[0-9A-Z $%*+\-.\/:]+$/.test(qrChunks[currentQrPageIndex])) {
-        qr.addData(qrChunks[currentQrPageIndex], 'Alphanumeric');
-      } else {
-        qr.addData(qrChunks[currentQrPageIndex]);
-      }
+      if (/^[0-9A-Z $%*+\-.\/:]+$/.test(dataText)) { qr.addData(dataText, 'Alphanumeric'); } 
+      else { qr.addData(dataText); }
       qr.make();
       container.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
     } catch (e) {
-      container.innerText = "生成失敗，請複製下方連結。";
+      container.innerText = "字數超出單一條碼上限，請複製下方連結分享。";
     }
   }
 
-  function changeQrPage(delta) {
-    currentQrPageIndex += delta;
-    if (currentQrPageIndex < 0) currentQrPageIndex = qrChunks.length - 1;
-    if (currentQrPageIndex >= qrChunks.length) currentQrPageIndex = 0;
-    updateQrView();
-  }
-
   function closeShareModal() { document.getElementById('shareModal').classList.remove('active'); }
-  function copyShareLink() { navigator.clipboard.writeText(shareUrl).then(() => { alert('📋 已複製專屬分享連結！'); }); }
+  function copyShareLink() { navigator.clipboard.writeText(shareUrl).then(() => { alert('📋 已複製專屬分享連結！可以直接貼上給朋友。'); }); }
 
   function unlockAudioEngine() {
     if (!audioUnlocked) {
@@ -782,12 +629,6 @@
   document.addEventListener('visibilitychange', async () => {
     if (wakeLock !== null && document.visibilityState === 'visible' && isPlayingAuto) { await requestWakeLock(); }
   });
-
-  function saveConfig() {
-    localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
-    localStorage.setItem('gemini_key', document.getElementById('geminiKey').value.trim());
-    alert('✅ 設定已成功儲存！');
-  }
 
   function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1007,15 +848,17 @@
 
       if (!sentenceText) { if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; } return; }
 
-      const apiKey = AZURE_API_KEY;
-      const region = AZURE_REGION;
+      // 🌟 動態獲取用家填入嘅真實 Azure Key
+      const apiKey = localStorage.getItem('azure_api_key') || document.getElementById('azureKey').value.trim();
+      const region = "eastasia";
+      
       const baseSpeed = document.getElementById('setupSpeed').value;
       const accent = document.getElementById('voiceAccent').value;
       const gender = document.getElementById('voiceGender').value;
       const readPunc = document.getElementById('readPunctuation').checked;
 
       if (!apiKey || apiKey.includes('請在這裡貼上')) {
-        alert('API KEY 尚未正確設定！請開發者檢查。');
+        alert('❌ 尚未設定 Azure API Key！請到「系統設定」貼上金鑰才能播放語音。');
         if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         return;
       }
@@ -1050,7 +893,12 @@
           method: 'POST', headers: { 'Ocp-Apim-Subscription-Key': apiKey, 'Content-Type': 'application/ssml+xml', 'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3' }, body: ssml
         });
 
+        if (response.status === 401 || response.status === 403) {
+          alert("❌ Azure API Key 無效或已過期！請到設定頁面重新檢查金鑰是否正確。");
+          throw new Error('Unauthorized');
+        }
         if (!response.ok) throw new Error('TTS Fetch Error');
+        
         const blob = await response.blob();
         if(globalAudio.src) URL.revokeObjectURL(globalAudio.src);
         
@@ -1183,40 +1031,6 @@
     openDetailScreen(id ? parseInt(id) : dictations[0].id);
   }
 
-  // ===== 🌟 通道功能重置 (V21 排版 / 移除 Gemini 按鈕) =====
-  function selectPhotoForChannel(channel) {
-    currentImportChannel = channel;
-    
-    if (channel === 'gemini') {
-      let geminiKey = localStorage.getItem('gemini_key');
-      if (!geminiKey) {
-        geminiKey = prompt("請輸入您的 Gemini API Key 以啟用最強視覺通道：\n(免費申請: aistudio.google.com)");
-        if (geminiKey) {
-            localStorage.setItem('gemini_key', geminiKey.trim());
-            document.getElementById('geminiKey').value = geminiKey.trim();
-        } else { return; }
-      }
-    }
-    
-    document.getElementById('fileInput').value = '';
-    document.getElementById('fileInput').click();
-  }
-
-  async function pasteFromClipboard() {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text && text.trim()) {
-        const existing = document.getElementById('editContent').value.trim();
-        document.getElementById('editContent').value = existing ? (existing + '\n' + text.trim()) : text.trim();
-        document.getElementById('ocrStatus').innerText = "✅ 📱 已成功從剪貼簿一鍵貼上文字！";
-        return;
-      }
-    } catch (e) {}
-    document.getElementById('editContent').focus();
-    alert("📱 實況文字 (Live Text) 使用方法：\n1. 直接在下方文字框長按，點選「掃描文字」圖示；\n2. 或用 iPad/iPhone 相機對準默書紙，撳右下角「擷取文字」Copy 後再貼上！");
-  }
-
-  // ===== 工具：題號與強效拼音過濾 =====
   function filterNumbers() {
     let text = document.getElementById('editContent').value;
     text = text.replace(/([a-zA-Z\u4e00-\u9fa5])\s*(\d+[\.\)])/g, '$1\n$2');
@@ -1227,30 +1041,29 @@
     document.getElementById('ocrStatus').innerText = "🧹 已成功過濾所有數字題號！";
   }
 
-  // 徹底解決 ầ ắ ủ ễ ỗ 等所有變體殘留的拼音過濾器
+  // ===== 🌟 V24 徹底修復：強效拼音/特殊重音字母過濾器 =====
   function filterPinyin() {
     let text = document.getElementById('editContent').value;
     if (!text.trim()) return;
     const lang = document.getElementById('editLang').value;
 
-    // 1. 強制剝離所有特殊重音符號 (例如 ầ, ắ 轉換為 a)
+    // 1. 強制剝離所有特殊重音符號 (解決越南文與普通話 ầ, ắ 殘留)
     text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC');
 
-    // 2. 移除所有括號內的拼音、粵拼、英文或注音 (支援 () （） [] 【】)
+    // 2. 移除所有括號內的拼音、粵拼、英文或注音
     text = text.replace(/[\(\（\[\【][^\)\）\]\】]*?[a-zA-Z\u00C0-\u024F\u1E00-\u1EFFㄅ-ㄩ1-9][^\)\）\]\】]*?[\)\）\]\】]/g, '');
 
     // 3. 移除所有獨立注音符號与聲調符號
     text = text.replace(/[ㄅ-ㄩ˙ˊˇˋˆˇˉˊˇˋ]/g, '');
 
     if (lang === 'zh') {
-      // 4. 中文模式下：徹底清除夾雜在漢字旁的所有拉丁字母、拉丁擴展字元及粵拼數字 (如 gwong2)
+      // 4. 中文模式下：徹底清除夾雜在漢字旁的所有拉丁字母、拉丁擴展字元及粵拼數字
       text = text.replace(/[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]+[1-9]?/g, '');
       text = text.replace(/[\u02B0-\u02FF\u0300-\u036F]/g, '');
       text = text.replace(/[\(\（\[\【]\s*[\)\）\]\】]/g, '');
-      // 清除中文字之間因刪除拼音留下的多餘空白
       text = text.replace(/([\u4e00-\u9fa5，。！？、；：「」『』（）])\s+(?=[\u4e00-\u9fa5，。！？、；：「」『』（）])/g, '$1');
     } else {
-      // 英文模式下：清除音標
+      // 英文模式下：只清除音標
       text = text.replace(/\/[^\/]+\//g, '');
     }
 
@@ -1334,7 +1147,7 @@
   function closeSplitModal() { document.getElementById('splitModal').classList.remove('active'); }
   function saveSegmentsToTextarea() { document.getElementById('editContent').value = tempSegments.join('\n'); closeSegmentModal(); }
 
-  // ===== 🌟 V21 智能相片/PDF 處理核心 =====
+  // ===== 🌟 V24 智能相片/PDF 處理核心 (純通道B引擎) =====
   async function handleFileUpload(e) {
     const file = e.target.files[0];
     if(!file) return;
@@ -1361,63 +1174,13 @@
     const img = document.getElementById('cropImage');
     img.src = imageSrc;
     document.getElementById('cropModal').classList.add('active');
-    
-    // 如果係通道 A (Gemini)，則顯示對應嘅按鈕；通道 B (雙引擎) 則顯示雙引擎按鈕
-    if (currentImportChannel === 'gemini') {
-        document.getElementById('btnExeGemini').style.display = 'block';
-        document.getElementById('btnExeOCR').style.display = 'none';
-    } else {
-        document.getElementById('btnExeGemini').style.display = 'none';
-        document.getElementById('btnExeOCR').style.display = 'block';
-    }
-
     if(cropper) cropper.destroy();
     cropper = new Cropper(img, { viewMode: 1, autoCropArea: 0.85, responsive: true });
   }
 
   function closeCropModal() { document.getElementById('cropModal').classList.remove('active'); if(cropper) cropper.destroy(); }
 
-  // --- 通道 A：Gemini AI 視覺識別 ---
-  async function executeChannelGemini() {
-    if(!cropper) return;
-    const canvas = cropper.getCroppedCanvas();
-    const base64Img = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-    closeCropModal();
-    
-    const statusText = document.getElementById('ocrStatus');
-    statusText.innerText = "⏳ 正在使用 Gemini AI 進行視覺辨識 (約需 5-10 秒)...";
-    
-    const geminiKey = localStorage.getItem('gemini_key');
-    const promptText = "請辨識這張圖片中的文字。這是一份默書或詞彙表。請忽略多餘的表格線條、題號，只提取出『詞彙』和對應的『中文解釋』。請以純文字回覆，每行一個項目，不要包含任何 Markdown 標記，不要輸出其他對話。";
-    
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [ { text: promptText }, { inline_data: { mime_type: "image/jpeg", data: base64Img } } ] }]
-            })
-        });
-        
-        const data = await response.json();
-        if (data.error) throw new Error(data.error.message);
-        
-        const resultText = data.candidates[0].content.parts[0].text;
-        document.getElementById('editContent').value = resultText.trim();
-        statusText.innerText = "🌟 通道 A (Gemini AI) 辨識成功！";
-    } catch (err) {
-        console.error(err);
-        statusText.innerText = "❌ Gemini 辨識失敗，請檢查 API Key 或網路連線。";
-    }
-  }
-
-  // --- 通道 B：OCR.space + 強化版 Tesseract 雙引擎 ---
-  async function executeChannelOCR() {
-    // 若為 Gemini 通道則跳轉
-    if (currentImportChannel === 'gemini') {
-        return executeChannelGemini();
-    }
-
+  async function recognizeWithOCRSpace() {
     if(!cropper) return;
     const canvas = cropper.getCroppedCanvas();
     closeCropModal();
@@ -1479,12 +1242,18 @@
     }
   }
 
-  // ===== 🌟 相機掃描 QR Code (iPad 鏡頭修正) =====
+  function alertLiveText() {
+    alert('💡 實況文字 (Live Text) 零誤差貼上神技：\n\n1. 在下方「默書內容」的大白框內輕點一下。\n2. 點擊彈出的「掃描文字」圖示 (一個小相框框住三條線)。\n3. 將相機對準你的默書紙/課本，文字就會一秒零誤差貼上！');
+    document.getElementById('editContent').focus();
+  }
+
+  // ===== 🌟 相機掃描 QR Code (修復 iPad 直向鏡頭方向) =====
   function openQrScanner() {
     document.getElementById('qrScanModal').classList.add('active');
     scannerVideoRotation = 0;
     html5QrCode = new Html5Qrcode("qr-reader");
     
+    // 解除強制比例限制，讓 iOS Safari 自然渲染直向相機
     const config = {
       fps: 15,
       qrbox: (viewfinderWidth, viewfinderHeight) => {
@@ -1521,21 +1290,15 @@
   async function handleQrCodeScanned(scannedText) {
     closeQrScanner();
     try {
-      // 1. 識別最新 Alphanumeric 純大寫智能分頁碼 (DIC32:xxx)
+      // 1. 識別 Alphanumeric 純大寫單一碼 (DIC32:xxx)
       if (scannedText.startsWith('DIC32:')) {
         const decompressed = decompressFromAlphanumericQR(scannedText);
         const parts = decompressed.split('|||');
         if (parts.length >= 3) {
           document.getElementById('editTitle').value = parts[0];
           document.getElementById('editLang').value = parts[1];
-          const existingContent = document.getElementById('editContent').value.trim();
-          const newContent = parts.slice(2).join('|||');
-          if (existingContent && confirm("偵測到輸入框已有內容！\n請問這是「下一頁 QR Code」嗎？\n\n按「確定」會將新內容附加在下方；按「取消」則覆蓋舊內容。")) {
-            document.getElementById('editContent').value = existingContent + '\n' + newContent;
-          } else {
-            document.getElementById('editContent').value = newContent;
-          }
-          alert('✅ 已成功掃描並讀取默書內容，請確認後按「儲存默書」！');
+          document.getElementById('editContent').value = parts.slice(2).join('|||');
+          alert('✅ 已成功掃描並讀取整份默書內容，請確認後按「儲存默書」！');
           return;
         }
       }
@@ -1568,13 +1331,7 @@
         if (parts.length >= 3) {
           document.getElementById('editTitle').value = parts[0];
           document.getElementById('editLang').value = parts[1];
-          const existingContent = document.getElementById('editContent').value.trim();
-          const newContent = parts.slice(2).join('|||');
-          if (existingContent && confirm("偵測到輸入框已有內容！\n請問這是「下一頁 QR Code」嗎？\n\n按「確定」會將新內容附加在下方；按「取消」則覆蓋舊內容。")) {
-            document.getElementById('editContent').value = existingContent + '\n' + newContent;
-          } else {
-            document.getElementById('editContent').value = newContent;
-          }
+          document.getElementById('editContent').value = parts.slice(2).join('|||');
           alert('✅ 已成功掃描並讀取默書內容，請確認後按「儲存默書」！');
           return;
         }
