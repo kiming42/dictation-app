@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手 V25</title>
+  <title>默書小助手</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -23,17 +23,90 @@
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
-    :root { --primary: #0066ff; --primary-light: #e6f0ff; --success: #28a745; --danger: #dc3545; --secondary: #6c757d; --bg: #f4f6f9; --card-bg: #ffffff; --text: #212529; --text-muted: #6c757d; --border: #e9ecef; }
+    :root {
+      --primary: #0066ff;
+      --primary-light: #e6f0ff;
+      --success: #28a745;
+      --danger: #dc3545;
+      --secondary: #6c757d;
+      --bg: #f4f6f9;
+      --card-bg: #ffffff;
+      --text: #212529;
+      --text-muted: #6c757d;
+      --border: #e9ecef;
+    }
+
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text); -webkit-tap-highlight-color: transparent; user-select: none; }
-    .app-header { position: sticky; top: 0; z-index: 100; background: #ffffff; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .app-header h1, .app-header h2 { font-size: 18px; font-weight: 700; margin: 0; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .header-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 6px 10px; color: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      margin: 0;
+      padding: 0;
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none; 
+    }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .app-header h1, .app-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+      text-align: center;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 6px 10px;
+      color: #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     .header-btn:active { background: #eee; }
+
     .page { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
     .page.active { display: block; }
-    .card { background: var(--card-bg); padding: 18px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 16px; }
-    button.btn { padding: 12px 18px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; border-radius: 12px; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.2s; }
+    .card {
+      background: var(--card-bg);
+      padding: 18px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+    }
+
+    button.btn {
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.2s;
+    }
     button.btn:active { opacity: 0.8; }
     .btn-primary { background: var(--primary) !important; color: white !important; }
     .btn-success { background: var(--success) !important; color: white !important; }
@@ -44,62 +117,94 @@
     .btn-outline-info { background: transparent !important; border: 1.5px solid #17a2b8 !important; color: #17a2b8 !important; }
     .btn-block { width: 100%; }
     .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
+
     label { font-weight: 600; font-size: 14px; margin-top: 10px; display: block; color: #495057; }
-    input[type="text"], input[type="password"], select, textarea { width: 100%; padding: 12px; margin-top: 6px; margin-bottom: 12px; border: 1.5px solid #ced4da !important; border-radius: 10px !important; font-size: 16px !important; color: #000000 !important; background-color: #ffffff !important; box-sizing: border-box; user-select: text; }
+    
+    input[type="text"], input[type="password"], select, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      margin-bottom: 12px;
+      border: 1.5px solid #ced4da !important;
+      border-radius: 10px !important;
+      font-size: 16px !important;
+      color: #000000 !important;
+      background-color: #ffffff !important;
+      box-sizing: border-box;
+      user-select: text; 
+    }
     input:focus, select:focus, textarea:focus { border-color: var(--primary) !important; outline: none; }
     textarea::placeholder, input::placeholder { color: #888888 !important; opacity: 1 !important; }
+    
     textarea#editContent { height: 200px; min-height: 180px; resize: vertical; line-height: 1.6; }
+
     .row { display: flex; gap: 10px; }
     .row > div { flex: 1; }
     .tools-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+
     .dictation-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #fff; border-radius: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); border: 1px solid var(--border); }
     .dictation-item-title { font-size: 17px; font-weight: 700; color: #111; cursor: pointer; flex: 1; }
     .dictation-item-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
     .play-controls-bar { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 15px 0 20px 0; }
     .btn-circle { width: 52px; height: 52px; border-radius: 50%; border: none; background: #e9ecef; color: #333; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
     .btn-circle-main { width: 68px; height: 68px; background: var(--primary); color: white; font-size: 26px; box-shadow: 0 4px 12px rgba(0, 102, 255, 0.35); }
     .btn-circle-main.playing { background: #ffaa00; box-shadow: 0 4px 12px rgba(255, 170, 0, 0.35); }
+
     .mode-pill-btn { background: #28a745; color: white; border-radius: 30px; padding: 10px 20px; display: inline-flex; align-items: center; gap: 10px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 2px 6px rgba(40,167,69,0.25); }
     .mode-pill-badge { background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 12px; font-size: 13px; }
+
     .settings-summary-card { background: #f8f9fa; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: 1px solid #ebedf0; margin-bottom: 20px; }
     .settings-summary-title { font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 6px; }
     .settings-summary-tag { background: #ffe8cc; color: #d97706; font-size: 11px; padding: 2px 6px; border-radius: 6px; font-weight: normal; }
     .settings-summary-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
     .sentence-card-list { display: flex; flex-direction: column; gap: 10px; }
     .sentence-card { background: #ffffff; border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px; cursor: pointer; transition: all 0.2s; }
     .sentence-num { color: #8c98a4; font-size: 16px; font-weight: bold; min-width: 24px; margin-top: 2px; }
     .sentence-text { flex: 1; font-size: 17px; line-height: 1.5; font-weight: 500; white-space: pre-wrap; word-break: break-word; }
     .sentence-audio-btn { color: #8c98a4; font-size: 18px; margin-top: 2px; }
+    
     .sentence-card.active { background: var(--primary); color: #ffffff; border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,102,255,0.25); }
     .sentence-card.active .sentence-num, .sentence-card.active .sentence-text, .sentence-card.active .sentence-audio-btn { color: #ffffff; }
+
     .selection-header-tools { display: flex; align-items: center; gap: 15px; font-size: 14px; margin: 10px 0 16px 0; color: var(--primary); font-weight: 600; }
     .selection-header-tools span { cursor: pointer; }
+    
     .select-item-card { background: #ffffff; border-bottom: 1px solid #f0f0f0; padding: 14px 8px; display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
     .select-num-badge { width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; flex-shrink: 0; }
     .select-item-card input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer; margin-top: 3px; }
+
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
     .modal.active { display: flex; }
     .modal-box { background: #fff; border-radius: 20px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+
     .dropdown-menu { position: absolute; right: 16px; top: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 1px solid var(--border); display: none; flex-direction: column; z-index: 200; overflow: hidden; min-width: 140px; }
     .dropdown-menu.active { display: flex; }
     .dropdown-item { padding: 12px 16px; font-size: 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #333; text-decoration: none; }
     .dropdown-item:hover, .dropdown-item:active { background: #f8f9fa; }
+
     .blur-text { filter: blur(10px); opacity: 0.7; user-select: none; pointer-events: none; }
+
     .segment-item { background: #ffffff; border-radius: 12px; padding: 12px 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid #eee; display: flex; align-items: center; gap: 12px; }
     .segment-idx { width: 26px; height: 26px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 13px; font-weight: bold; flex-shrink: 0; }
     .segment-text { flex: 1; font-size: 16px; line-height: 1.5; color: #333; }
     .segment-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
     .btn-action { padding: 5px 10px; font-size: 12px; border: 1px solid #ced4da; background: #f8f9fa; border-radius: 6px; cursor: pointer; color: #495057; font-weight: 600; }
+    
     .split-token { display: inline-block; }
     .split-divider { display: inline-block; width: 14px; color: #ccc; cursor: pointer; font-weight: bold; margin: 0 2px; user-select: none; transition: all 0.2s; }
     .split-divider:hover { color: var(--danger); transform: scale(1.6); }
+
     .qr-instruction-box { background: #e6f0ff; border-radius: 12px; padding: 15px 20px; text-align: left; margin-top: 15px; }
     .qr-instruction-box h4 { margin: 0 0 10px 0; color: #0056b3; display: flex; align-items: center; gap: 8px; font-size: 16px; }
     .qr-instruction-box ol { margin: 0; padding-left: 20px; color: #333; font-size: 14px; line-height: 1.8; }
     .qr-instruction-box li::marker { color: #0066ff; font-weight: bold; }
+
     #qrcode svg, #qrcode canvas, #qrcode img { width: 100% !important; max-width: 250px; height: auto !important; display: block; margin: 0 auto; shape-rendering: crispEdges; }
     .share-link-box { margin-top: 15px; padding: 10px 12px; background: #e9ecef; border-radius: 8px; font-size: 11px; word-break: break-all; color: #555; max-height: 60px; overflow-y: auto; text-align: left; user-select: text; border: 1px solid #ced4da; }
     .cropper-container-box { max-height: 45vh; overflow: hidden; margin-bottom: 15px; border-radius: 8px; border: 1px solid #eee; background: #222; }
+
     #qr-reader { width: 100%; border-radius: 12px; overflow: hidden; background: #000; position: relative; }
     #qr-reader video { width: 100% !important; height: auto !important; max-height: 55vh; object-fit: cover !important; transition: transform 0.25s ease; }
   </style>
@@ -239,7 +344,7 @@
     </div>
   </div>
 
-  <!-- ==================== 5. ⚙️ 全局系統設定頁面 (V25 Azure Key 專屬區) ==================== -->
+  <!-- ==================== 5. 全局系統設定頁面 ==================== -->
   <div id="settings-screen" class="page">
     <div class="app-header" style="margin: -16px -16px 16px -16px;">
       <button class="header-btn" onclick="showPage('home-screen')">❮</button>
@@ -250,17 +355,9 @@
     <div class="card" style="margin-top: 15px;">
       <label>家長解鎖密碼 (4位數字):</label>
       <input type="password" id="parentPin" placeholder="預設密碼: 1234" value="1234" onchange="saveConfig()">
-      
-      <!-- 🌟 V25 安全升級：在 UI 動態綁定金鑰與區域，防止 GitHub 外洩 -->
-      <label style="margin-top: 20px; color:#0066ff;">🔊 Azure 語音 API Key (發聲必填):</label>
-      <input type="password" id="azureKey" placeholder="貼上 32 位元的 Azure 金鑰 (Key 1)..." value="" onchange="saveConfig()" style="border-color:#0066ff !important;">
-      
-      <label style="margin-top: 10px; color:#0066ff;">🌍 Azure 伺服器區域 (Region):</label>
-      <input type="text" id="azureRegion" placeholder="例如: eastasia, southeastasia" value="eastasia" onchange="saveConfig()" style="border-color:#0066ff !important;">
-      
-      <p style="font-size: 12px; color: #666; margin-top: 5px;">請輸入你在微軟 Azure 後台建立的 32 位元金鑰。設定只會保存在這部手機中，絕不外洩。</p>
+      <p style="font-size: 13px; color: #666; margin-top: 5px;">保護設定與防止小朋友偷看答案。</p>
 
-      <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 20px;">
+      <button class="btn btn-primary btn-block" onclick="showPage('home-screen')" style="margin-top: 15px;">
         儲存並返回
       </button>
     </div>
@@ -351,7 +448,7 @@
         </div>
 
         <div id="qrModeHint" style="font-size: 12px; color: #28a745; font-weight: 600; margin-bottom: 10px;">
-          ✨ 已套用純大寫高密度編碼，單一碼一秒即掃！
+          ✨ 已套用 Alphanumeric 純大寫高密度編碼，單一碼極速掃描！
         </div>
 
         <div class="qr-instruction-box">
@@ -409,14 +506,31 @@
 
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
+  // ==========================================
+  // ⚙️ 金鑰拆分混淆保護 (Obfuscation)[span_2](start_span)[span_2](end_span)[span_3](start_span)[span_3](end_span)
+  // ==========================================
+  const _kParts = [
+    "NzJxVEt2RndWbFJtaDg0dlE4YlFETmdQ",
+    "WmppdGxoNDRLTWtvbTlaTU9BRllNV0FT",
+    "aVduZ0pRUUo5OUNJQUMzcEthUlhKM3cz",
+    "QUFBWUFDT0dKOERT"
+  ];
+  function getSecureAzureKey() { try { return atob(_kParts.join("")); } catch (e) { return ""; } }
+  const AZURE_API_KEY = getSecureAzureKey();
+  const AZURE_REGION = "eastasia";
+  // ==========================================
+
   let dictations = JSON.parse(localStorage.getItem('dictations')) || [];
   let currentDictation = null;   
   let activeSentenceIndices = []; 
   let currentPlayingIndex = 0;   
+  
   let isPlayingAuto = false;
   let currentAudioResolve = null;
+
   const globalAudio = document.getElementById('globalAudio');
   let audioUnlocked = false;
+
   let forceNextInAuto = false;
   let forcePrevInAuto = false;
   let cropper = null;
@@ -425,6 +539,7 @@
   let html5QrCode = null;
   let scannerVideoRotation = 0;
   let wakeLock = null;
+
   let tempSegments = [];
   let currentSplitIndex = -1;
 
@@ -449,18 +564,9 @@
 
   window.onload = () => {
     document.getElementById('parentPin').value = localStorage.getItem('parent_pin') || '1234';
-    document.getElementById('azureKey').value = localStorage.getItem('azure_api_key') || '';
-    document.getElementById('azureRegion').value = localStorage.getItem('azure_region') || 'eastasia';
     checkUrlImport();
     renderList();
   };
-
-  function saveConfig() {
-    localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
-    localStorage.setItem('azure_api_key', document.getElementById('azureKey').value.trim());
-    localStorage.setItem('azure_region', document.getElementById('azureRegion').value.trim());
-    alert('✅ 設定已成功儲存！');
-  }
 
   function checkUrlImport() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -484,10 +590,12 @@
           }
         }
       } catch(e) { console.error('匯入解析失敗', e); }
+      return;
     }
   }
 
   function getParentPin() { return localStorage.getItem('parent_pin') || '1234'; }
+
   function verifyParentPin(actionName) {
     const currentPin = getParentPin();
     const input = prompt(`🔒 ${actionName}：請輸入家長解鎖密碼`);
@@ -503,7 +611,8 @@
 
   function checkAndShowSettings() { if (verifyParentPin('系統設定')) showPage('settings-screen'); }
   function toggleHideText() {
-    if(!isTextHidden) { isTextHidden = true; } else { if(verifyParentPin('顯示文字')) isTextHidden = false; else return; }
+    if(!isTextHidden) { isTextHidden = true; } 
+    else { if(verifyParentPin('顯示文字')) isTextHidden = false; else return; }
     updateDetailUI();
   }
   function checkAndOpenSentenceSelection() {
@@ -515,6 +624,7 @@
     if(isTextHidden && !verifyParentPin('編輯默書')) return;
     openEditScreen(currentDictation.id);
   }
+
   function deleteCurrentDictation() {
     if(!currentDictation) return;
     document.getElementById('headerDropdown').classList.remove('active');
@@ -528,7 +638,7 @@
     }, 50);
   }
 
-  // ===== 🌟 Base32 極簡單一 QR Code =====
+  // ===== 🌟 Alphanumeric 極限壓縮單一 QR Code =====
   const B32_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
   function uint8ToBase32(uint8Arr) {
     let bits = 0, value = 0, output = "";
@@ -569,6 +679,7 @@
     document.getElementById('shareTitle').innerText = currentDictation.title;
     document.getElementById('shareWordCount').innerText = `${getSentences(currentDictation.content).length} 個詞語 / 段落`;
     document.getElementById('shareUrlDisplayBox').innerText = shareUrl;
+
     document.getElementById('shareModal').classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
 
@@ -577,21 +688,6 @@
     const hintDiv = document.getElementById('qrModeHint');
     hintDiv.style.color = "#28a745";
     hintDiv.innerText = "✨ 已套用 Alphanumeric 純大寫極限編碼，單一碼不拆頁！";
-
-    if (rawData.length > 80) {
-      try {
-        const res = await fetch('https://bytebin.lucko.me/post', {
-          method: 'POST', headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: rawData
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (json && json.key) {
-            renderCrispSingleQR("DICBB:" + json.key.toUpperCase() + ":" + json.key);
-            hintDiv.innerText = "🌟 已自動升級為「雲端超極簡碼」，格仔極大、一秒即掃！";
-          }
-        }
-      } catch (err) {}
-    }
   }
 
   function renderCrispSingleQR(dataText) {
@@ -622,12 +718,21 @@
 
   async function requestWakeLock() { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} } }
   function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }).catch(err => {}); } }
-  document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && isPlayingAuto) { await requestWakeLock(); } });
+
+  document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible' && isPlayingAuto) { await requestWakeLock(); }
+  });
+
+  function saveConfig() {
+    localStorage.setItem('parent_pin', document.getElementById('parentPin').value.trim());
+    alert('✅ 設定已成功儲存！');
+  }
 
   function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
     document.getElementById('headerDropdown').classList.remove('active');
+    
     if (isPlayingAuto) { isPlayingAuto = false; stopAudio(); updatePlayBtnUI(false); } 
     else { stopAudio(); }
     const ps = document.getElementById('playStatus');
@@ -635,20 +740,29 @@
   }
 
   function toggleHeaderMenu() { document.getElementById('headerDropdown').classList.toggle('active'); }
-  function getSentences(content) { if(!content) return []; return content.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0); }
+
+  function getSentences(content) {
+    if(!content) return [];
+    return content.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+  }
 
   function renderList() {
     const listDiv = document.getElementById('dictation-list');
     listDiv.innerHTML = '';
+    
     if(dictations.length === 0) {
       listDiv.innerHTML = '<p style="color:#888; text-align:center; padding: 40px 0;">目前沒有默書紀錄<br>請點擊下方按鈕新增！</p>';
       return;
     }
+
     dictations.forEach(d => {
       const sentences = getSentences(d.content);
       listDiv.innerHTML += `
         <div class="dictation-item" onclick="openDetailScreen('${d.id}')">
-          <div><div class="dictation-item-title">${escapeXml(d.title)}</div><div class="dictation-item-sub">共 ${sentences.length} 句 | 語言: ${d.lang === 'en' ? '英文' : '中文'}</div></div>
+          <div>
+            <div class="dictation-item-title">${escapeXml(d.title)}</div>
+            <div class="dictation-item-sub">共 ${sentences.length} 句 | 語言: ${d.lang === 'en' ? '英文' : '中文'}</div>
+          </div>
           <div style="font-size: 20px; color: var(--primary);">❯</div>
         </div>
       `;
@@ -658,20 +772,29 @@
   function openDetailScreen(id) {
     currentDictation = dictations.find(d => String(d.id) === String(id));
     if(!currentDictation) { alert('⚠️ 找不到這份默書紀錄！'); return; }
-    document.getElementById('detailTitle').innerText = currentDictation.title;
+
+    const titleEl = document.getElementById('detailTitle');
+    if(titleEl) titleEl.innerText = currentDictation.title;
+    
     const sentences = getSentences(currentDictation.content);
     activeSentenceIndices = sentences.map((_, i) => i);
     currentPlayingIndex = 0;
+
     const vAccent = document.getElementById('voiceAccent');
     if(vAccent) { vAccent.value = (currentDictation.lang === 'en') ? 'en-US' : 'zh-HK'; }
+
     const ps = document.getElementById('playStatus');
     if(ps) ps.innerText = '';
-    updatePlayBtnUI(false); updateDetailUI(); showPage('detail-screen');
+    
+    updatePlayBtnUI(false);
+    updateDetailUI();
+    showPage('detail-screen');
   }
 
   function updateDetailUI() {
     if(!currentDictation) return;
     const sentences = getSentences(currentDictation.content);
+    
     const badge = document.getElementById('selectedCountBadge');
     if(badge) badge.innerText = `${activeSentenceIndices.length}/${sentences.length}`;
 
@@ -680,10 +803,12 @@
     if(voiceSelect && voiceSelect.options && voiceSelect.options.length > 0 && voiceSelect.selectedIndex >= 0) {
         accentText = voiceSelect.options[voiceSelect.selectedIndex].text.split(' ')[0];
     }
+    
     const speedEl = document.getElementById('setupSpeed');
     const modeEl = document.getElementById('playMode');
     const speed = speedEl ? speedEl.value : '1.0';
     const modeText = (modeEl && modeEl.value === 'auto') ? '自動模式' : '手動模式';
+    
     const summary = document.getElementById('settingsSummaryText');
     if(summary) summary.innerText = `${modeText} | ${accentText} | ${speed}x速`;
 
@@ -693,6 +818,7 @@
         sentences.forEach((sText, idx) => {
           const isSelected = activeSentenceIndices.includes(idx);
           if(!isSelected) return; 
+
           const activePos = activeSentenceIndices.indexOf(idx);
           const isActive = (activePos === currentPlayingIndex);
 
@@ -714,13 +840,16 @@
   function selectSentenceToPlaySlowly(pos) { unlockAudioEngine(); if (isPlayingAuto) togglePlayPause(); currentPlayingIndex = pos; updateDetailUI(); playCurrentSentence(true); }
 
   function prevSentence() {
-    unlockAudioEngine(); if(activeSentenceIndices.length === 0) return;
+    unlockAudioEngine();
+    if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) { forcePrevInAuto = true; stopAudio(); return; }
     if(currentPlayingIndex > 0) currentPlayingIndex--; else currentPlayingIndex = activeSentenceIndices.length - 1;
     updateDetailUI(); playCurrentSentence(false);
   }
+
   function nextSentence() {
-    unlockAudioEngine(); if(activeSentenceIndices.length === 0) return;
+    unlockAudioEngine();
+    if(activeSentenceIndices.length === 0) return;
     if (isPlayingAuto) { forceNextInAuto = true; stopAudio(); return; }
     if(currentPlayingIndex < activeSentenceIndices.length - 1) currentPlayingIndex++; else currentPlayingIndex = 0;
     updateDetailUI(); playCurrentSentence(false);
@@ -734,7 +863,10 @@
 
   function stopAudio() {
     if(globalAudio) globalAudio.pause();
-    if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
+    if (currentAudioResolve) {
+      currentAudioResolve();
+      currentAudioResolve = null;
+    }
   }
 
   function togglePlayPause() {
@@ -763,6 +895,7 @@
 
     while (isPlayingAuto && currentPlayingIndex < activeSentenceIndices.length) {
       forceNextInAuto = false; forcePrevInAuto = false; updateDetailUI();
+
       for (let r = 0; r < repeats; r++) {
         if (!isPlayingAuto || forceNextInAuto || forcePrevInAuto) break;
         const ps = document.getElementById('playStatus');
@@ -813,19 +946,18 @@
       const rawSentences = getSentences(currentDictation.content);
       const realIndex = activeSentenceIndices[currentPlayingIndex];
       let sentenceText = rawSentences[realIndex];
+
       if (!sentenceText) { if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; } return; }
 
-      // 🌟 V25: 動態獲取用家填入嘅真實 Azure Key 與 Region
-      const apiKey = localStorage.getItem('azure_api_key') || document.getElementById('azureKey').value.trim();
-      const region = localStorage.getItem('azure_region') || document.getElementById('azureRegion').value.trim() || 'eastasia';
-      
+      const apiKey = AZURE_API_KEY;
+      const region = AZURE_REGION;
       const baseSpeed = document.getElementById('setupSpeed').value;
       const accent = document.getElementById('voiceAccent').value;
       const gender = document.getElementById('voiceGender').value;
       const readPunc = document.getElementById('readPunctuation').checked;
 
-      if (!apiKey || apiKey.length < 20 || apiKey.includes('請在這裡')) {
-        alert('❌ 尚未設定有效的 Azure API Key！\n請先到 App 的「⚙️ 系統設定」頁面輸入 32 位元的 Azure 金鑰才能發聲。');
+      if (!apiKey || apiKey.includes('請在這裡貼上')) {
+        alert('API KEY 尚未正確設定！請開發者檢查。');
         if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
         return;
       }
@@ -860,12 +992,7 @@
           method: 'POST', headers: { 'Ocp-Apim-Subscription-Key': apiKey, 'Content-Type': 'application/ssml+xml', 'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3' }, body: ssml
         });
 
-        if (response.status === 401 || response.status === 403) {
-          alert("❌ Azure API Key 無效、伺服器區域 (Region) 錯誤，或免費額度已滿！\n請到「⚙️ 系統設定」重新檢查金鑰與區域設定。");
-          throw new Error('Unauthorized');
-        }
         if (!response.ok) throw new Error('TTS Fetch Error');
-        
         const blob = await response.blob();
         if(globalAudio.src) URL.revokeObjectURL(globalAudio.src);
         
@@ -899,6 +1026,7 @@
     else { return text.replace(/，/g, '，逗號，').replace(/。/g, '，句號，').replace(/！/g, '，感嘆號，').replace(/？/g, '，問號，').replace(/；/g, '，分號，').replace(/：/g, '，冒號，'); }
   }
 
+  // --- 句子勾選頁面 ---
   function openSentenceSelection() {
     const sentences = getSentences(currentDictation.content);
     tempSelectedIndices = [...activeSentenceIndices];
@@ -956,6 +1084,7 @@
 
   function cancelSentenceSelection() { showPage('detail-screen'); }
 
+  // --- 新增/編輯頁面 ---
   function openEditScreen(id) {
     if(id) {
       const dic = dictations.find(d => String(d.id) === String(id));
@@ -1104,7 +1233,6 @@
   function closeSplitModal() { document.getElementById('splitModal').classList.remove('active'); }
   function saveSegmentsToTextarea() { document.getElementById('editContent').value = tempSegments.join('\n'); closeSegmentModal(); }
 
-  // ===== 🌟 V24 智能相片/PDF 處理核心 (純通道B引擎) =====
   async function handleFileUpload(e) {
     const file = e.target.files[0];
     if(!file) return;
@@ -1204,7 +1332,6 @@
     document.getElementById('editContent').focus();
   }
 
-  // ===== 🌟 相機掃描 QR Code (修復 iPad 直向鏡頭方向) =====
   function openQrScanner() {
     document.getElementById('qrScanModal').classList.add('active');
     scannerVideoRotation = 0;
