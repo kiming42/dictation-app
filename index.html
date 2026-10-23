@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="light">
   
-  <title>默書小助手</title>
+  <title>默書小助手 V21</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -203,7 +203,7 @@
 
     #qrcode svg, #qrcode canvas, #qrcode img { width: 100% !important; max-width: 250px; height: auto !important; display: block; margin: 0 auto; shape-rendering: crispEdges; }
     .share-link-box { margin-top: 15px; padding: 10px 12px; background: #e9ecef; border-radius: 8px; font-size: 11px; word-break: break-all; color: #555; max-height: 60px; overflow-y: auto; text-align: left; user-select: text; border: 1px solid #ced4da; }
-    .cropper-container-box { max-height: 45vh; overflow: hidden; margin-bottom: 15px; border-radius: 8px; border: 1px solid #eee; background: #222; }
+    .cropper-container-box { max-height: 45vh; overflow: hidden; margin-bottom: 15px; border-radius: 8px; border: 1px solid #eee; }
 
     #qr-reader { width: 100%; border-radius: 12px; overflow: hidden; background: #000; position: relative; }
     #qr-reader video { width: 100% !important; height: auto !important; max-height: 55vh; object-fit: cover !important; transition: transform 0.25s ease; }
@@ -407,7 +407,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 相片方向旋轉與強化預覽器 ==================== -->
+  <!-- ==================== MODAL: 相片方向旋轉與強化預覽器 (只保留通道B) ==================== -->
   <div id="cropModal" class="modal">
     <div class="modal-box" style="max-width: 95%;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -433,7 +433,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 分享與單一極簡 QR Code ==================== -->
+  <!-- ==================== MODAL: 分享與單一極簡 QR Code (不分拆) ==================== -->
   <div id="shareModal" class="modal">
     <div class="modal-box" style="padding: 0; overflow: hidden; background: #f4f6f9; display: flex; flex-direction: column; max-height: 90vh;">
       <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; flex-shrink: 0;">
@@ -461,7 +461,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: 相機掃描 QR Code ==================== -->
+  <!-- ==================== MODAL: 相機掃描 QR Code (支援 iPad 鏡頭旋轉修正) ==================== -->
   <div id="qrScanModal" class="modal">
     <div class="modal-box" style="text-align: center; padding: 15px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -507,16 +507,17 @@
 <!-- ==================== JAVASCRIPT 邏輯區 ==================== -->
 <script>
   // ==========================================
-  // ⚙️ 金鑰拆分混淆保護 (Obfuscation)[span_2](start_span)[span_2](end_span)[span_3](start_span)[span_3](end_span)
+  // ⚙️ 系統核心設定 (金鑰已拆分混淆保護)
   // ==========================================
   const _kParts = [
-    "NzJxVEt2RndWbFJtaDg0dlE4YlFETmdQ",
+    "N3JxVEt2RndWbFJtaDg0dlE4YlFETmdQ",
     "WmppdGxoNDRLTWtvbTlaTU9BRllNV0FT",
     "aVduZ0pRUUo5OUNJQUMzcEthUlhKM3cz",
     "QUFBWUFDT0dKOERT"
   ];
-  function getSecureAzureKey() { try { return atob(_kParts.join("")); } catch (e) { return ""; } }
-  const AZURE_API_KEY = getSecureAzureKey();
+  function getSecureAzureKey() {
+    try { return atob(_kParts.join("")); } catch (e) { return ""; }
+  }
   const AZURE_REGION = "eastasia";
   // ==========================================
 
@@ -638,33 +639,67 @@
     }, 50);
   }
 
-  // ===== 🌟 Alphanumeric 極限壓縮單一 QR Code =====
+  // ===== 🌟 單一極簡 QR Code 黑科技：Base32 純大寫 Alphanumeric 編碼 + 雲端雙重加速 =====
   const B32_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+
   function uint8ToBase32(uint8Arr) {
     let bits = 0, value = 0, output = "";
     for (let i = 0; i < uint8Arr.length; i++) {
-      value = (value << 8) | uint8Arr[i]; bits += 8;
-      while (bits >= 5) { output += B32_ALPHABET[(value >>> (bits - 5)) & 31]; bits -= 5; }
+      value = (value << 8) | uint8Arr[i];
+      bits += 8;
+      while (bits >= 5) {
+        output += B32_ALPHABET[(value >>> (bits - 5)) & 31];
+        bits -= 5;
+      }
     }
-    if (bits > 0) output += B32_ALPHABET[(value << (5 - bits)) & 31];
+    if (bits > 0) {
+      output += B32_ALPHABET[(value << (5 - bits)) & 31];
+    }
     return output;
   }
+
   function base32ToUint8(base32Str) {
-    let bits = 0, value = 0, index = 0; const output = new Uint8Array(Math.floor(base32Str.length * 5 / 8));
+    let bits = 0, value = 0, index = 0;
+    const output = new Uint8Array(Math.floor(base32Str.length * 5 / 8));
     for (let i = 0; i < base32Str.length; i++) {
-      const val = B32_ALPHABET.indexOf(base32Str[i]); if (val === -1) continue;
-      value = (value << 5) | val; bits += 5;
-      if (bits >= 8) { output[index++] = (value >>> (bits - 8)) & 255; bits -= 8; }
+      const val = B32_ALPHABET.indexOf(base32Str[i]);
+      if (val === -1) continue;
+      value = (value << 5) | val;
+      bits += 5;
+      if (bits >= 8) {
+        output[index++] = (value >>> (bits - 8)) & 255;
+        bits -= 8;
+      }
     }
     return output;
   }
+
   function compressToAlphanumericQR(rawStr) {
     const uint8 = LZString.compressToUint8Array(rawStr);
     return "DIC32:" + uint8ToBase32(uint8);
   }
+
   function decompressFromAlphanumericQR(qrStr) {
     const b32 = qrStr.substring(6);
-    return LZString.decompressFromUint8Array(base32ToUint8(b32));
+    const uint8 = base32ToUint8(b32);
+    return LZString.decompressFromUint8Array(uint8);
+  }
+
+  function renderCrispSingleQR(dataText) {
+    const container = document.getElementById('qrcode');
+    container.innerHTML = "";
+    try {
+      const qr = qrcode(0, 'L');
+      if (/^[0-9A-Z $%*+\-.\/:]+$/.test(dataText)) {
+        qr.addData(dataText, 'Alphanumeric');
+      } else {
+        qr.addData(dataText);
+      }
+      qr.make();
+      container.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+    } catch (e) {
+      container.innerText = "字數超出單一條碼上限，請複製下方連結分享。";
+    }
   }
 
   async function openShareModal() {
@@ -688,24 +723,27 @@
     const hintDiv = document.getElementById('qrModeHint');
     hintDiv.style.color = "#28a745";
     hintDiv.innerText = "✨ 已套用 Alphanumeric 純大寫極限編碼，單一碼不拆頁！";
-  }
 
-  function renderCrispSingleQR(dataText) {
-    const container = document.getElementById('qrcode');
-    container.innerHTML = "";
-    try {
-      const qr = qrcode(0, 'L');
-      if (/^[0-9A-Z $%*+\-.\/:]+$/.test(dataText)) { qr.addData(dataText, 'Alphanumeric'); } 
-      else { qr.addData(dataText); }
-      qr.make();
-      container.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
-    } catch (e) {
-      container.innerText = "字數超出單一條碼上限，請複製下方連結分享。";
+    if (rawData.length > 80) {
+      try {
+        const res = await fetch('https://bytebin.lucko.me/post', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+          body: rawData
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.key) {
+            renderCrispSingleQR("DICBB:" + json.key.toUpperCase() + ":" + json.key);
+            hintDiv.innerText = "🌟 已自動升級為「雲端超極簡碼」，格仔極大、一秒即掃！";
+          }
+        }
+      } catch (err) {}
     }
   }
 
   function closeShareModal() { document.getElementById('shareModal').classList.remove('active'); }
-  function copyShareLink() { navigator.clipboard.writeText(shareUrl).then(() => { alert('📋 已複製專屬分享連結！'); }); }
+  function copyShareLink() { navigator.clipboard.writeText(shareUrl).then(() => { alert('📋 已複製專屬分享連結！可以直接貼上給朋友。'); }); }
 
   function unlockAudioEngine() {
     if (!audioUnlocked) {
@@ -863,10 +901,7 @@
 
   function stopAudio() {
     if(globalAudio) globalAudio.pause();
-    if (currentAudioResolve) {
-      currentAudioResolve();
-      currentAudioResolve = null;
-    }
+    if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; }
   }
 
   function togglePlayPause() {
@@ -949,7 +984,7 @@
 
       if (!sentenceText) { if (currentAudioResolve) { currentAudioResolve(); currentAudioResolve = null; } return; }
 
-      const apiKey = AZURE_API_KEY;
+      const apiKey = getSecureAzureKey();
       const region = AZURE_REGION;
       const baseSpeed = document.getElementById('setupSpeed').value;
       const accent = document.getElementById('voiceAccent').value;
@@ -1135,21 +1170,30 @@
     document.getElementById('ocrStatus').innerText = "🧹 已成功過濾所有數字題號！";
   }
 
+  // ===== 🌟 V21 徹底修復：強效拼音/特殊重音字母過濾器 =====
   function filterPinyin() {
     let text = document.getElementById('editContent').value;
     if (!text.trim()) return;
     const lang = document.getElementById('editLang').value;
 
+    // 1. 強制剝離所有特殊重音符號 (例如 ầ, ắ 轉換為 a)
     text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC');
+
+    // 2. 移除所有括號內的拼音、粵拼、英文或注音 (支援 () （） [] 【】)
     text = text.replace(/[\(\（\[\【][^\)\）\]\】]*?[a-zA-Z\u00C0-\u024F\u1E00-\u1EFFㄅ-ㄩ1-9][^\)\）\]\】]*?[\)\）\]\】]/g, '');
+
+    // 3. 移除所有獨立注音符號与聲調符號
     text = text.replace(/[ㄅ-ㄩ˙ˊˇˋˆˇˉˊˇˋ]/g, '');
 
     if (lang === 'zh') {
+      // 4. 中文模式下：徹底清除夾雜在漢字旁的所有拉丁字母、拉丁擴展字元及粵拼數字 (如 gwong2)
       text = text.replace(/[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]+[1-9]?/g, '');
       text = text.replace(/[\u02B0-\u02FF\u0300-\u036F]/g, '');
       text = text.replace(/[\(\（\[\【]\s*[\)\）\]\】]/g, '');
+      // 清除中文字之間因刪除拼音留下的多餘空白
       text = text.replace(/([\u4e00-\u9fa5，。！？、；：「」『』（）])\s+(?=[\u4e00-\u9fa5，。！？、；：「」『』（）])/g, '$1');
     } else {
+      // 英文模式下：只清除音標
       text = text.replace(/\/[^\/]+\//g, '');
     }
 
@@ -1233,6 +1277,7 @@
   function closeSplitModal() { document.getElementById('splitModal').classList.remove('active'); }
   function saveSegmentsToTextarea() { document.getElementById('editContent').value = tempSegments.join('\n'); closeSegmentModal(); }
 
+  // ===== 🌟 V21: 智能相片/PDF 處理核心 (單通道) =====
   async function handleFileUpload(e) {
     const file = e.target.files[0];
     if(!file) return;
@@ -1332,6 +1377,7 @@
     document.getElementById('editContent').focus();
   }
 
+  // ===== 🌟 相機掃描 QR Code (iPad 鏡頭修正) =====
   function openQrScanner() {
     document.getElementById('qrScanModal').classList.add('active');
     scannerVideoRotation = 0;
